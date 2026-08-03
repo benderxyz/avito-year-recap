@@ -1,0 +1,38 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+
+  analytics:
+    build:
+      context: ./analytics-service
+
+    container_name: analytics-service
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - clickhouse
+
+  cards:
+    build:
+      context: ./cards-service
+
+    container_name: cards-service
+
+    ports:
+      - "8081:8081"
+
+    depends_on:
+      - analytics
+
+volumes:
+  clickhouse-data:

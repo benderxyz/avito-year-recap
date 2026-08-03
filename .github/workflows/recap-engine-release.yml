@@ -1,0 +1,60 @@
+name: Recap Engine Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "recap-engine/**"
+      - ".github/workflows/recap-engine-release.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "recap-engine/**"
+      - ".github/workflows/recap-engine-release.yml"
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: recap-engine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: recap-engine/pnpm-lock.yaml
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        uses: changesets/action@v1
+        with:
+          cwd: recap-engine
+          version: pnpm run version
+          publish: pnpm release
+          title: "Version Packages (recap-engine)"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

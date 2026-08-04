@@ -1,0 +1,14 @@
+@media (prefers-reduced-motion: reduce) {
+  .recap-motion--fade,
+  .recap-motion--slide-up,
+  .recap-motion--slide-left,
+  .recap-motion--slide-right,
+  .recap-motion--scale-fade,
+  .recap-achievement--pop .recap-achievement__icon,
+  .recap-achievement--pop .recap-achievement__title,
+  .recap-achievement--pop .recap-achievement__desc,
+  .recap-callout--in,
+  .recap-stagger--in .recap-stagger__item {
+    animation: none;
+  }
+}

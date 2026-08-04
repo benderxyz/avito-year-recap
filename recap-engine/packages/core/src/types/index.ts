@@ -78,6 +78,6 @@ export type {
   StoryStatItem,
   StoryTextBlock,
   StoryUpsellItem,
-} from './story-items';
+} from './storyItems';
 
 export type { ResolvedTheme, ThemeTokens } from './theme';

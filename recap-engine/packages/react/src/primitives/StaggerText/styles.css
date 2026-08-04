@@ -1,0 +1,22 @@
+.recap-insight,
+.recap-stagger {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--recap-muted);
+}
+
+.recap-stagger--in .recap-stagger__item {
+  animation: recap-stagger-item 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes recap-stagger-item {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -4,6 +4,8 @@ export { fillTemplate, resolveUnit } from './format/templates';
 export { metricList, metricNumber, metricString } from './payload';
 export {
   createInitialPlayerState,
+  DEFAULT_MOTION_DURATION_MS,
+  type NormalizedMotion,
   normalizeMotion,
   playerReducer,
 } from './player';

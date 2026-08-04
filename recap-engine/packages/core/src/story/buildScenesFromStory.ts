@@ -10,7 +10,7 @@ import {
   type SceneDefinition,
   type StatBlock,
 } from '../types/scenes';
-import type { StoryBlock, StoryItem, StoryStatBlock } from '../types/story-items';
+import type { StoryBlock, StoryItem, StoryStatBlock } from '../types/storyItems';
 
 function narrative(payload: RecapPayload, id: string) {
   return payload.narrative?.scenes?.[id];
@@ -27,6 +27,8 @@ function fillMoneyTemplate(
 }
 
 function mapStatBlock(block: StoryStatBlock): StatBlock<RecapPayload> {
+  const percentileKey = block.percentile;
+
   return {
     type: ESceneBlockType.Stat,
     title: block.title,
@@ -35,25 +37,32 @@ function mapStatBlock(block: StoryStatBlock): StatBlock<RecapPayload> {
     blockMotion: block.blockMotion,
     unit: block.unit,
     value: (ctx) => metricNumber(ctx.data.metrics, block.value),
-    comparison: block.percentile
+    comparison: percentileKey
       ? {
           template: block.comparisonTemplate ?? 'больше, чем у {{percentile}}% пользователей',
-          percentile: (ctx) => metricNumber(ctx.data.metrics, block.percentile as string),
+          percentile: (ctx) => metricNumber(ctx.data.metrics, percentileKey),
         }
       : undefined,
   };
 }
 
 function mapBlock(block: StoryBlock): SceneBlock<RecapPayload> {
-  if (block.type === ESceneBlockType.Stat) return mapStatBlock(block);
-  if (block.type === ESceneBlockType.Text) {
-    return { type: ESceneBlockType.Text, text: block.text, blockMotion: block.blockMotion };
+  switch (block.type) {
+    case ESceneBlockType.Stat:
+      return mapStatBlock(block);
+    case ESceneBlockType.Text:
+      return { type: ESceneBlockType.Text, text: block.text, blockMotion: block.blockMotion };
+    case ESceneBlockType.Callout:
+      return {
+        type: ESceneBlockType.Callout,
+        text: block.text,
+        blockMotion: block.blockMotion,
+      };
+    default: {
+      const _exhaustive: never = block;
+      return _exhaustive;
+    }
   }
-  return {
-    type: ESceneBlockType.Callout,
-    text: block.text,
-    blockMotion: block.blockMotion,
-  };
 }
 
 function mapStoryItem(item: StoryItem, payload: RecapPayload): SceneDefinition<RecapPayload> {

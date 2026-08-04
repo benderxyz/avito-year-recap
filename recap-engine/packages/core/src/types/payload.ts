@@ -1,4 +1,4 @@
-import type { StoryItem } from './story-items';
+import type { StoryItem } from './storyItems';
 
 export enum EMetricType {
   Number = 'number',

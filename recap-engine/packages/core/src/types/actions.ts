@@ -9,7 +9,7 @@ export enum ESceneActionType {
   Prev = 'prev',
   Link = 'link',
   Share = 'share',
-  Goto = 'goto',
+  GoTo = 'goto',
   Custom = 'custom',
 }
 
@@ -63,8 +63,8 @@ type ShareSceneAction = {
   variant?: EButtonVariant;
 };
 
-type GotoSceneAction = {
-  type: ESceneActionType.Goto;
+type GoToSceneAction = {
+  type: ESceneActionType.GoTo;
   label: string;
   sceneId: string;
   variant?: EButtonVariant;
@@ -82,7 +82,7 @@ export type SceneAction =
   | PreviousSceneAction
   | LinkSceneAction
   | ShareSceneAction
-  | GotoSceneAction
+  | GoToSceneAction
   | CustomSceneAction;
 
 type SceneEnterRecapEvent = {

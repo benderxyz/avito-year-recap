@@ -59,7 +59,9 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
       };
     }
 
-    default:
-      return state;
+    default: {
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
   }
 }

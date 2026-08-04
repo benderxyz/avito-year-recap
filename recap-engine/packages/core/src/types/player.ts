@@ -23,7 +23,7 @@ type NextPlayerAction = { type: EPlayerActionType.Next };
 
 type PreviousPlayerAction = { type: EPlayerActionType.Prev };
 
-type GotoPlayerAction = { type: EPlayerActionType.GoTo; index: number };
+type GoToPlayerAction = { type: EPlayerActionType.GoTo; index: number };
 
 type SetPhasePlayerAction = {
   type: EPlayerActionType.SetPhase;
@@ -38,6 +38,6 @@ type SetTotalPlayerAction = {
 export type PlayerAction =
   | NextPlayerAction
   | PreviousPlayerAction
-  | GotoPlayerAction
+  | GoToPlayerAction
   | SetPhasePlayerAction
   | SetTotalPlayerAction;

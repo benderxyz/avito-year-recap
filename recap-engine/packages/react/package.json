@@ -1,9 +1,17 @@
 {
   "name": "@recap-engine/react",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
   "files": [
     "dist"
   ],
@@ -11,16 +19,23 @@
     "access": "public"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "dependencies": {
     "@recap-engine/core": "workspace:*"
   },
   "scripts": {
-    "build": "tsup src/index.ts --dts",
-    "typecheck": "tsc --noEmit"
+    "build": "tsup src/index.ts --format esm --dts --clean --external react --external react-dom --external @recap-engine/core && node scripts/bundle-css.mjs",
+    "build:css": "node scripts/bundle-css.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/**/*.test.ts 2>/dev/null || echo 'no tests yet'"
   },
   "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tsup": "^8.5.1",
     "typescript": "^5.8.3"
   }

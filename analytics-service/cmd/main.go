@@ -3,16 +3,21 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"analytics-service/internal/api"
 )
 
 func main() {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "analytics-service: OK")
 	})
+	mux.HandleFunc("GET /internal/metrics/{id}", api.GetMetrics)
 
 	fmt.Println("analytics-service started on :8080")
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		panic(err)
 	}
 }

@@ -11,7 +11,7 @@
     "format": "biome format . --write",
     "check": "biome check .",
     "lintfix": "biome check . --write",
-    "typecheck": "pnpm -r run typecheck",
+    "typecheck": "pnpm --filter @recap-engine/core run build && pnpm -r run typecheck",
     "prepare": "cd .. && husky recap-engine/.husky"
   },
   "lint-staged": {

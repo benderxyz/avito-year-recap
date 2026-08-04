@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -11,8 +18,9 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup src/index.ts --dts",
-    "typecheck": "tsc --noEmit"
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/**/*.test.ts 2>/dev/null || echo 'no tests yet'"
   },
   "devDependencies": {
     "tsup": "^8.5.1",

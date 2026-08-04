@@ -1,0 +1,57 @@
+---
+description: React component structure and hooks for recap-engine/react
+globs: recap-engine/packages/react/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# React components (recap-engine)
+
+## Folder template
+
+```
+ComponentName/
+  ComponentName.tsx   # named function export only
+  interface.ts        # Props (+ component-local types)
+  styles.css          # only if the component owns styles
+  index.ts            # re-exports component + Props
+```
+
+- Folder name = export name. Never nest `Recap/Recap/` beside `Recap/Recap.tsx`
+- One canonical path per component — no parallel legacy + refactor copies
+- Props with zero fields → skip `interface.ts`
+- Export as `export function Stat(...)`, not `const Stat = (...)`
+
+## Props
+
+```typescript
+// ✅ GOOD
+export type StatProps = {
+  value: number
+  classNames?: { root?: string; value?: string; unit?: string }
+}
+
+// Single root override
+export type TitleProps = { className?: string; children: ReactNode }
+```
+
+- One root → `className?: string` + `cn('recap-x', className)`
+- Multiple slots → `classNames?: { root?: string; ... }`
+- Do not mix both APIs on one component without a clear reason
+- Extend DOM types when wrapping native elements (`ButtonHTMLAttributes & { ... }`)
+
+## Hooks
+
+| Kind | Location |
+|------|----------|
+| Generic (`useSwipe`, `usePrefersReducedMotion`) | `src/hooks/` |
+| Player/shell-only | `src/Recap/` next to consumer |
+| Layout-only | `src/layouts/` |
+
+- Return objects `{ ... }`, not long tuples
+- Timers / rAF / listeners must clean up in `useEffect`
+- Context hooks throw if used outside provider
+
+## Context
+
+- One session context; navigate with one naming scheme (`next`/`prev` or `goNext`/`goPrev`)
+- Map to the other scheme once in an adapter (`useSceneCtx`), not ad hoc in every layout

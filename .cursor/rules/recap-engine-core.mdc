@@ -1,0 +1,44 @@
+---
+description: Pure core package conventions for recap-engine/core
+globs: recap-engine/packages/core/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Core package (recap-engine)
+
+## Purity
+
+- No I/O, DOM, or React. Locale and copy are arguments or payload fields — not globals
+- Factories (`createTheme`, `createFormatters`, `prepareRecap`) return plain data
+- `playerReducer` and mappers are pure and unit-testable
+
+## Layers
+
+```
+types/     → contracts (Story DTO vs Scene runtime)
+story/     → Story → Scene adapters
+payload/   → metric accessors
+player/    → state machine
+format/    → formatters & templates
+resolve/   → ValueOrFn evaluation
+```
+
+- Map DTO → domain in one place (`prepareRecap` / `buildScenesFromStory`)
+- Field renames (`iconUrl` → `icon`) stay in that adapter and are documented in JSDoc
+
+## Errors
+
+Pick one policy per layer and stick to it:
+
+- Structural invariants (duplicate scene `id`) → throw
+- Missing metrics → explicit `fallback` in the signature **and** documented behavior; avoid silent `0` without a contract
+- Prefer fail-fast in development for wrong metric types over masking as zero
+
+## Exhaustiveness
+
+Every `switch` on `PlayerAction`, `StoryItem`, `StoryBlock`, `MetricValue` ends with `never` — not a silent `return state` unless the type is intentionally open.
+
+## Comments
+
+- Explain **why** and boundary contracts, not what the code does
+- Avoid React/JSX references in core JSDoc; say «host Recap props bag» instead of `<Recap />`

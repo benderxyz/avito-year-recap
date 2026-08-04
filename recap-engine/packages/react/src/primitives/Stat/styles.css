@@ -1,0 +1,14 @@
+.recap-stat__value {
+  font-family: var(--recap-font-display);
+  font-size: clamp(3rem, 12vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--recap-fg);
+}
+
+.recap-stat__unit {
+  margin-top: 8px;
+  font-size: 1.15rem;
+  color: var(--recap-muted);
+}

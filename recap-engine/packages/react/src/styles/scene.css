@@ -1,0 +1,42 @@
+.recap-scene {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  padding: var(--recap-scene-padding);
+  padding-top: 20px;
+}
+
+.recap-scene-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.recap-scene-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-height: 0;
+}
+
+.recap-scene-content--center {
+  align-items: center;
+  text-align: center;
+}
+
+.recap-body-text {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--recap-muted);
+}
+
+.recap-block + .recap-block {
+  margin-top: 18px;
+}

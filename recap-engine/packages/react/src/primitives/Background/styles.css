@@ -1,0 +1,41 @@
+.recap-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.recap-background__base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 80% at 20% 0%,
+      color-mix(in srgb, var(--recap-accent) 35%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 70% at 100% 100%,
+      color-mix(in srgb, var(--recap-accent) 22%, transparent),
+      transparent 50%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--recap-bg) 88%, #000) 0%,
+      var(--recap-bg) 45%,
+      color-mix(in srgb, var(--recap-bg) 80%, #123) 100%
+    );
+}
+
+.recap-background__pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--recap-fg) 35%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 85%);
+}

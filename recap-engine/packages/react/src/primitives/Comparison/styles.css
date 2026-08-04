@@ -1,0 +1,7 @@
+.recap-comparison {
+  margin: 0;
+  margin-top: 8px;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--recap-accent);
+}

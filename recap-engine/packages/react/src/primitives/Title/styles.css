@@ -1,0 +1,8 @@
+.recap-title {
+  margin: 0;
+  font-family: var(--recap-font-display);
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}

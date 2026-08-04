@@ -1,0 +1,39 @@
+.recap-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: var(--recap-radius-button);
+  font: inherit;
+  font-weight: 650;
+  transition:
+    transform 120ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.recap-btn:active {
+  transform: scale(0.98);
+}
+
+.recap-btn--primary {
+  background: var(--recap-accent);
+  color: #041018;
+}
+
+.recap-btn--secondary {
+  background: var(--recap-surface);
+  color: var(--recap-fg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--recap-fg) 16%, transparent);
+}
+
+.recap-btn--ghost {
+  background: transparent;
+  color: var(--recap-muted);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--recap-fg) 16%, transparent);
+}

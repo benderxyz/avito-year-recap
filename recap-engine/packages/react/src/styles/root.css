@@ -1,0 +1,30 @@
+.recap-root {
+  --recap-bg: #0b1f33;
+  --recap-fg: #ffffff;
+  --recap-muted: rgba(255, 255, 255, 0.72);
+  --recap-accent: #00aaff;
+  --recap-accent-soft: rgba(0, 170, 255, 0.16);
+  --recap-surface: rgba(255, 255, 255, 0.06);
+  --recap-callout: rgba(0, 170, 255, 0.12);
+  --recap-font-display: "Manrope", system-ui, sans-serif;
+  --recap-font-body: "Manrope", system-ui, sans-serif;
+  --recap-radius-button: 16px;
+  --recap-radius-card: 24px;
+  --recap-scene-padding: 24px;
+  --recap-motion-duration: 420ms;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  color: var(--recap-fg);
+  font-family: var(--recap-font-body);
+  background: var(--recap-bg);
+  border-radius: var(--recap-radius-card);
+  user-select: none;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}

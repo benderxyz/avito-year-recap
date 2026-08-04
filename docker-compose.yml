@@ -34,5 +34,17 @@ services:
     depends_on:
       - analytics
 
+  user:
+    build:
+      context: ./user-service
+
+    container_name: user-service
+
+    ports:
+      - "8082:8082"
+
+    depends_on:
+      - clickhouse
+
 volumes:
   clickhouse-data:

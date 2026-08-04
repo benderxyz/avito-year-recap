@@ -32,6 +32,7 @@ docker-compose down
 ```sh
 curl localhost:8080/health 
 curl localhost:8081/health
+curl localhost:8082/health
 ```
 
 Переменные для бд стоят пока заглушки, добавьте нужные данные при необходимости в .env

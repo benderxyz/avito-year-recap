@@ -1,0 +1,43 @@
+---
+description: TypeScript style and naming for recap-engine packages
+globs: recap-engine/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript (recap-engine)
+
+Follow `recap-engine/biome.json`: single quotes, semicolons always, trailing commas, 2-space indent, line width 100.
+
+## Naming
+
+- Modules: `camelCase.ts` (`storyItems.ts`, not `story-items.ts`)
+- Components / types: `PascalCase`
+- Runtime enums used as discriminants: prefix `E` (`ESceneType`, `EPlayerActionType`)
+- String unions without runtime values: plain `type`, not `enum`
+- Generics for payload data: always `TData`, not `D` / `T`
+- Enum members and wire strings: one convention per domain — do not mix `Goto`/`GoTo` or `goto`/`go_to`
+
+```typescript
+// ❌ BAD — inconsistent member + wire value across packages
+enum ESceneActionType { Goto = 'goto' }
+enum EPlayerActionType { GoTo = 'go_to' }
+
+// ✅ GOOD — aligned naming
+enum EPlayerActionType { GoTo = 'go_to' }
+```
+
+## Types
+
+- Prefer `export type FooProps = { ... }` over `interface` unless declaration merging is needed
+- Use `import type` for type-only imports
+- Discriminated unions: switch must be exhaustive with `never` in `default`
+- No identity aliases (`type Value<T> = T`) and no unused type parameters
+- Named constants instead of magic numbers (`DEFAULT_MOTION_DURATION_MS = 420`)
+
+```typescript
+// ✅ GOOD
+default: {
+  const _exhaustive: never = action;
+  return _exhaustive;
+}
+```

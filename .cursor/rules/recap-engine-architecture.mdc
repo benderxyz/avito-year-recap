@@ -1,0 +1,39 @@
+---
+description: Package boundaries, layers, and public API for recap-engine
+globs: recap-engine/packages/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Architecture (recap-engine)
+
+## Package boundary
+
+| `@recap-engine/core` | `@recap-engine/react` |
+|----------------------|------------------------|
+| Types, enums, reducers, `prepareRecap`, formatters, `resolveValue` | DOM, hooks, CSS, context, layouts, primitives |
+| Framework-agnostic | React 19 peer |
+
+- Do not put JSX, DOM APIs, or React lifecycle into `core`
+- Do not reimplement `playerReducer` / scene contracts in `react`
+- UI helpers (`cn`, `backgroundStyle`, motion→class maps) stay in `react`
+
+## Layers in react
+
+- `primitives/` — atoms; no `SceneDefinition` / scene switch
+- `layouts/` — scene orchestration + `resolveValue`; not public by default
+- `Recap/` — player shell, gestures, lifecycle
+- `hooks/` — reusable, domain-agnostic hooks only
+- Feature hooks that use `useRecap` live next to the feature (`Recap/useAutoplay.ts`)
+
+## Public API
+
+- Export only through package `src/index.ts`
+- Export: `Recap`, `RecapProps`, `useRecap`, selected primitives, `registerScene`
+- Do not export layouts, `SceneRenderer`, `RecapShell`, or internal player hooks
+- Re-export from `core` only a documented stable subset — consumers may depend on `@recap-engine/core` directly
+- Internal helpers (`variantClass`, `cn` if unused by hosts) stay private
+
+## Barrels
+
+- Feature folders either all have `index.ts` or none (except package root)
+- Outside the package, deep imports into internals are forbidden

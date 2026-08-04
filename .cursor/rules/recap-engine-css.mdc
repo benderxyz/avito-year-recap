@@ -1,0 +1,47 @@
+---
+description: CSS BEM, tokens, and style colocation for recap-engine/react
+globs: recap-engine/packages/react/**/*.{css,tsx}
+alwaysApply: false
+---
+
+# CSS (recap-engine)
+
+Global BEM with a `recap-` namespace (not CSS Modules). Isolates styles inside host apps.
+
+## Naming
+
+```css
+.recap-{block} { }
+.recap-{block}__{element} { }
+.recap-{block}--{modifier} { }
+```
+
+- Default block = kebab-case component name: `Stat` → `recap-stat`
+- Shared affordances may shorten (`recap-btn`) — document why and reuse from multiple components
+- Motion: `recap-motion--{preset}`; block effects: `recap-{block}--{effect}`
+- Never ship unprefixed classes from the library
+
+```css
+/* ❌ BAD */
+.stat-value { color: #fff; }
+
+/* ✅ GOOD */
+.recap-stat__value { color: var(--recap-fg); }
+```
+
+## Tokens
+
+- Theme via `--recap-*` on `.recap-root` (`styles/root.css`)
+- Primitives use tokens, not hardcoded brand colors (fallbacks only in `root.css`)
+- Duration / easing from `--recap-motion-*` when shared
+
+## Colocation
+
+- Component-owned rules → `ComponentName/styles.css`
+- Shared scene / motion / tokens → `src/styles/`
+- New stylesheet → add `@import` in `src/styles.css`
+- No empty CSS files; wrappers that reuse `recap-btn` do not add their own sheet
+
+## Consumers
+
+Document: `import '@recap-engine/react/styles.css'`

@@ -1,0 +1,125 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(8, 18, 28, 0.62);
+  cursor: pointer;
+}
+
+.frame {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 100%);
+  height: min(760px, calc(100vh - 32px));
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  background: #0b1f33;
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.recap {
+  width: 100%;
+  height: 100%;
+}
+
+.recap :global(.recap-stat) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.4em;
+}
+
+.recap :global(.recap-stat__unit) {
+  margin-top: 0;
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.customScene {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #fff;
+  width: 100%;
+}
+
+.customEyebrow {
+  margin: 0;
+  opacity: 0.72;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.customTitle {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.customList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customItem {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.customRank {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 170, 255, 0.2);
+  color: #7dd6ff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.customLabel {
+  font-weight: 600;
+}
+
+.customValue {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}

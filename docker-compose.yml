@@ -1,48 +1,62 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:24.8
     container_name: clickhouse
-
     ports:
       - "8123:8123"
       - "9000:9000"
-
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: recap
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
 
   analytics:
     build:
       context: ./analytics-service
-
     container_name: analytics-service
-
     ports:
       - "8080:8080"
-
+    environment:
+      SERVER_PORT: "8080"
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: "9000"
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: recap
+      CLICKHOUSE_DATABASE: default
+      MIGRATIONS_DIR: /app/migrations
     depends_on:
       - clickhouse
 
   cards:
     build:
       context: ./cards-service
-
     container_name: cards-service
-
     ports:
       - "8081:8081"
-
     depends_on:
       - analytics
 
   user:
     build:
       context: ./user-service
-
     container_name: user-service
-
     ports:
       - "8082:8082"
-
+    environment:
+      SERVER_PORT: "8082"
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: "9000"
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: recap
+      CLICKHOUSE_DATABASE: default
+      MIGRATIONS_DIR: /app/migrations
     depends_on:
       - clickhouse
 

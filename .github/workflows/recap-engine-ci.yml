@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint & Typecheck
+    name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,3 +47,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Test with coverage
+        run: pnpm test:coverage

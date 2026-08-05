@@ -2,7 +2,14 @@
   "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
 
   "files": {
-    "includes": ["**", "!**/dist", "!**/coverage", "!**/node_modules"]
+    "includes": [
+      "**",
+      "!**/build",
+      "!**/.docusaurus",
+      "!**/dist",
+      "!**/coverage",
+      "!**/node_modules"
+    ]
   },
 
   "formatter": {

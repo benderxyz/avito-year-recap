@@ -1,0 +1,100 @@
+---
+title: Введение
+description: Установка Recap Engine и запуск первого интерактивного recap в React.
+sidebar_position: 1
+---
+
+# Recap Engine
+
+Recap Engine — набор TypeScript-библиотек для создания интерактивных историй с итогами
+года. Он разделён на два пакета:
+
+- `@recap-engine/core` — типы, подготовка данных, форматирование, темы и управление сценами;
+- `@recap-engine/react` — React-компоненты, layouts, анимации, навигация и autoplay.
+
+## Установка
+
+```bash
+pnpm add @recap-engine/core @recap-engine/react
+```
+
+React и React DOM являются peer dependencies:
+
+```bash
+pnpm add react react-dom
+```
+
+## Первый recap
+
+Опишите данные, соберите последовательность сцен и передайте их компоненту `Recap`.
+Значения сцены могут быть статическими или вычисляться из контекста.
+
+```tsx
+import {
+  createTheme,
+  defineScenes,
+  ESceneType,
+  type SceneDefinition,
+} from '@recap-engine/core';
+import { Recap } from '@recap-engine/react';
+import '@recap-engine/react/styles.css';
+
+type RecapData = {
+  userName: string;
+  publishedAds: number;
+};
+
+const data: RecapData = {
+  userName: 'Максим',
+  publishedAds: 12,
+};
+
+const scenes: SceneDefinition<RecapData>[] = defineScenes([
+  {
+    id: 'intro',
+    type: ESceneType.Intro,
+    title: ({ data }) => `${data.userName}, это был ваш год`,
+    subtitle: 'Посмотрим, каким он получился',
+  },
+  {
+    id: 'ads',
+    type: ESceneType.Stat,
+    title: 'Опубликовано объявлений',
+    value: ({ data }) => data.publishedAds,
+    unit: {
+      one: 'объявление',
+      few: 'объявления',
+      many: 'объявлений',
+    },
+  },
+  {
+    id: 'outro',
+    type: ESceneType.Outro,
+    title: 'До встречи в следующем году!',
+  },
+]);
+
+const theme = createTheme({
+  colors: {
+    accent: '#00aaff',
+  },
+});
+
+export function YearRecap() {
+  return <Recap theme={theme} data={data} scenes={scenes} />;
+}
+```
+
+`Recap` автоматически добавляет прогресс, навигацию с клавиатуры и свайпы. Поведение можно
+изменять через props:
+
+- `autoplay` — автоматическое переключение сцен;
+- `loop` — возврат к первой сцене после завершения;
+- `initialSceneId` — начальная сцена;
+- `reducedMotion` — принудительное отключение сложных анимаций;
+- `onEvent` — обработка входа и выхода со сцены, действий, завершения и sharing.
+
+## Куда двигаться дальше
+
+Следующие разделы документации могут раскрыть типы сцен, подготовку backend payload,
+кастомизацию темы и motion, пользовательские layouts и события плеера.

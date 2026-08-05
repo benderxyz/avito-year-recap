@@ -2,7 +2,9 @@
   "name": "recap-engine",
   "private": true,
   "scripts": {
-    "build": "pnpm -r run build",
+    "build": "pnpm --filter @recap-engine/core --filter @recap-engine/react run build",
+    "docs:start": "pnpm --filter @recap-engine/docs start",
+    "docs:build": "pnpm --filter @recap-engine/docs build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

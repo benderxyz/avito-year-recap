@@ -20,7 +20,9 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/**/*.test.ts 2>/dev/null || echo 'no tests yet'"
+    "test": "jest --config ../../jest.config.mjs --selectProjects core",
+    "test:watch": "jest --config ../../jest.config.mjs --selectProjects core --watch",
+    "test:coverage": "jest --config ../../jest.config.mjs --selectProjects core --coverage"
   },
   "devDependencies": {
     "tsup": "^8.5.1",

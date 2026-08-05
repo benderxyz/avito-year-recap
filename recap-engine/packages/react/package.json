@@ -29,7 +29,9 @@
     "build": "tsup src/index.ts --format esm --dts --clean --external react --external react-dom --external @recap-engine/core && node scripts/bundle-css.mjs",
     "build:css": "node scripts/bundle-css.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/**/*.test.ts 2>/dev/null || echo 'no tests yet'"
+    "test": "jest --config ../../jest.config.mjs --selectProjects react",
+    "test:watch": "jest --config ../../jest.config.mjs --selectProjects react --watch",
+    "test:coverage": "jest --config ../../jest.config.mjs --selectProjects react --coverage"
   },
   "devDependencies": {
     "@types/react": "^19.1.2",

@@ -1,0 +1,68 @@
+name: Go Services CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cards-service/**"
+      - "user-service/**"
+      - ".github/workflows/go-services-ci.yml"
+  pull_request:
+    paths:
+      - "cards-service/**"
+      - "user-service/**"
+      - ".github/workflows/go-services-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - cards-service
+          - user-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache-dependency-path: ${{ matrix.service }}/go.mod
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+          working-directory: ${{ matrix.service }}
+
+  test:
+    name: Test (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - cards-service
+          - user-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache-dependency-path: ${{ matrix.service }}/go.mod
+
+      - name: Test
+        run: go test ./...
+        working-directory: ${{ matrix.service }}

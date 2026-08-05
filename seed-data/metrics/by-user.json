@@ -1,0 +1,20 @@
+{
+  "1": {
+    "views_realty": 87,
+    "views_auto": 12,
+    "purchases": 1,
+    "favorites": 15
+  },
+  "2": {
+    "views_realty": 5,
+    "views_auto": 45,
+    "purchases": 6,
+    "favorites": 8
+  },
+  "3": {
+    "views_realty": 3,
+    "views_auto": 2,
+    "purchases": 0,
+    "favorites": 1
+  }
+}

@@ -1,18 +1,71 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"user-service/internal/api"
+	"user-service/internal/config"
+	"user-service/internal/db"
+	"user-service/internal/users"
 )
 
 func main() {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "user-service: OK")
-	})
-
-	fmt.Println("user-service started on :8082")
-
-	if err := http.ListenAndServe(":8082", nil); err != nil {
-		panic(err)
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("load config: %v", err)
 	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	client, err := db.Connect(
+		ctx,
+		cfg.ClickHouseHost,
+		cfg.ClickHousePort,
+		cfg.ClickHouseUser,
+		cfg.ClickHousePassword,
+		cfg.ClickHouseDatabase,
+	)
+	if err != nil {
+		log.Fatalf("connect clickhouse: %v", err)
+	}
+	defer func() {
+		_ = client.Close()
+	}()
+
+	if err := client.Migrate(ctx, cfg.MigrationsDir); err != nil {
+		log.Fatalf("migrate: %v", err)
+	}
+
+	repo := users.NewRepository(client.Conn())
+	handler := api.NewHandler(repo)
+
+	mux := http.NewServeMux()
+	handler.Register(mux)
+
+	server := &http.Server{
+		Addr:              ":" + cfg.ServerPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	go func() {
+		fmt.Printf("user-service started on :%s\n", cfg.ServerPort)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	_ = server.Shutdown(shutdownCtx)
 }

@@ -1,13 +1,15 @@
 # User Service
 
-Service responsible for test user profiles, user data, and user-related events.
+Manages test user profiles in ClickHouse (`ReplacingMergeTree`). No event ingest — events go to analytics-service.
 
-Ownership: Darina + Nikita Makarov.
+## API
 
-Planned areas:
+- `GET /health`
+- `PUT /users/{userID}` — upsert profile (`external_id`, `username`, `timezone`)
+- `GET /users/{userID}` — read current profile (`FINAL`)
 
-- `internal/users` - user business logic.
-- `internal/profiles` - MVP test profiles.
-- `internal/events` - user event intake and validation.
-- `internal/db` - storage access.
-- `internal/api` - service API handlers.
+## Local
+
+Env vars: `CLICKHOUSE_HOST`, `CLICKHOUSE_PORT` (native, default `9000`), `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`, `SERVER_PORT`, `MIGRATIONS_DIR`.
+
+Migrations run on startup from `migrations/`.

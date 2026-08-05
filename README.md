@@ -35,4 +35,13 @@ curl localhost:8081/health
 curl localhost:8082/health
 ```
 
-Переменные для бд стоят пока заглушки, добавьте нужные данные при необходимости в .env
+Переменные для БД смотри в `.env.example`. Локальный пароль ClickHouse по умолчанию `recap`.
+
+Smoke после `docker compose up --build`
+
+```sh
+curl -s localhost:8080/health
+curl -s localhost:8082/health
+go -C seed-data/seed-avito run . -user 42 -year 2026
+curl -s 'localhost:8080/users/42/metrics?from=2026-01-01T00:00:00Z&to=2027-01-01T00:00:00Z'
+```

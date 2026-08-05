@@ -12,7 +12,8 @@ The MVP is split into frontend, recap rendering packages, and three backend serv
 
 ## Data
 
-The MVP uses test profiles and generated activity data. Sensitive fields, private messages, exact purchases, and other users' private data should not be exposed in personal recap cards or public share cards.
+The MVP uses ClickHouse for events (`analytics-service`) and user profiles (`user-service`).
+Test profiles and seed events live in `seed-data/`. Sensitive fields, private messages, exact purchases, and other users' private data should not be exposed in personal recap cards or public share cards.
 
 ## Future Work
 

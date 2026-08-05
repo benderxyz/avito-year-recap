@@ -24,12 +24,12 @@ func NewHandler(userClient *clients.UserClient, analyticsClient *clients.Analyti
 func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	if _, err := h.userClient.GetProfile(id); err != nil {
+	if _, err := h.userClient.GetProfile(r.Context(), id); err != nil {
 		http.Error(w, "profile not found", http.StatusNotFound)
 		return
 	}
 
-	metrics, err := h.analyticsClient.GetMetrics(id)
+	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id)
 	if err != nil {
 		http.Error(w, "metrics not found", http.StatusNotFound)
 		return
@@ -41,5 +41,7 @@ func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(recap)
+	if err := json.NewEncoder(w).Encode(recap); err != nil {
+		http.Error(w, "failed to encode recap", http.StatusInternalServerError)
+	}
 }

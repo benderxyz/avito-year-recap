@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,12 +32,19 @@ func NewUserClient(baseURL string) *UserClient {
 	}
 }
 
-func (c *UserClient) GetProfile(id string) (Profile, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/internal/users/%s", c.baseURL, id))
+func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/internal/users/%s", c.baseURL, id), nil)
 	if err != nil {
 		return Profile{}, err
 	}
-	defer resp.Body.Close()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return Profile{}, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return Profile{}, fmt.Errorf("profile not found")
@@ -65,12 +73,19 @@ func NewAnalyticsClient(baseURL string) *AnalyticsClient {
 	}
 }
 
-func (c *AnalyticsClient) GetMetrics(id string) (Metrics, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/internal/metrics/%s", c.baseURL, id))
+func (c *AnalyticsClient) GetMetrics(ctx context.Context, id string) (Metrics, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/internal/metrics/%s", c.baseURL, id), nil)
 	if err != nil {
 		return Metrics{}, err
 	}
-	defer resp.Body.Close()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return Metrics{}, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return Metrics{}, fmt.Errorf("metrics not found")

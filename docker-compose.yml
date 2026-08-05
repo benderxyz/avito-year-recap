@@ -46,5 +46,15 @@ services:
     depends_on:
       - clickhouse
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+
+    container_name: frontend
+
+    ports:
+      - "3000:3000"
+
 volumes:
   clickhouse-data:

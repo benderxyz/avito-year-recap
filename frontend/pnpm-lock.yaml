@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@recap-engine/core':
-        specifier: ^1.1.0
+        specifier: 1.1.0
         version: 1.1.0
       '@recap-engine/react':
-        specifier: ^1.1.0
-        version: 1.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 1.2.0
+        version: 1.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ^19.1.0
         version: 19.2.8
@@ -303,8 +303,8 @@ packages:
   '@recap-engine/core@1.1.0':
     resolution: {integrity: sha512-jEIiwo6ZgC4NH6Q/XIo8PBUC+5aT4G1MT7/rIv3Y+oFtPT36fIuvDi3PGsPmVCEZ1B4psYnEzN1kOYuORs1Iag==}
 
-  '@recap-engine/react@1.1.0':
-    resolution: {integrity: sha512-d/N18BbxcnXkYxjZJP+xOdQlK3ox9uQpUvQ/HBA6zbwc5DThw+E46+WBRHFXZMmgHOsMi96nMMYrANmIVkhgKQ==}
+  '@recap-engine/react@1.2.0':
+    resolution: {integrity: sha512-X/CBFbquiYhg0nu29aaWleI6Iqompnkazc+DyX+9vBzKcjRZT7jIIoj36WpHHJ1AAuoHZDn8MOv1DvsDordMRg==}
     peerDependencies:
       react: ^19.0.0
       react-dom: ^19.0.0
@@ -866,7 +866,7 @@ snapshots:
 
   '@recap-engine/core@1.1.0': {}
 
-  '@recap-engine/react@1.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@recap-engine/react@1.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@recap-engine/core': 1.1.0
       react: 19.2.8

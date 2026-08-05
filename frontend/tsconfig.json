@@ -15,11 +15,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@recap-engine/core": ["../recap-engine/packages/core/src/index.ts"],
-      "@recap-engine/react": ["../recap-engine/packages/react/src/index.ts"]
-    }
+    // "baseUrl": ".",
+    // "paths": {
+    //   "@recap-engine/core": ["../recap-engine/packages/core/src/index.ts"],
+    //   "@recap-engine/react": ["../recap-engine/packages/react/src/index.ts"]
+    // }
   },
   "include": ["src"]
 }

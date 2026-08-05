@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+.git
+.gocache
+.env
+**/.DS_Store
+analytics-service
+cards-service
+user-service
+seed-data
+infra
+docs
+contracts
+scripts

@@ -1,0 +1,67 @@
+name: Deploy Recap Engine Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "recap-engine/docs/**"
+      - "recap-engine/package.json"
+      - "recap-engine/pnpm-lock.yaml"
+      - "recap-engine/pnpm-workspace.yaml"
+      - ".github/workflows/recap-engine-docs-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: recap-engine-docs-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: recap-engine
+    env:
+      DOCS_URL: ${{ vars.DOCS_URL || 'https://recap-engine.netlify.app' }}
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: recap-engine/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Netlify credentials
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN" || (echo "NETLIFY_AUTH_TOKEN is not configured" && exit 1)
+          test -n "$NETLIFY_SITE_ID" || (echo "NETLIFY_SITE_ID is not configured" && exit 1)
+
+      - name: Build documentation
+        run: pnpm docs:build
+
+      - name: Deploy to Netlify
+        run: >-
+          pnpm exec netlify deploy
+          --prod
+          --no-build
+          --site="$NETLIFY_SITE_ID"
+          --dir=docs/build
+          --message="GitHub ${GITHUB_SHA}"

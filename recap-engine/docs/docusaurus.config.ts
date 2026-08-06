@@ -3,12 +3,13 @@ import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 const repositoryUrl = 'https://github.com/benderxyz/avito-year-recap';
+const siteUrl = process.env.DOCS_URL ?? 'https://recap-engine.netlify.app';
 
 const config: Config = {
   title: 'Recap Engine',
   tagline: 'Конструктор интерактивных итогов года для React',
-  url: 'https://benderxyz.github.io',
-  baseUrl: '/avito-year-recap/',
+  url: siteUrl,
+  baseUrl: '/',
   organizationName: 'benderxyz',
   projectName: 'avito-year-recap',
   onBrokenLinks: 'throw',

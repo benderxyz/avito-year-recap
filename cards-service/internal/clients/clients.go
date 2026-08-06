@@ -8,16 +8,17 @@ import (
 )
 
 type Profile struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	UserID     uint64 `json:"user_id"`
+	ExternalID string `json:"external_id"`
+	Username   string `json:"username"`
+	Timezone   string `json:"timezone"`
 }
 
 type Metrics struct {
-	ViewsRealty int `json:"views_realty"`
-	ViewsAuto   int `json:"views_auto"`
-	Purchases   int `json:"purchases"`
-	Favorites   int `json:"favorites"`
+	ViewsTotal        int `json:"viewsTotal"`
+	FavoritesReceived int `json:"favoritesReceived"`
+	DealsClosed       int `json:"dealsClosed"`
+	DaysActive        int `json:"daysActive"`
 }
 
 type UserClient struct {
@@ -33,7 +34,7 @@ func NewUserClient(baseURL string) *UserClient {
 }
 
 func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/internal/users/%s", c.baseURL, id), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/users/%s", c.baseURL, id), nil)
 	if err != nil {
 		return Profile{}, err
 	}
@@ -74,7 +75,7 @@ func NewAnalyticsClient(baseURL string) *AnalyticsClient {
 }
 
 func (c *AnalyticsClient) GetMetrics(ctx context.Context, id string) (Metrics, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/internal/metrics/%s", c.baseURL, id), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/users/%s/metrics", c.baseURL, id), nil)
 	if err != nil {
 		return Metrics{}, err
 	}
@@ -94,10 +95,26 @@ func (c *AnalyticsClient) GetMetrics(ctx context.Context, id string) (Metrics, e
 		return Metrics{}, fmt.Errorf("analytics-service returned status %d", resp.StatusCode)
 	}
 
-	var metrics Metrics
-	if err := json.NewDecoder(resp.Body).Decode(&metrics); err != nil {
+	var response struct {
+		Metrics map[string]*float64 `json:"metrics"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return Metrics{}, err
 	}
 
-	return metrics, nil
+	return Metrics{
+		ViewsTotal:        metricInt(response.Metrics, "viewsTotal"),
+		FavoritesReceived: metricInt(response.Metrics, "favoritesReceived"),
+		DealsClosed:       metricInt(response.Metrics, "dealsClosed"),
+		DaysActive:        metricInt(response.Metrics, "daysActive"),
+	}, nil
+}
+
+func metricInt(metrics map[string]*float64, key string) int {
+	value, ok := metrics[key]
+	if !ok || value == nil {
+		return 0
+	}
+
+	return int(*value)
 }

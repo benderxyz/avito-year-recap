@@ -51,8 +51,6 @@ func main() {
 
 	mux := http.NewServeMux()
 	handler.Register(mux)
-	mux.HandleFunc("GET /api/profiles", api.GetProfiles)
-	mux.HandleFunc("GET /internal/users/{id}", api.GetProfile)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.ServerPort,

@@ -247,6 +247,6 @@ func minFloat(a, b float64) float64 {
 }
 
 func fail(err error) {
-	fmt.Fprintf(os.Stderr, "seed-avito: %v\n", err)
+	fmt.Fprintf(os.Stderr, "seed-script: %v\n", err)
 	os.Exit(1)
 }

@@ -10,31 +10,31 @@ import (
 func Generate(metrics clients.Metrics) []models.Card {
 	var cards []models.Card
 
-	if metrics.ViewsRealty > 50 {
+	if metrics.ViewsTotal > 500 {
 		cards = append(cards, models.Card{
 			Type:  "achievement",
-			Title: "Искатель жилья",
-			Text:  fmt.Sprintf("Ты посмотрела %d объявлений о недвижимости", metrics.ViewsRealty),
+			Title: "Много внимания",
+			Text:  fmt.Sprintf("Твои объявления набрали %d просмотров", metrics.ViewsTotal),
 		})
 	}
 
-	if metrics.ViewsAuto > 30 {
+	if metrics.FavoritesReceived > 20 {
 		cards = append(cards, models.Card{
 			Type:  "achievement",
-			Title: "Автоман",
-			Text:  fmt.Sprintf("Ты посмотрела %d автомобилей", metrics.ViewsAuto),
+			Title: "В избранном",
+			Text:  fmt.Sprintf("Твои объявления добавили в избранное %d раз", metrics.FavoritesReceived),
 		})
 	}
 
-	if metrics.Purchases >= 3 {
+	if metrics.DealsClosed >= 3 {
 		cards = append(cards, models.Card{
 			Type:  "achievement",
-			Title: "Уже с опытом покупок",
-			Text:  fmt.Sprintf("За год ты совершила %d покупок", metrics.Purchases),
+			Title: "Сделки пошли",
+			Text:  fmt.Sprintf("За год у тебя было %d успешных сделок", metrics.DealsClosed),
 		})
 	}
 
-	if metrics.ViewsRealty < 10 && metrics.ViewsAuto < 10 && metrics.Purchases == 0 {
+	if metrics.DaysActive < 10 && metrics.ViewsTotal == 0 && metrics.DealsClosed == 0 {
 		cards = append(cards, models.Card{
 			Type:  "insight",
 			Title: "Тихий наблюдатель",

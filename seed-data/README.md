@@ -4,7 +4,7 @@ Test users and a generator for Avito-like activity events.
 
 ## Users
 
-`users/alex.json` — body for manual upsert if needed
+`users/alex.json` — body for manual upsert if needed. The seed script also upserts a test user before posting events.
 
 ```sh
 curl -s -X PUT http://localhost:8082/users/42 \
@@ -18,7 +18,7 @@ Generate a year of activity and push it to the services
 
 ```sh
 docker compose up -d clickhouse analytics user
-go -C seed-data/seed-avito run . -user 42 -year 2026
+go -C seed-data/seed-script run . -user 42 -year 2026
 ```
 
 Flags

@@ -1,4 +1,4 @@
-module seed-avito
+module seed-script
 
 go 1.24
 

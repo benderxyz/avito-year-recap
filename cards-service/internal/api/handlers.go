@@ -8,8 +8,6 @@ import (
 
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
-	"cards-service/internal/models"
-	"log"
 )
 
 type Handler struct {
@@ -28,21 +26,19 @@ func RegisterRoutes(handler *Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
-
 	mux.HandleFunc("GET /api/recap/{year}/{id}", handler.GetRecap)
 
 	return mux
 }
 
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
-	log.Println("Пришел запрос на проверку активность сервиса")
 	if _, err := fmt.Fprintln(w, "cards-service: OK"); err != nil {
 		http.Error(w, "failed to write health response", http.StatusInternalServerError)
 	}
 }
 
 func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
-	log.Println("Пришел запрос на получение рекапа")
+
 	year := r.PathValue("year")
 	id := r.PathValue("id")
 
@@ -52,11 +48,8 @@ func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// временно убрала проверку существования профиля, так как сервис user-service пока не интегрирован в cards-service
-	_, err = h.userClient.GetProfile(r.Context(), id)
-	log.Println("Получили профиль")
+	profile, err := h.userClient.GetProfile(r.Context(), id)
 	if err != nil {
-		log.Println("Ошибка при получении профиля:%w", err)
 		http.Error(w, "profile not found", http.StatusNotFound)
 		return
 	}
@@ -64,15 +57,11 @@ func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, yearInt)
 	if err != nil {
 		http.Error(w, "metrics not found", http.StatusNotFound)
-		log.Println("Ошибка при получении метрик от сервиса аналитики, err:", err)
 		return
 	}
-	log.Printf("Метрики для пользователя %s за %d год: %+v", id, yearInt, metrics)
+	//log.Printf("Метрики для пользователя %s за %d год: %+v", id, yearInt, metrics)
 
-	recap := models.Recap{
-		ProfileID: id,
-		Badges:    cards.Generate(metrics),
-	}
+	recap := cards.BuildRecap(profile, yearInt, metrics)
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(recap); err != nil {

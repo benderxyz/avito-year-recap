@@ -44,7 +44,7 @@ func main() {
 	userID := flag.Uint64("user", 42, "user id")
 	year := flag.Int("year", 2026, "recap year")
 	analyticsURL := flag.String("analytics", "http://127.0.0.1:8080", "analytics-service base url")
-	//userURL := flag.String("users", "http://127.0.0.1:8082", "user-service base url")
+	userURL := flag.String("users", "http://127.0.0.1:8082", "user-service base url")
 	seed := flag.Int64("seed", 42, "rng seed")
 	flag.Parse()
 
@@ -52,10 +52,9 @@ func main() {
 	from := time.Date(*year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(*year+1, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	// user-service пока не интегрирован в seed-script, поэтому закомментировал вызов upsertUser
-	/*if err := upsertUser(*userURL, *userID); err != nil {
+	if err := upsertUser(*userURL, *userID); err != nil {
 		fail(err)
-	}*/
+	}
 
 	events := generateEvents(*userID, from, to, rng)
 	if err := postEvents(*analyticsURL, events); err != nil {

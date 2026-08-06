@@ -6,6 +6,7 @@
       "**",
       "!**/build",
       "!**/.docusaurus",
+      "!**/.netlify",
       "!**/dist",
       "!**/coverage",
       "!**/node_modules"

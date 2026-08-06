@@ -3,5 +3,11 @@
 node_modules
 dist
 .gocache
+.golangci-cache
 
 graphify-out
+
+main
+*/main
+**/main
+go.work.sum

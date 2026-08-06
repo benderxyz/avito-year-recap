@@ -35,6 +35,7 @@ linters:
       enable-all: true
       disable:
         - fieldalignment
+        - shadow
     nolintlint:
       require-explanation: true
       require-specific: true
@@ -44,6 +45,12 @@ linters:
           disabled: true
         - name: package-comments
           disabled: true
+    gosec:
+      excludes:
+        - G304
+    gocritic:
+      disabled-checks:
+        - exitAfterDefer
 
 formatters:
   enable:

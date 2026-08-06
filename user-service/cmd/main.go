@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-<<<<<<< HEAD
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,34 +20,6 @@ func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("load config: %v", err)
-=======
-	"time"
-
-	"user-service/internal/api"
-)
-
-func main() {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		if _, err := fmt.Fprintln(w, "user-service: OK"); err != nil {
-			http.Error(w, "failed to write health response", http.StatusInternalServerError)
-		}
-	})
-	mux.HandleFunc("GET /api/profiles", api.GetProfiles)
-	mux.HandleFunc("GET /internal/users/{id}", api.GetProfile)
-
-	fmt.Println("user-service started on :8082")
-
-	server := &http.Server{
-		Addr:              ":8082",
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
-	if err := server.ListenAndServe(); err != nil {
-		panic(err)
->>>>>>> feat/implement-services
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -63,6 +34,7 @@ func main() {
 		cfg.ClickHouseDatabase,
 	)
 	if err != nil {
+		cancel()
 		log.Fatalf("connect clickhouse: %v", err)
 	}
 	defer func() {
@@ -70,6 +42,7 @@ func main() {
 	}()
 
 	if err := client.Migrate(ctx, cfg.MigrationsDir); err != nil {
+		cancel()
 		log.Fatalf("migrate: %v", err)
 	}
 
@@ -78,11 +51,16 @@ func main() {
 
 	mux := http.NewServeMux()
 	handler.Register(mux)
+	mux.HandleFunc("GET /api/profiles", api.GetProfiles)
+	mux.HandleFunc("GET /internal/users/{id}", api.GetProfile)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.ServerPort,
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	go func() {
@@ -96,5 +74,7 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
-	_ = server.Shutdown(shutdownCtx)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("shutdown server: %v", err)
+	}
 }

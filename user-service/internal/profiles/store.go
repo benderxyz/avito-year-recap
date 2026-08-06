@@ -13,7 +13,10 @@ var testProfiles = []Profile{
 }
 
 func List() []Profile {
-	return testProfiles
+	profiles := make([]Profile, len(testProfiles))
+	copy(profiles, testProfiles)
+
+	return profiles
 }
 
 func GetByID(id string) (Profile, bool) {

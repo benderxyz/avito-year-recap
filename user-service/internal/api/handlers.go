@@ -1,17 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"user-service/internal/profiles"
 )
 
 func GetProfiles(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(profiles.List()); err != nil {
-		http.Error(w, "failed to encode profiles", http.StatusInternalServerError)
-	}
+	writeJSON(w, http.StatusOK, profiles.List())
 }
 
 func GetProfile(w http.ResponseWriter, r *http.Request) {
@@ -19,12 +15,9 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	profile, ok := profiles.GetByID(id)
 	if !ok {
-		http.Error(w, "profile not found", http.StatusNotFound)
+		writeError(w, http.StatusNotFound, "profile not found")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(profile); err != nil {
-		http.Error(w, "failed to encode profile", http.StatusInternalServerError)
-	}
+	writeJSON(w, http.StatusOK, profile)
 }

@@ -3,12 +3,15 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"user-service/internal/users"
 )
+
+const maxJSONBodyBytes = 1 << 20
 
 type Handler struct {
 	users *users.Repository
@@ -37,7 +40,7 @@ func (h *Handler) UpsertUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req users.UpsertRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if decodeErr := decodeJSONBody(w, r, &req); decodeErr != nil {
 		writeError(w, http.StatusBadRequest, "invalid json body")
 		return
 	}
@@ -54,7 +57,7 @@ func (h *Handler) UpsertUser(w http.ResponseWriter, r *http.Request) {
 		Timezone:   timezone,
 	}
 
-	if err := h.users.Upsert(r.Context(), user); err != nil {
+	if upsertErr := h.users.Upsert(r.Context(), user); upsertErr != nil {
 		writeError(w, http.StatusInternalServerError, "failed to upsert user")
 		return
 	}
@@ -90,16 +93,39 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 func parseUserID(raw string) (uint64, error) {
 	userID, err := strconv.ParseUint(raw, 10, 64)
-	if err != nil {
+	if err != nil || userID == 0 {
 		return 0, errors.New("invalid user id")
 	}
 	return userID, nil
 }
 
+func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst any) error {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(dst); err != nil {
+		return err
+	}
+
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		return errors.New("request body must contain a single json object")
+	}
+
+	return nil
+}
+
 func writeJSON(w http.ResponseWriter, status int, payload any) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(payload)
+	_, _ = w.Write(append(body, '\n'))
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {

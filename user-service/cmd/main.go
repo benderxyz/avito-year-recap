@@ -34,6 +34,7 @@ func main() {
 		cfg.ClickHouseDatabase,
 	)
 	if err != nil {
+		cancel()
 		log.Fatalf("connect clickhouse: %v", err)
 	}
 	defer func() {
@@ -41,6 +42,7 @@ func main() {
 	}()
 
 	if err := client.Migrate(ctx, cfg.MigrationsDir); err != nil {
+		cancel()
 		log.Fatalf("migrate: %v", err)
 	}
 
@@ -54,6 +56,9 @@ func main() {
 		Addr:              ":" + cfg.ServerPort,
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	go func() {
@@ -67,5 +72,7 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
-	_ = server.Shutdown(shutdownCtx)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("shutdown server: %v", err)
+	}
 }

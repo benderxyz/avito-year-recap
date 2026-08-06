@@ -5,5 +5,11 @@ dist
 coverage
 .netlify
 .gocache
+.golangci-cache
 
 graphify-out
+
+main
+*/main
+**/main
+go.work.sum

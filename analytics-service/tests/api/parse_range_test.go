@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestParseRangeShouldRejectPartialBoundsWhenOnlyFromIsSet(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/users/1/metrics?from=2026-01-01T00:00:00Z", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/users/1/metrics?from=2026-01-01T00:00:00Z", nil)
 
 	_, _, err := api.ParseRange(req, "UTC")
 
@@ -21,7 +22,7 @@ func TestParseRangeShouldRejectPartialBoundsWhenOnlyFromIsSet(t *testing.T) {
 }
 
 func TestParseRangeShouldUseTimezoneYearWhenBoundsAreOmitted(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/users/1/metrics", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/users/1/metrics", nil)
 
 	from, to, err := api.ParseRange(req, "Europe/Moscow")
 

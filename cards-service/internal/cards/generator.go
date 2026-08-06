@@ -1,54 +1,52 @@
 package cards
 
 import (
-	"fmt"
-
 	"cards-service/internal/clients"
 	"cards-service/internal/models"
+	"fmt"
 )
 
-func Generate(metrics clients.Metrics) []models.Card {
-	var cards []models.Card
+/*
+	type Metrics struct {
+		ActiveListings    int     `json:"activeListings"`
+		AvgReplySeconds   float64 `json:"avgReplySeconds"`
+		CategoriesTried   int     `json:"categoriesTried"`
+		DaysActive        int     `json:"daysActive"`
+		DealsClosed       int     `json:"dealsClosed"`
+		DeliveryOrders    int     `json:"deliveryOrders"`
+		FavoritesReceived int     `json:"favoritesReceived"`
+		FirstDealAt       int64   `json:"firstDealAt"`
+		FirstListingAt    int64   `json:"firstListingAt"`
+		ListingsPublished int     `json:"listingsPublished"`
+		MessagesSent      int     `json:"messagesSent"`
+		MoneyEarned       int64   `json:"moneyEarned"`
+		MoneySaved        int64   `json:"moneySaved"`
+		PeakDayViews      int     `json:"peakDayViews"`
+		SearchQueries     int     `json:"searchQueries"`
+		SellerRating      float64 `json:"sellerRating"`
+		ViewsTotal        int     `json:"viewsTotal"`
+	}
+*/
+func Generate(metrics clients.Metrics) []models.Badge {
+	var badges []models.Badge
 
-	if metrics.ViewsTotal > 500 {
-		cards = append(cards, models.Card{
-			Type:  "achievement",
-			Title: "Много внимания",
-			Text:  fmt.Sprintf("Твои объявления набрали %d просмотров", metrics.ViewsTotal),
+	if messagesSent := metrics.MessagesSent; messagesSent > 1000 {
+		badges = append(badges, models.Badge{
+			ID:          "messages_sent_1000",
+			Title:       "Разговорчивый",
+			Description: fmt.Sprintf("Вы отправили %d сообщений!", messagesSent),
 		})
 	}
 
-	if metrics.FavoritesReceived > 20 {
-		cards = append(cards, models.Card{
-			Type:  "achievement",
-			Title: "В избранном",
-			Text:  fmt.Sprintf("Твои объявления добавили в избранное %d раз", metrics.FavoritesReceived),
+	if metrics != (clients.Metrics{}) {
+		badges = append(badges, models.Badge{
+			ID:          "active_user",
+			Title:       "Активный пользователь",
+			Description: "Вы заходили на нашу площадку в этом году!",
 		})
 	}
 
-	if metrics.DealsClosed >= 3 {
-		cards = append(cards, models.Card{
-			Type:  "achievement",
-			Title: "Сделки пошли",
-			Text:  fmt.Sprintf("За год у тебя было %d успешных сделок", metrics.DealsClosed),
-		})
-	}
+	fmt.Println(badges)
 
-	if metrics.DaysActive < 10 && metrics.ViewsTotal == 0 && metrics.DealsClosed == 0 {
-		cards = append(cards, models.Card{
-			Type:  "insight",
-			Title: "Тихий наблюдатель",
-			Text:  "В этом году ты почти не пользовалась Авито. Может, самое время начать?",
-		})
-	}
-
-	cards = append(cards, models.Card{
-		Type:        "recommendation",
-		Title:       "Что дальше?",
-		Text:        "Посмотри, что нового появилось в интересных тебе категориях",
-		Action:      "open_home",
-		ActionValue: "",
-	})
-
-	return cards
+	return badges
 }

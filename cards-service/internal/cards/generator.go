@@ -9,9 +9,10 @@ import (
 )
 
 type BuildOptions struct {
-	Mode         models.RecapMode
-	SigningKey   []byte
-	ShareBaseURL string
+	Mode           models.RecapMode
+	SigningKey     []byte
+	ShareBaseURL   string
+	ProductBaseURL string
 }
 
 func BuildRecap(
@@ -31,7 +32,7 @@ func BuildRecap(
 		},
 		Metrics: buildMetrics(metrics, opts.Mode),
 		Badges:  buildBadges(metrics, opts.Mode),
-		Story:   buildStory(profile, year, metrics, opts.Mode),
+		Story:   buildStory(profile, year, metrics, opts),
 	}
 
 	if opts.Mode == models.RecapModePrivate && len(opts.SigningKey) > 0 {
@@ -57,7 +58,8 @@ func buildShareURL(baseURL, token string) string {
 	return fmt.Sprintf("%s/share/%s", baseURL, token)
 }
 
-func buildStory(profile models.Profile, year int, m clients.Metrics, mode models.RecapMode) []map[string]any {
+func buildStory(profile models.Profile, year int, m clients.Metrics, opts BuildOptions) []map[string]any {
+	mode := opts.Mode
 	name := profile.Username
 	if name == "" {
 		name = "вы"
@@ -161,6 +163,10 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, mode models
 			"type":    "achievement",
 			"badgeId": b.ID,
 		})
+	}
+
+	if isPrivate {
+		story = append(story, buildRecommendations(m, opts.ProductBaseURL)...)
 	}
 
 	story = append(story, buildOutro(mode))

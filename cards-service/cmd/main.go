@@ -23,6 +23,7 @@ func main() {
 		clients.NewAnalyticsClient(cfg.AnalyticsServiceURL),
 		cfg.ShareSigningKey,
 		cfg.ShareBaseURL,
+		cfg.ProductBaseURL,
 	)
 
 	mux := api.RegisterRoutes(handler)

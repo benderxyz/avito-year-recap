@@ -8,6 +8,7 @@ type Config struct {
 	AnalyticsServiceURL string
 	ShareSigningKey     string
 	ShareBaseURL        string
+	ProductBaseURL      string
 }
 
 func Load() Config {
@@ -17,6 +18,7 @@ func Load() Config {
 		AnalyticsServiceURL: getEnv("ANALYTICS_SERVICE_URL", "http://localhost:8080"),
 		ShareSigningKey:     getEnv("SHARE_SIGNING_KEY", "dev-insecure-share-key"),
 		ShareBaseURL:        getEnv("SHARE_BASE_URL", "http://localhost:3000"),
+		ProductBaseURL:      getEnv("PRODUCT_BASE_URL", "https://www.avito.ru"),
 	}
 }
 

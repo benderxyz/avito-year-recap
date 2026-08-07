@@ -16,6 +16,7 @@ type Handler struct {
 	analyticsClient *clients.AnalyticsClient
 	shareSigningKey []byte
 	shareBaseURL    string
+	productBaseURL  string
 }
 
 func NewHandler(
@@ -23,12 +24,14 @@ func NewHandler(
 	analyticsClient *clients.AnalyticsClient,
 	shareSigningKey string,
 	shareBaseURL string,
+	productBaseURL string,
 ) *Handler {
 	return &Handler{
 		userClient:      userClient,
 		analyticsClient: analyticsClient,
 		shareSigningKey: []byte(shareSigningKey),
 		shareBaseURL:    shareBaseURL,
+		productBaseURL:  productBaseURL,
 	}
 }
 
@@ -102,9 +105,10 @@ func (h *Handler) buildRecap(
 	}
 
 	return cards.BuildRecap(profile, year, metrics, cards.BuildOptions{
-		Mode:         mode,
-		SigningKey:   h.shareSigningKey,
-		ShareBaseURL: h.shareBaseURL,
+		Mode:           mode,
+		SigningKey:     h.shareSigningKey,
+		ShareBaseURL:   h.shareBaseURL,
+		ProductBaseURL: h.productBaseURL,
 	}), nil
 }
 

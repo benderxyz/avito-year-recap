@@ -8,17 +8,27 @@ import (
 
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
+	"cards-service/internal/models"
 )
 
 type Handler struct {
 	userClient      *clients.UserClient
 	analyticsClient *clients.AnalyticsClient
+	shareSigningKey []byte
+	shareBaseURL    string
 }
 
-func NewHandler(userClient *clients.UserClient, analyticsClient *clients.AnalyticsClient) *Handler {
+func NewHandler(
+	userClient *clients.UserClient,
+	analyticsClient *clients.AnalyticsClient,
+	shareSigningKey string,
+	shareBaseURL string,
+) *Handler {
 	return &Handler{
 		userClient:      userClient,
 		analyticsClient: analyticsClient,
+		shareSigningKey: []byte(shareSigningKey),
+		shareBaseURL:    shareBaseURL,
 	}
 }
 
@@ -27,6 +37,7 @@ func RegisterRoutes(handler *Handler) *http.ServeMux {
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /api/recap/{year}/{id}", handler.GetRecap)
+	mux.HandleFunc("GET /api/share/{token}", handler.GetSharedRecap)
 
 	return mux
 }
@@ -47,22 +58,63 @@ func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	recap, err := h.buildRecap(r, id, yearInt, models.RecapModePrivate)
+	if err != nil {
+		writeRecapError(w, err)
+		return
+	}
+
+	writeJSON(w, recap)
+}
+
+func (h *Handler) GetSharedRecap(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+
+	id, year, err := cards.DecodeShareToken(h.shareSigningKey, token)
+	if err != nil {
+		http.Error(w, "invalid share token", http.StatusBadRequest)
+		return
+	}
+
+	recap, err := h.buildRecap(r, id, year, models.RecapModePublic)
+	if err != nil {
+		writeRecapError(w, err)
+		return
+	}
+
+	writeJSON(w, recap)
+}
+
+func (h *Handler) buildRecap(
+	r *http.Request,
+	id string,
+	year int,
+	mode models.RecapMode,
+) (models.RecapPayload, error) {
 	profile, err := h.userClient.GetProfile(r.Context(), id)
 	if err != nil {
-		http.Error(w, "profile not found", http.StatusNotFound)
-		return
+		return models.RecapPayload{}, fmt.Errorf("profile not found: %w", err)
 	}
 
-	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, yearInt, profile.Timezone)
+	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, year, profile.Timezone)
 	if err != nil {
-		http.Error(w, "metrics not found", http.StatusNotFound)
-		return
+		return models.RecapPayload{}, fmt.Errorf("metrics not found: %w", err)
 	}
 
-	recap := cards.BuildRecap(profile, yearInt, metrics)
+	return cards.BuildRecap(profile, year, metrics, cards.BuildOptions{
+		Mode:         mode,
+		SigningKey:   h.shareSigningKey,
+		ShareBaseURL: h.shareBaseURL,
+	}), nil
+}
 
+func writeRecapError(w http.ResponseWriter, _ error) {
+	http.Error(w, "recap not found", http.StatusNotFound)
+}
+
+func writeJSON(w http.ResponseWriter, payload any) {
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(recap); err != nil {
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		http.Error(w, "failed to encode recap", http.StatusInternalServerError)
 	}
 }

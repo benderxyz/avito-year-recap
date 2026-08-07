@@ -148,54 +148,54 @@ func buildStory(profile models.Profile, year int, m clients.Metrics) []map[strin
 
 func buildMetrics(m clients.Metrics) map[string]models.MetricValue {
 	return map[string]models.MetricValue{
-		"listingsPublished": {
-			Type:  "number",
+		string(models.MetricListingsPublished): {
+			Type:  models.MetricTypeNumber,
 			Value: m.ListingsPublished,
 		},
-		"viewsTotal": {
-			Type:  "number",
+		string(models.MetricViewsTotal): {
+			Type:  models.MetricTypeNumber,
 			Value: m.ViewsTotal,
 		},
-		"favoritesReceived": {
-			Type:  "number",
+		string(models.MetricFavoritesReceived): {
+			Type:  models.MetricTypeNumber,
 			Value: m.FavoritesReceived,
 		},
-		"messagesSent": {
-			Type:  "number",
+		string(models.MetricMessagesSent): {
+			Type:  models.MetricTypeNumber,
 			Value: m.MessagesSent,
 		},
-		"dealsClosed": {
-			Type:  "number",
+		string(models.MetricDealsClosed): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DealsClosed,
 		},
-		"moneyEarned": {
-			Type:     "money",
+		string(models.MetricMoneyEarned): {
+			Type:     models.MetricTypeMoney,
 			Value:    m.MoneyEarned,
-			Currency: "RUB",
+			Currency: models.CurrencyRUB,
 		},
-		"moneySaved": {
-			Type:     "money",
+		string(models.MetricMoneySaved): {
+			Type:     models.MetricTypeMoney,
 			Value:    m.MoneySaved,
-			Currency: "RUB",
+			Currency: models.CurrencyRUB,
 		},
-		"daysActive": {
-			Type:  "number",
+		string(models.MetricDaysActive): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DaysActive,
 		},
-		"peakDayViews": {
-			Type:  "number",
+		string(models.MetricPeakDayViews): {
+			Type:  models.MetricTypeNumber,
 			Value: m.PeakDayViews,
 		},
-		"searchQueries": {
-			Type:  "number",
+		string(models.MetricSearchQueries): {
+			Type:  models.MetricTypeNumber,
 			Value: m.SearchQueries,
 		},
-		"categoriesTried": {
-			Type:  "number",
+		string(models.MetricCategoriesTried): {
+			Type:  models.MetricTypeNumber,
 			Value: m.CategoriesTried,
 		},
-		"deliveryOrders": {
-			Type:  "number",
+		string(models.MetricDeliveryOrders): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DeliveryOrders,
 		},
 	}

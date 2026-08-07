@@ -29,9 +29,9 @@ type Profile struct {
 }
 
 type MetricValue struct {
-	Type     string `json:"type"`
-	Value    any    `json:"value"`
-	Currency string `json:"currency,omitempty"`
+	Type     MetricType `json:"type"`
+	Value    any        `json:"value"`
+	Currency Currency   `json:"currency,omitempty"`
 }
 
 type Badge struct {

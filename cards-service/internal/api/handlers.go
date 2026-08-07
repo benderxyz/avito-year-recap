@@ -38,7 +38,6 @@ func healthHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
-
 	year := r.PathValue("year")
 	id := r.PathValue("id")
 

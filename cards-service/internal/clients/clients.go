@@ -52,16 +52,10 @@ func NewUserClient(baseURL string) *UserClient {
 			Timeout: 5 * time.Second,
 		},
 	}
-
 }
 
 func (c *UserClient) GetProfile(ctx context.Context, id string) (models.Profile, error) {
 	url := fmt.Sprintf("%s/users/%s", c.baseURL, id)
-
-	slog.Debug("requesting user profile",
-		"user_id", id,
-		"url", url,
-	)
 
 	req, err := http.NewRequestWithContext(
 		ctx,
@@ -84,11 +78,13 @@ func (c *UserClient) GetProfile(ctx context.Context, id string) (models.Profile,
 		return models.Profile{}, err
 	}
 
-	defer resp.Body.Close()
-
-	slog.Debug("user profile response received",
-		"status", resp.StatusCode,
-	)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close connection to user service",
+				"error", err,
+			)
+		}
+	}()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return models.Profile{}, fmt.Errorf("profile not found")
@@ -151,7 +147,13 @@ func (c *AnalyticsClient) Health(ctx context.Context) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close connection to analytics service",
+				"error", err,
+			)
+		}
+	}()
 	return nil
 }
 
@@ -161,7 +163,6 @@ func (c *AnalyticsClient) GetMetrics(
 	year int,
 	timezone string,
 ) (Metrics, error) {
-
 	from, to, err := getYearRange(year, timezone)
 	if err != nil {
 		return Metrics{}, err
@@ -181,7 +182,6 @@ func (c *AnalyticsClient) GetMetrics(
 	slog.Debug("requesting user metrics",
 		"user_id", id,
 		"year", year,
-		"url", requestURL,
 	)
 
 	req, err := http.NewRequestWithContext(
@@ -206,7 +206,13 @@ func (c *AnalyticsClient) GetMetrics(
 		return Metrics{}, err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close connection to analytics service",
+				"error", err,
+			)
+		}
+	}()
 
 	slog.Debug("metrics response received",
 		"status", resp.StatusCode,
@@ -215,7 +221,7 @@ func (c *AnalyticsClient) GetMetrics(
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 
-		slog.Error("analytics service returned non-success response",
+		slog.Debug("analytics service returned non-success response",
 			"status", resp.StatusCode,
 			"body", string(body),
 		)
@@ -275,5 +281,4 @@ func getYearRange(year int, timezone string) (string, string, error) {
 	)
 
 	return from.Format(time.RFC3339), to.Format(time.RFC3339), nil
-
 }

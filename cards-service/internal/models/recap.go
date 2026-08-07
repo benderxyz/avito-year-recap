@@ -1,5 +1,24 @@
 package models
 
+type RecapMode string
+
+const (
+	RecapModePrivate RecapMode = "private"
+	RecapModePublic  RecapMode = "public"
+)
+
+var PublicMetricsAllowlist = map[string]bool{
+	"listingsPublished": true,
+	"viewsTotal":        true,
+	"favoritesReceived": true,
+	"dealsClosed":       true,
+	"daysActive":        true,
+	"categoriesTried":   true,
+	"peakDayViews":      true,
+	"searchQueries":     true,
+	"deliveryOrders":    true,
+}
+
 type Recap struct {
 	ProfileID string  `json:"profile_id"`
 	Badges    []Badge `json:"badges"`
@@ -10,7 +29,8 @@ type RecapPayload struct {
 	Meta          Meta                   `json:"meta"`
 	Metrics       map[string]MetricValue `json:"metrics"`
 	Badges        []Badge                `json:"badges"`
-	Story         []map[string]any       `json:"story"` // пока просто map, типы сцен добавить позже
+	Story         []map[string]any       `json:"story"`
+	Features      *Features              `json:"features,omitempty"`
 }
 
 type Meta struct {
@@ -38,4 +58,10 @@ type Badge struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	IconURL     string `json:"iconUrl,omitempty"`
+}
+
+type Features struct {
+	ShareEnabled bool   `json:"shareEnabled"`
+	ShareURL     string `json:"shareUrl,omitempty"`
+	UpsellID     string `json:"upsellId,omitempty"`
 }

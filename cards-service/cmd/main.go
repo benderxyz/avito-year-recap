@@ -20,6 +20,8 @@ func main() {
 	handler := api.NewHandler(
 		clients.NewUserClient(cfg.UserServiceURL),
 		clients.NewAnalyticsClient(cfg.AnalyticsServiceURL),
+		cfg.ShareSigningKey,
+		cfg.ShareBaseURL,
 	)
 
 	mux := api.RegisterRoutes(handler)

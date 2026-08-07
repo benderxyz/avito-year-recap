@@ -85,7 +85,11 @@ func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error)
 		return Profile{}, err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 
 	slog.Debug("user profile response received",
 		"status", resp.StatusCode,
@@ -152,7 +156,11 @@ func (c *AnalyticsClient) Health(ctx context.Context) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf(
@@ -169,7 +177,6 @@ func (c *AnalyticsClient) GetMetrics(
 	id string,
 	year int,
 ) (Metrics, error) {
-
 	if err := c.Health(ctx); err != nil {
 		slog.Error("analytics health check failed",
 			"error", err,
@@ -213,7 +220,11 @@ func (c *AnalyticsClient) GetMetrics(
 		return Metrics{}, err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 
 	slog.Debug("metrics response received",
 		"status", resp.StatusCode,

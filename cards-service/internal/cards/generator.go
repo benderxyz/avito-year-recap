@@ -8,8 +8,14 @@ import (
 	"cards-service/internal/models"
 )
 
-func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics) models.RecapPayload {
-	return models.RecapPayload{
+type BuildOptions struct {
+	Mode         models.RecapMode
+	SigningKey   []byte
+	ShareBaseURL string
+}
+
+func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics, opts BuildOptions) models.RecapPayload {
+	payload := models.RecapPayload{
 		SchemaVersion: 1,
 		Meta: models.Meta{
 			Vertical: "marketplace",
@@ -19,19 +25,38 @@ func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics) mode
 				ID:          profile.ExternalID,
 				DisplayName: profile.Username,
 			},
-			GeneratedAt: time.Now().UTC().Format(time.RFC3339), // в идеале здесь нужно передавать время генерации из сервиса аналитики
+			GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		},
-		Metrics: buildMetrics(metrics),
-		Badges:  buildBadges(metrics),
-		Story:   buildStory(profile, year, metrics),
+		Metrics: buildMetrics(metrics, opts.Mode),
+		Badges:  buildBadges(metrics, opts.Mode),
+		Story:   buildStory(profile, year, metrics, opts.Mode),
 	}
+
+	if opts.Mode == models.RecapModePrivate && len(opts.SigningKey) > 0 {
+		token := GenerateShareToken(opts.SigningKey, profile.ExternalID, year)
+		payload.Features = &models.Features{
+			ShareEnabled: true,
+			ShareURL:     buildShareURL(opts.ShareBaseURL, token),
+		}
+	}
+
+	return payload
 }
 
-func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[string]any {
+func buildShareURL(baseURL, token string) string {
+	if baseURL == "" {
+		return "/share/" + token
+	}
+	return fmt.Sprintf("%s/share/%s", baseURL, token)
+}
+
+func buildStory(profile clients.Profile, year int, m clients.Metrics, mode models.RecapMode) []map[string]any {
 	name := profile.Username
 	if name == "" {
 		name = "вы"
 	}
+
+	isPrivate := mode == models.RecapModePrivate
 
 	story := make([]map[string]any, 0)
 
@@ -83,7 +108,7 @@ func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[stri
 		})
 	}
 
-	if m.MessagesSent > 0 {
+	if isPrivate && m.MessagesSent > 0 {
 		story = append(story, map[string]any{
 			"id":    "stat-messages",
 			"type":  "stat",
@@ -109,7 +134,7 @@ func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[stri
 		})
 	}
 
-	if m.MoneyEarned > 0 {
+	if isPrivate && m.MoneyEarned > 0 {
 		story = append(story, map[string]any{
 			"id":      "stat-earned",
 			"type":    "stat",
@@ -123,7 +148,7 @@ func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[stri
 		})
 	}
 
-	for _, b := range buildBadges(m) {
+	for _, b := range buildBadges(m, mode) {
 		story = append(story, map[string]any{
 			"id":      "achievement-" + b.ID,
 			"type":    "achievement",
@@ -131,26 +156,44 @@ func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[stri
 		})
 	}
 
-	story = append(story, map[string]any{
-		"id":       "outro",
-		"type":     "outro",
-		"title":    "Это был ваш год на Авито",
-		"subtitle": "Сохраните итоги или вернитесь к объявлениям",
-		"actions": []map[string]any{
-			{
-				"type":    "custom",
-				"id":      "close-recap",
-				"label":   "На главную",
-				"variant": "primary",
-			},
-		},
-	})
+	story = append(story, buildOutro(mode))
 
 	return story
 }
 
-func buildMetrics(m clients.Metrics) map[string]models.MetricValue {
-	return map[string]models.MetricValue{
+func buildOutro(mode models.RecapMode) map[string]any {
+	actions := make([]map[string]any, 0, 2)
+
+	if mode == models.RecapModePrivate {
+		actions = append(actions, map[string]any{
+			"type":  "share",
+			"label": "Поделиться",
+			"share": map[string]any{
+				"kind":  "link",
+				"title": "Мои итоги на Авито",
+				"text":  "Посмотрите, каким был мой год на Авито!",
+			},
+		})
+	}
+
+	actions = append(actions, map[string]any{
+		"type":    "custom",
+		"id":      "close-recap",
+		"label":   "На главную",
+		"variant": "primary",
+	})
+
+	return map[string]any{
+		"id":       "outro",
+		"type":     "outro",
+		"title":    "Это был ваш год на Авито",
+		"subtitle": "Сохраните итоги или вернитесь к объявлениям",
+		"actions":  actions,
+	}
+}
+
+func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.MetricValue {
+	all := map[string]models.MetricValue{
 		"listingsPublished": {
 			Type:  "number",
 			Value: m.ListingsPublished,
@@ -202,16 +245,32 @@ func buildMetrics(m clients.Metrics) map[string]models.MetricValue {
 			Value: m.DeliveryOrders,
 		},
 	}
+
+	if mode == models.RecapModePublic {
+		filtered := make(map[string]models.MetricValue, len(all))
+		for key, value := range all {
+			if models.PublicMetricsAllowlist[key] {
+				filtered[key] = value
+			}
+		}
+		return filtered
+	}
+
+	return all
 }
 
-func buildBadges(metrics clients.Metrics) []models.Badge {
+func buildBadges(metrics clients.Metrics, mode models.RecapMode) []models.Badge {
 	var badges []models.Badge
 
 	if metrics.MessagesSent > 1000 {
+		description := "Вы отправили больше 1000 сообщений!"
+		if mode == models.RecapModePrivate {
+			description = fmt.Sprintf("Вы отправили %d сообщений!", metrics.MessagesSent)
+		}
 		badges = append(badges, models.Badge{
 			ID:          "messages_sent_1000",
 			Title:       "Разговорчивый",
-			Description: fmt.Sprintf("Вы отправили %d сообщений!", metrics.MessagesSent),
+			Description: description,
 		})
 	}
 

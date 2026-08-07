@@ -20,7 +20,6 @@ func BuildRecap(
 	metrics clients.Metrics,
 	opts BuildOptions,
 ) models.RecapPayload {
-
 	payload := models.RecapPayload{
 		SchemaVersion: 1,
 		Meta: models.Meta{

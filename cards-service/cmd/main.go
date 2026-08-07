@@ -1,50 +1,60 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"cards-service/internal/api"
 	"cards-service/internal/clients"
+	"cards-service/internal/config"
 )
 
-func envOrDefault(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
-}
-
 func main() {
-	userServiceURL := envOrDefault("USER_SERVICE_URL", "http://localhost:8082")
-	analyticsServiceURL := envOrDefault("ANALYTICS_SERVICE_URL", "http://localhost:8080")
+	cfg := config.Load()
 
 	handler := api.NewHandler(
-		clients.NewUserClient(userServiceURL),
-		clients.NewAnalyticsClient(analyticsServiceURL),
+		clients.NewUserClient(cfg.UserServiceURL),
+		clients.NewAnalyticsClient(cfg.AnalyticsServiceURL),
 	)
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		if _, err := fmt.Fprintln(w, "cards-service: OK"); err != nil {
-			http.Error(w, "failed to write health response", http.StatusInternalServerError)
-		}
-	})
-	mux.HandleFunc("GET /api/recap/{id}", handler.GetRecap)
-
-	log.Println("cards-service started on :8081")
+	mux := api.RegisterRoutes(handler)
 
 	server := &http.Server{
-		Addr:              ":8081",
+		Addr:              ":" + cfg.Port,
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		slog.Info("cards-service started",
+			"port", cfg.Port,
+		)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("server failed",
+				"error", err,
+			)
+			os.Exit(1)
+		}
+	}()
+
+	<-stop
+	slog.Info("shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("shutdown error: %v", err)
 	}
+
+	log.Println("cards-service stopped")
 }

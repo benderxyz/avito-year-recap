@@ -35,7 +35,7 @@ func privateOptions(key []byte) BuildOptions {
 }
 
 func TestBuildRecapPrivateShouldExposeSensitiveMetrics(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
 
 	for _, name := range []string{"moneyEarned", "moneySaved", "messagesSent"} {
 		if _, ok := recap.Metrics[name]; !ok {
@@ -45,7 +45,7 @@ func TestBuildRecapPrivateShouldExposeSensitiveMetrics(t *testing.T) {
 }
 
 func TestBuildRecapPublicShouldFilterSensitiveMetrics(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
 
 	for _, name := range []string{"moneyEarned", "moneySaved", "messagesSent", "avgReplySeconds"} {
 		if _, ok := recap.Metrics[name]; ok {
@@ -61,7 +61,7 @@ func TestBuildRecapPublicShouldFilterSensitiveMetrics(t *testing.T) {
 }
 
 func TestBuildRecapPublicShouldOmitPrivateScenes(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
 
 	for _, scene := range recap.Story {
 		if scene["id"] == "stat-messages" || scene["id"] == "stat-earned" {
@@ -71,7 +71,7 @@ func TestBuildRecapPublicShouldOmitPrivateScenes(t *testing.T) {
 }
 
 func TestBuildRecapPrivateShouldIncludeShareFeatures(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
 
 	if recap.Features == nil || !recap.Features.ShareEnabled {
 		t.Fatal("expected share features in private recap")
@@ -85,7 +85,7 @@ func TestBuildRecapPrivateShouldIncludeShareFeatures(t *testing.T) {
 }
 
 func TestBuildRecapPublicShouldNotExposeShareLink(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
 
 	if recap.Features != nil && recap.Features.ShareEnabled {
 		t.Fatal("public recap must not advertise sharing")
@@ -93,7 +93,7 @@ func TestBuildRecapPublicShouldNotExposeShareLink(t *testing.T) {
 }
 
 func TestBuildRecapBadgeShouldMaskExactCountInPublic(t *testing.T) {
-	recap := BuildRecap(clients.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
 
 	for _, badge := range recap.Badges {
 		if badge.ID == "messages_sent_1000" {

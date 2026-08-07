@@ -14,17 +14,20 @@ type BuildOptions struct {
 	ShareBaseURL string
 }
 
-func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics, opts BuildOptions) models.RecapPayload {
+func BuildRecap(
+	profile models.Profile,
+	year int,
+	metrics clients.Metrics,
+	opts BuildOptions,
+) models.RecapPayload {
+
 	payload := models.RecapPayload{
 		SchemaVersion: 1,
 		Meta: models.Meta{
-			Vertical: "marketplace",
-			Year:     year,
-			Locale:   "ru-RU",
-			User: models.User{
-				ID:          profile.ExternalID,
-				DisplayName: profile.Username,
-			},
+			Vertical:    "marketplace",
+			Year:        year,
+			Locale:      "ru-RU",
+			Profile:     profile,
 			GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		},
 		Metrics: buildMetrics(metrics, opts.Mode),
@@ -33,7 +36,12 @@ func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics, opts
 	}
 
 	if opts.Mode == models.RecapModePrivate && len(opts.SigningKey) > 0 {
-		token := GenerateShareToken(opts.SigningKey, profile.ExternalID, year)
+		token := GenerateShareToken(
+			opts.SigningKey,
+			profile.ExternalID,
+			year,
+		)
+
 		payload.Features = &models.Features{
 			ShareEnabled: true,
 			ShareURL:     buildShareURL(opts.ShareBaseURL, token),
@@ -50,7 +58,7 @@ func buildShareURL(baseURL, token string) string {
 	return fmt.Sprintf("%s/share/%s", baseURL, token)
 }
 
-func buildStory(profile clients.Profile, year int, m clients.Metrics, mode models.RecapMode) []map[string]any {
+func buildStory(profile models.Profile, year int, m clients.Metrics, mode models.RecapMode) []map[string]any {
 	name := profile.Username
 	if name == "" {
 		name = "вы"
@@ -194,54 +202,54 @@ func buildOutro(mode models.RecapMode) map[string]any {
 
 func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.MetricValue {
 	all := map[string]models.MetricValue{
-		"listingsPublished": {
-			Type:  "number",
+		string(models.MetricListingsPublished): {
+			Type:  models.MetricTypeNumber,
 			Value: m.ListingsPublished,
 		},
-		"viewsTotal": {
-			Type:  "number",
+		string(models.MetricViewsTotal): {
+			Type:  models.MetricTypeNumber,
 			Value: m.ViewsTotal,
 		},
-		"favoritesReceived": {
-			Type:  "number",
+		string(models.MetricFavoritesReceived): {
+			Type:  models.MetricTypeNumber,
 			Value: m.FavoritesReceived,
 		},
-		"messagesSent": {
-			Type:  "number",
+		string(models.MetricMessagesSent): {
+			Type:  models.MetricTypeNumber,
 			Value: m.MessagesSent,
 		},
-		"dealsClosed": {
-			Type:  "number",
+		string(models.MetricDealsClosed): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DealsClosed,
 		},
-		"moneyEarned": {
-			Type:     "money",
+		string(models.MetricMoneyEarned): {
+			Type:     models.MetricTypeMoney,
 			Value:    m.MoneyEarned,
-			Currency: "RUB",
+			Currency: models.CurrencyRUB,
 		},
-		"moneySaved": {
-			Type:     "money",
+		string(models.MetricMoneySaved): {
+			Type:     models.MetricTypeMoney,
 			Value:    m.MoneySaved,
-			Currency: "RUB",
+			Currency: models.CurrencyRUB,
 		},
-		"daysActive": {
-			Type:  "number",
+		string(models.MetricDaysActive): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DaysActive,
 		},
-		"peakDayViews": {
-			Type:  "number",
+		string(models.MetricPeakDayViews): {
+			Type:  models.MetricTypeNumber,
 			Value: m.PeakDayViews,
 		},
-		"searchQueries": {
-			Type:  "number",
+		string(models.MetricSearchQueries): {
+			Type:  models.MetricTypeNumber,
 			Value: m.SearchQueries,
 		},
-		"categoriesTried": {
-			Type:  "number",
+		string(models.MetricCategoriesTried): {
+			Type:  models.MetricTypeNumber,
 			Value: m.CategoriesTried,
 		},
-		"deliveryOrders": {
-			Type:  "number",
+		string(models.MetricDeliveryOrders): {
+			Type:  models.MetricTypeNumber,
 			Value: m.DeliveryOrders,
 		},
 	}

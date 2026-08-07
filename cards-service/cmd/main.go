@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -36,14 +37,19 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("cards-service started on :%s", cfg.Port)
+		slog.Info("cards-service started",
+			"port", cfg.Port,
+		)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			slog.Error("server failed",
+				"error", err,
+			)
+			os.Exit(1)
 		}
 	}()
 
 	<-stop
-	log.Println("shutting down...")
+	slog.Info("shutting down...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

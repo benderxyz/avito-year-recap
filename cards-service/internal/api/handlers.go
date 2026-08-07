@@ -96,7 +96,7 @@ func (h *Handler) buildRecap(
 		return models.RecapPayload{}, fmt.Errorf("profile not found: %w", err)
 	}
 
-	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, year)
+	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, year, profile.Timezone)
 	if err != nil {
 		return models.RecapPayload{}, fmt.Errorf("metrics not found: %w", err)
 	}

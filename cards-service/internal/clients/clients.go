@@ -1,20 +1,16 @@
 package clients
 
 import (
+	"cards-service/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"time"
 )
-
-type Profile struct {
-	UserID     uint64 `json:"user_id"`
-	ExternalID string `json:"external_id"`
-	Username   string `json:"username"`
-	Timezone   string `json:"timezone"`
-}
 
 type MetricsResponse struct {
 	From     string  `json:"from"`
@@ -51,12 +47,15 @@ type UserClient struct {
 
 func NewUserClient(baseURL string) *UserClient {
 	return &UserClient{
-		baseURL:    baseURL,
-		httpClient: http.DefaultClient,
+		baseURL: baseURL,
+		httpClient: &http.Client{
+			Timeout: 5 * time.Second,
+		},
 	}
+
 }
 
-func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error) {
+func (c *UserClient) GetProfile(ctx context.Context, id string) (models.Profile, error) {
 	url := fmt.Sprintf("%s/users/%s", c.baseURL, id)
 
 	slog.Debug("requesting user profile",
@@ -74,7 +73,7 @@ func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error)
 		slog.Error("failed to create user profile request",
 			"error", err,
 		)
-		return Profile{}, err
+		return models.Profile{}, err
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -82,7 +81,7 @@ func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error)
 		slog.Error("user profile request failed",
 			"error", err,
 		)
-		return Profile{}, err
+		return models.Profile{}, err
 	}
 
 	defer resp.Body.Close()
@@ -92,23 +91,23 @@ func (c *UserClient) GetProfile(ctx context.Context, id string) (Profile, error)
 	)
 
 	if resp.StatusCode == http.StatusNotFound {
-		return Profile{}, fmt.Errorf("profile not found")
+		return models.Profile{}, fmt.Errorf("profile not found")
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return Profile{}, fmt.Errorf(
+		return models.Profile{}, fmt.Errorf(
 			"user-service returned status %d",
 			resp.StatusCode,
 		)
 	}
 
-	var profile Profile
+	var profile models.Profile
 
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
 		slog.Error("failed to decode user profile response",
 			"error", err,
 		)
-		return Profile{}, err
+		return models.Profile{}, err
 	}
 
 	slog.Info("user profile loaded",
@@ -153,14 +152,6 @@ func (c *AnalyticsClient) Health(ctx context.Context) error {
 	}
 
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf(
-			"analytics service unhealthy: %s",
-			resp.Status,
-		)
-	}
-
 	return nil
 }
 
@@ -168,33 +159,35 @@ func (c *AnalyticsClient) GetMetrics(
 	ctx context.Context,
 	id string,
 	year int,
+	timezone string,
 ) (Metrics, error) {
 
-	if err := c.Health(ctx); err != nil {
-		slog.Error("analytics health check failed",
-			"error", err,
-		)
+	from, to, err := getYearRange(year, timezone)
+	if err != nil {
 		return Metrics{}, err
 	}
 
-	slog.Debug("analytics service is healthy")
+	query := url.Values{}
+	query.Set("from", from)
+	query.Set("to", to)
 
-	url := fmt.Sprintf(
-		"%s/users/%s/metrics",
+	requestURL := fmt.Sprintf(
+		"%s/users/%s/metrics?%s",
 		c.baseURL,
 		id,
+		query.Encode(),
 	)
 
 	slog.Debug("requesting user metrics",
 		"user_id", id,
 		"year", year,
-		"url", url,
+		"url", requestURL,
 	)
 
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		url,
+		requestURL,
 		nil,
 	)
 
@@ -247,4 +240,40 @@ func (c *AnalyticsClient) GetMetrics(
 	)
 
 	return response.Metrics, nil
+}
+
+func getYearRange(year int, timezone string) (string, string, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return "", "", fmt.Errorf(
+			"invalid timezone %s: %w",
+			timezone,
+			err,
+		)
+	}
+
+	from := time.Date(
+		year,
+		time.January,
+		1,
+		0,
+		0,
+		0,
+		0,
+		loc,
+	)
+
+	to := time.Date(
+		year,
+		time.December,
+		31,
+		23,
+		59,
+		59,
+		0,
+		loc,
+	)
+
+	return from.Format(time.RFC3339), to.Format(time.RFC3339), nil
+
 }

@@ -8,18 +8,15 @@ import (
 	"cards-service/internal/models"
 )
 
-func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics) models.RecapPayload {
+func BuildRecap(profile models.Profile, year int, metrics clients.Metrics) models.RecapPayload {
 	return models.RecapPayload{
 		SchemaVersion: 1,
 		Meta: models.Meta{
-			Vertical: "marketplace",
-			Year:     year,
-			Locale:   "ru-RU",
-			User: models.User{
-				ID:          profile.ExternalID,
-				DisplayName: profile.Username,
-			},
-			GeneratedAt: time.Now().UTC().Format(time.RFC3339), // в идеале здесь нужно передавать время генерации из сервиса аналитики
+			Vertical:    "marketplace",
+			Year:        year,
+			Locale:      "ru-RU",
+			Profile:     profile,
+			GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		},
 		Metrics: buildMetrics(metrics),
 		Badges:  buildBadges(metrics),
@@ -27,7 +24,7 @@ func BuildRecap(profile clients.Profile, year int, metrics clients.Metrics) mode
 	}
 }
 
-func buildStory(profile clients.Profile, year int, m clients.Metrics) []map[string]any {
+func buildStory(profile models.Profile, year int, m clients.Metrics) []map[string]any {
 	name := profile.Username
 	if name == "" {
 		name = "вы"

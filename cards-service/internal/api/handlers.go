@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -25,16 +24,9 @@ func NewHandler(userClient *clients.UserClient, analyticsClient *clients.Analyti
 func RegisterRoutes(handler *Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /api/recap/{year}/{id}", handler.GetRecap)
 
 	return mux
-}
-
-func healthHandler(w http.ResponseWriter, _ *http.Request) {
-	if _, err := fmt.Fprintln(w, "cards-service: OK"); err != nil {
-		http.Error(w, "failed to write health response", http.StatusInternalServerError)
-	}
 }
 
 func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
@@ -54,12 +46,11 @@ func (h *Handler) GetRecap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, yearInt)
+	metrics, err := h.analyticsClient.GetMetrics(r.Context(), id, yearInt, profile.Timezone)
 	if err != nil {
 		http.Error(w, "metrics not found", http.StatusNotFound)
 		return
 	}
-	//log.Printf("Метрики для пользователя %s за %d год: %+v", id, yearInt, metrics)
 
 	recap := cards.BuildRecap(profile, yearInt, metrics)
 

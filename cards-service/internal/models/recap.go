@@ -10,27 +10,28 @@ type RecapPayload struct {
 	Meta          Meta                   `json:"meta"`
 	Metrics       map[string]MetricValue `json:"metrics"`
 	Badges        []Badge                `json:"badges"`
-	Story         []map[string]any       `json:"story"` // пока просто map, типы сцен добавить позже
+	Story         []map[string]any       `json:"story"`
 }
 
 type Meta struct {
-	Vertical    string `json:"vertical"`
-	Year        int    `json:"year"`
-	Locale      string `json:"locale"`
-	User        User   `json:"user"`
-	GeneratedAt string `json:"generatedAt"`
+	Vertical    string  `json:"vertical"`
+	Year        int     `json:"year"`
+	Locale      string  `json:"locale"`
+	Profile     Profile `json:"profile"`
+	GeneratedAt string  `json:"generatedAt"`
 }
 
-type User struct {
-	ID          string `json:"id"`
-	DisplayName string `json:"displayName"`
-	AvatarURL   string `json:"avatarUrl,omitempty"`
+type Profile struct {
+	UserID     uint64 `json:"user_id"`
+	ExternalID string `json:"external_id"`
+	Username   string `json:"username"`
+	Timezone   string `json:"timezone"`
 }
 
 type MetricValue struct {
-	Type     string `json:"type"`               // "number" | "money" | "percentile" | ...
-	Value    any    `json:"value"`              // число или строка
-	Currency string `json:"currency,omitempty"` // только для money
+	Type     string `json:"type"`
+	Value    any    `json:"value"`
+	Currency string `json:"currency,omitempty"`
 }
 
 type Badge struct {

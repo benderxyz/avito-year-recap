@@ -15,6 +15,11 @@ const (
 	MetricSearchQueries     MetricKey = "searchQueries"
 	MetricCategoriesTried   MetricKey = "categoriesTried"
 	MetricDeliveryOrders    MetricKey = "deliveryOrders"
+	MetricActiveListings    MetricKey = "activeListings"
+	MetricSellerRating      MetricKey = "sellerRating"
+	MetricAvgReplySeconds   MetricKey = "avgReplySeconds"
+	MetricFirstListingAt    MetricKey = "firstListingAt"
+	MetricFirstDealAt       MetricKey = "firstDealAt"
 )
 
 type MetricType string

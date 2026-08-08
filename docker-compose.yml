@@ -46,9 +46,29 @@ services:
     environment:
       USER_SERVICE_URL: http://user:8082
       ANALYTICS_SERVICE_URL: http://analytics:8080
+      POSTGRES_HOST: cards-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: recap
+      POSTGRES_PASSWORD: recap
+      POSTGRES_DATABASE: cards
+      POSTGRES_SSLMODE: disable
+      MIGRATIONS_DIR: /app/migrations
+      SEEDS_DIR: /app/seeds
+      SEED_ON_START: "true"
     depends_on:
       - analytics
       - user
+      - cards-postgres
+
+  cards-postgres:
+    image: postgres:16
+    container_name: cards-postgres
+    environment:
+      POSTGRES_USER: recap
+      POSTGRES_PASSWORD: recap
+      POSTGRES_DB: cards
+    volumes:
+      - cards-postgres-data:/var/lib/postgresql/data
 
   user:
     build:
@@ -75,3 +95,4 @@ services:
 
 volumes:
   clickhouse-data:
+  cards-postgres-data:

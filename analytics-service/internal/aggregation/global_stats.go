@@ -10,7 +10,7 @@ import (
 	"analytics-service/internal/events"
 )
 
-const defaultGlobalCacheTTL = 5 * time.Minute
+const defaultGlobalCacheTTL = 15 * time.Minute
 
 type globalStats struct {
 	db    FloatQuerier

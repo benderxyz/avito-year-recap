@@ -2,22 +2,78 @@
   position: relative;
   z-index: 2;
   display: flex;
-  gap: 4px;
-  padding: 14px var(--recap-scene-padding) 0;
+  gap: 5px;
+  padding: 14px var(--recap-scene-padding) 2px;
 }
 
 .recap-progress__segment {
+  position: relative;
   flex: 1;
-  height: 3px;
+  min-width: 0;
+  height: 16px;
+  margin: 0;
+  padding: 6px 0;
+  border: 0;
+  outline-offset: 2px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.recap-progress__segment:focus-visible {
+  outline: 2px solid var(--recap-fg);
+  border-radius: 4px;
+}
+
+.recap-progress__track {
+  display: block;
+  width: 100%;
+  height: 4px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--recap-fg) 18%, transparent);
+  background: color-mix(in srgb, var(--recap-fg) 22%, transparent);
   overflow: hidden;
 }
 
 .recap-progress__fill {
+  display: block;
   height: 100%;
-  width: calc(var(--fill, 0) * 100%);
+  width: 100%;
   background: var(--recap-fg);
   border-radius: inherit;
-  transition: width 180ms ease;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.recap-progress__fill[data-state="complete"] {
+  transform: scaleX(1);
+}
+
+.recap-progress__fill[data-state="current"] {
+  transform: scaleX(0.08);
+}
+
+.recap-progress__fill[data-state="current"][data-animated="true"] {
+  animation: recap-progress-fill var(--recap-progress-duration) linear forwards;
+  animation-play-state: paused;
+}
+
+.recap-progress__fill[data-state="current"][data-playing="true"] {
+  animation-play-state: running;
+}
+
+@keyframes recap-progress-fill {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recap-progress__fill {
+    animation: none;
+    will-change: auto;
+  }
 }

@@ -21,11 +21,15 @@ export function Stat({
 
   const display = useCountUp(value, animate && !reducedMotion, 1000, handleComplete);
   const unitText = resolveUnit(value, unit, format);
+  const formattedValue = format.number(value, valueFormat);
 
   return (
     <div className={cn('recap-stat', classNames?.root)}>
-      <div className={cn('recap-stat__value', classNames?.value)}>
-        {format.number(display, valueFormat)}
+      <div
+        className={cn('recap-stat__value', classNames?.value)}
+        data-target-value={formattedValue}
+      >
+        <span className="recap-stat__current">{format.number(display, valueFormat)}</span>
       </div>
       {unitText ? <div className={cn('recap-stat__unit', classNames?.unit)}>{unitText}</div> : null}
     </div>

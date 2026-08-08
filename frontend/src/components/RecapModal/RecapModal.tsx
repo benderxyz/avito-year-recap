@@ -80,7 +80,7 @@ export function RecapModal({ onClose }: RecapModalProps) {
         <button type="button" className={styles.close} onClick={onClose} aria-label="Закрыть">
           ×
         </button>
-        <Recap {...prepared} theme={theme} onEvent={onEvent} className={styles.recap} />
+        <Recap {...prepared} autoplay theme={theme} onEvent={onEvent} className={styles.recap} />
       </div>
     </div>
   );

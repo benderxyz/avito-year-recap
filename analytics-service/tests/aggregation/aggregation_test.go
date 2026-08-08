@@ -25,6 +25,18 @@ func (q *recordingQuerier) QueryFloat64(_ context.Context, query string, args ..
 	return q.result, q.present, q.err
 }
 
+func (q *recordingQuerier) QueryFloat64s(_ context.Context, query string, args ...any) ([]float64, error) {
+	q.lastQuery = query
+	q.lastArgs = args
+	if q.err != nil {
+		return nil, q.err
+	}
+	if !q.present {
+		return nil, nil
+	}
+	return []float64{q.result}, nil
+}
+
 type staticTimezoneResolver struct {
 	timezone string
 	err      error
@@ -156,6 +168,14 @@ func TestUniqueAggregatorShouldIgnoreEmptyPayloadFieldWhenAggregating(t *testing
 	}
 	if !strings.Contains(querier.lastQuery, "JSONExtractString(payload, 'category') != ''") {
 		t.Fatalf("expected empty payload filter, got %s", querier.lastQuery)
+	}
+}
+
+func TestUniqueAggregatorShouldFallbackToValueWhenPayloadFieldIsInvalid(t *testing.T) {
+	agg := aggregation.NewUniqueAggregator(&recordingQuerier{}, events.UniqueModePayload, "x'); DROP TABLE events; --")
+
+	if agg.PayloadField() != "value" {
+		t.Fatalf("expected fallback field value, got %s", agg.PayloadField())
 	}
 }
 

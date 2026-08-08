@@ -3,13 +3,10 @@ package aggregation
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"analytics-service/internal/events"
 )
-
-var payloadFieldPattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
 type UniqueAggregator struct {
 	db           FloatQuerier
@@ -22,15 +19,11 @@ func NewUniqueAggregator(db FloatQuerier, mode events.UniqueMode, payloadField s
 		mode = events.UniqueModePayload
 	}
 
-	field := payloadField
-	if field == "" {
-		field = "value"
+	return &UniqueAggregator{
+		db:           db,
+		mode:         mode,
+		payloadField: sanitizePayloadField(payloadField),
 	}
-	if !payloadFieldPattern.MatchString(field) {
-		field = "value"
-	}
-
-	return &UniqueAggregator{db: db, mode: mode, payloadField: field}
 }
 
 func (a *UniqueAggregator) Aggregate(ctx context.Context, req Request) (Result, error) {

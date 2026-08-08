@@ -13,10 +13,16 @@ type Service struct {
 	registry  *events.Registry
 	db        FloatQuerier
 	timezones TimezoneResolver
+	globals   *globalStats
 }
 
 func NewService(registry *events.Registry, db FloatQuerier, timezones TimezoneResolver) *Service {
-	return &Service{registry: registry, db: db, timezones: timezones}
+	return &Service{
+		registry:  registry,
+		db:        db,
+		timezones: timezones,
+		globals:   newGlobalStats(db, defaultGlobalCacheTTL),
+	}
 }
 
 func (s *Service) Metrics(
@@ -57,7 +63,7 @@ func (s *Service) Metrics(
 			return MetricsSnapshot{}, fmt.Errorf("aggregate %s: %w", eventType, err)
 		}
 
-		metric, err := enrichMetric(ctx, s.db, cfg, eventType, req, aggregate)
+		metric, err := enrichMetric(ctx, s.globals, cfg, eventType, req, aggregate)
 		if err != nil {
 			return MetricsSnapshot{}, fmt.Errorf("enrich %s: %w", eventType, err)
 		}

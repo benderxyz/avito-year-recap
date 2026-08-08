@@ -7,6 +7,7 @@ import (
 
 type FloatQuerier interface {
 	QueryFloat64(ctx context.Context, query string, args ...any) (float64, bool, error)
+	QueryFloat64s(ctx context.Context, query string, args ...any) ([]float64, error)
 }
 
 type Request struct {

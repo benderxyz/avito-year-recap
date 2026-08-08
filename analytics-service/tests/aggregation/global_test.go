@@ -12,23 +12,15 @@ import (
 )
 
 type enrichmentQuerier struct {
-	userTotals   map[string]float64
-	globalTotals map[string]float64
-	userPresent  map[string]bool
+	userTotals     map[string]float64
+	globalTotals   map[string]float64
+	userPresent    map[string]bool
+	perUserTotals  map[string][]float64
+	float64sCalls  int
+	globalSumCalls int
 }
 
 func (q *enrichmentQuerier) QueryFloat64(_ context.Context, query string, args ...any) (float64, bool, error) {
-	if strings.Contains(query, "countIf(total < ?)") || strings.Contains(query, "countIf(total > ?)") {
-		userValue, ok := args[0].(float64)
-		if !ok {
-			return 0, false, nil
-		}
-		if userValue >= 40 {
-			return 88, true, nil
-		}
-		return 50, true, nil
-	}
-
 	if strings.Contains(query, "user_id = ?") {
 		eventType, ok := args[1].(string)
 		if !ok {
@@ -45,18 +37,36 @@ func (q *enrichmentQuerier) QueryFloat64(_ context.Context, query string, args .
 	}
 
 	if strings.Contains(query, "sum(user_total)") || strings.Contains(query, "sum(value)") {
-		eventType, ok := args[0].(string)
-		if !ok {
-			return 0, false, nil
+		q.globalSumCalls++
+		for _, arg := range args {
+			eventType, ok := arg.(string)
+			if !ok {
+				continue
+			}
+			total, exists := q.globalTotals[eventType]
+			if !exists {
+				continue
+			}
+			return total, true, nil
 		}
-		total, exists := q.globalTotals[eventType]
-		if !exists {
-			return 0, true, nil
-		}
-		return total, true, nil
+		return 0, true, nil
 	}
 
 	return 0, false, nil
+}
+
+func (q *enrichmentQuerier) QueryFloat64s(_ context.Context, _ string, args ...any) ([]float64, error) {
+	q.float64sCalls++
+	for _, arg := range args {
+		eventType, ok := arg.(string)
+		if !ok {
+			continue
+		}
+		if totals, ok := q.perUserTotals[eventType]; ok {
+			return append([]float64(nil), totals...), nil
+		}
+	}
+	return lowerPercentileTotals(88, 12, 0, 100), nil
 }
 
 func TestServiceShouldEnrichCounterMetricsWithShareAndPercentile(t *testing.T) {
@@ -66,6 +76,9 @@ func TestServiceShouldEnrichCounterMetricsWithShareAndPercentile(t *testing.T) {
 		},
 		globalTotals: map[string]float64{
 			"item_published": 1000,
+		},
+		perUserTotals: map[string][]float64{
+			"item_published": lowerPercentileTotals(88, 12, 0, 100),
 		},
 	}
 	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
@@ -120,6 +133,9 @@ func TestServiceShouldReturnNullShareWhenGlobalCounterTotalIsZero(t *testing.T) 
 		globalTotals: map[string]float64{
 			"item_published": 0,
 		},
+		perUserTotals: map[string][]float64{
+			"item_published": {0, 0, 10, 10},
+		},
 	}
 	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -135,8 +151,8 @@ func TestServiceShouldReturnNullShareWhenGlobalCounterTotalIsZero(t *testing.T) 
 	if metric.Share != nil {
 		t.Fatalf("expected null share when global total is zero, got %v", metric.Share)
 	}
-	if metric.Percentile == nil || *metric.Percentile != 50 {
-		t.Fatalf("expected percentile 50, got %v", metric.Percentile)
+	if metric.Percentile == nil || *metric.Percentile != 0 {
+		t.Fatalf("expected percentile 0, got %v", metric.Percentile)
 	}
 }
 
@@ -144,6 +160,9 @@ func TestServiceShouldEnrichMilestoneWhenValueIsPresent(t *testing.T) {
 	querier := &enrichmentQuerier{
 		userTotals: map[string]float64{
 			"first_item_published": 1_700_000_000,
+		},
+		perUserTotals: map[string][]float64{
+			"first_item_published": higherPercentileTotals(88, 12, 1_800_000_000, 1_600_000_000),
 		},
 	}
 	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
@@ -178,4 +197,60 @@ func TestServiceShouldFailEnrichmentWhenFromIsNotBeforeTo(t *testing.T) {
 	if !apperr.IsValidation(err) {
 		t.Fatalf("expected validation error, got %v", err)
 	}
+}
+
+func TestServiceShouldReuseCachedGlobalStatsWhenMetricsAreRequestedTwice(t *testing.T) {
+	querier := &enrichmentQuerier{
+		userTotals: map[string]float64{
+			"item_published": 47,
+		},
+		globalTotals: map[string]float64{
+			"item_published": 1000,
+		},
+		perUserTotals: map[string][]float64{
+			"item_published": lowerPercentileTotals(88, 12, 0, 100),
+		},
+	}
+	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	if _, err := service.Metrics(context.Background(), 42, from, to); err != nil {
+		t.Fatalf("unexpected first error: %v", err)
+	}
+	firstGlobalCalls := querier.globalSumCalls
+	firstTotalsCalls := querier.float64sCalls
+
+	if _, err := service.Metrics(context.Background(), 99, from, to); err != nil {
+		t.Fatalf("unexpected second error: %v", err)
+	}
+
+	if querier.globalSumCalls != firstGlobalCalls {
+		t.Fatalf("expected cached global totals, got calls %d after %d", querier.globalSumCalls, firstGlobalCalls)
+	}
+	if querier.float64sCalls != firstTotalsCalls {
+		t.Fatalf("expected cached per-user totals, got calls %d after %d", querier.float64sCalls, firstTotalsCalls)
+	}
+}
+
+func lowerPercentileTotals(belowCount, restCount int, belowValue, restValue float64) []float64 {
+	totals := make([]float64, 0, belowCount+restCount)
+	for i := 0; i < belowCount; i++ {
+		totals = append(totals, belowValue)
+	}
+	for i := 0; i < restCount; i++ {
+		totals = append(totals, restValue)
+	}
+	return totals
+}
+
+func higherPercentileTotals(aboveCount, restCount int, aboveValue, restValue float64) []float64 {
+	totals := make([]float64, 0, aboveCount+restCount)
+	for i := 0; i < aboveCount; i++ {
+		totals = append(totals, aboveValue)
+	}
+	for i := 0; i < restCount; i++ {
+		totals = append(totals, restValue)
+	}
+	return totals
 }

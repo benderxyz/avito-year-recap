@@ -61,54 +61,6 @@ func aggregateGlobalUnique(
 	return Result{Value: value, Present: true}, nil
 }
 
-func aggregateLowerPercentile(
-	ctx context.Context,
-	db FloatQuerier,
-	subquery string,
-	args []any,
-	userValue float64,
-) (Result, error) {
-	query := fmt.Sprintf(`
-		SELECT if(
-			count() = 0,
-			CAST(NULL AS Nullable(Float64)),
-			toFloat64(countIf(total < ?)) * 100.0 / count()
-		)
-		FROM (%s)
-	`, subquery)
-
-	queryArgs := append([]any{userValue}, args...)
-	value, present, err := db.QueryFloat64(ctx, query, queryArgs...)
-	if err != nil {
-		return Result{}, fmt.Errorf("lower percentile: %w", err)
-	}
-	return Result{Value: value, Present: present}, nil
-}
-
-func aggregateHigherPercentile(
-	ctx context.Context,
-	db FloatQuerier,
-	subquery string,
-	args []any,
-	userValue float64,
-) (Result, error) {
-	query := fmt.Sprintf(`
-		SELECT if(
-			count() = 0,
-			CAST(NULL AS Nullable(Float64)),
-			toFloat64(countIf(total > ?)) * 100.0 / count()
-		)
-		FROM (%s)
-	`, subquery)
-
-	queryArgs := append([]any{userValue}, args...)
-	value, present, err := db.QueryFloat64(ctx, query, queryArgs...)
-	if err != nil {
-		return Result{}, fmt.Errorf("higher percentile: %w", err)
-	}
-	return Result{Value: value, Present: present}, nil
-}
-
 func counterPerUserSubquery(req GlobalRequest) (string, []any) {
 	const query = `
 		SELECT sum(value) AS total
@@ -180,10 +132,7 @@ func uniquePerUserSubquery(cfg events.CategoryConfig, req GlobalRequest) (string
 		`
 		return query, []any{timezone, req.EventType, req.From, req.To}, nil
 	default:
-		field := cfg.UniqueField
-		if field == "" {
-			field = "value"
-		}
+		field := sanitizePayloadField(cfg.UniqueField)
 		query := fmt.Sprintf(`
 			SELECT toFloat64(uniqExact(JSONExtractString(payload, '%s'))) AS user_total
 			FROM events

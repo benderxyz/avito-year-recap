@@ -77,11 +77,26 @@ services:
     ports:
       - "8082:8082"
     environment:
-      <<: *clickhouse-client-env
+      POSTGRES_HOST: user-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: recap
+      POSTGRES_PASSWORD: recap
+      POSTGRES_DATABASE: users
+      POSTGRES_SSLMODE: disable
       SERVER_PORT: "8082"
       MIGRATIONS_DIR: /app/migrations
     depends_on:
-      - clickhouse
+      - user-postgres
+
+  user-postgres:
+    image: postgres:16
+    container_name: user-postgres
+    environment:
+      POSTGRES_USER: recap
+      POSTGRES_PASSWORD: recap
+      POSTGRES_DB: users
+    volumes:
+      - user-postgres-data:/var/lib/postgresql/data
 
   frontend:
     build:
@@ -96,3 +111,4 @@ services:
 volumes:
   clickhouse-data:
   cards-postgres-data:
+  user-postgres-data:

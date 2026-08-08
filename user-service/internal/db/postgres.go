@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,40 +10,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
+	_ "github.com/lib/pq"
 )
 
-type Client struct {
-	conn driver.Conn
+type Postgres struct {
+	db *sql.DB
 }
 
-func Connect(ctx context.Context, host string, port int, user, password, database string) (*Client, error) {
+func Connect(ctx context.Context, dsn string) (*Postgres, error) {
 	var lastErr error
 
 	for attempt := 1; attempt <= 30; attempt++ {
-		conn, err := clickhouse.Open(&clickhouse.Options{
-			Addr: []string{fmt.Sprintf("%s:%d", host, port)},
-			Auth: clickhouse.Auth{
-				Database: database,
-				Username: user,
-				Password: password,
-			},
-			DialTimeout: 5 * time.Second,
-			Settings: clickhouse.Settings{
-				"max_execution_time": 60,
-			},
-		})
+		conn, err := sql.Open("postgres", dsn)
 		if err != nil {
-			lastErr = fmt.Errorf("open clickhouse: %w", err)
-		} else if err := conn.Ping(ctx); err != nil {
+			lastErr = fmt.Errorf("open postgres: %w", err)
+		} else if err := conn.PingContext(ctx); err != nil {
 			_ = conn.Close()
-			lastErr = fmt.Errorf("ping clickhouse: %w", err)
+			lastErr = fmt.Errorf("ping postgres: %w", err)
 		} else {
-			return &Client{conn: conn}, nil
+			return &Postgres{db: conn}, nil
 		}
 
-		fmt.Printf("clickhouse connect attempt %d/30 failed: %v\n", attempt, lastErr)
+		fmt.Printf("postgres connect attempt %d/30 failed: %v\n", attempt, lastErr)
 
 		select {
 		case <-ctx.Done():
@@ -51,18 +40,18 @@ func Connect(ctx context.Context, host string, port int, user, password, databas
 		}
 	}
 
-	return nil, fmt.Errorf("clickhouse unavailable after retries: %w", lastErr)
+	return nil, fmt.Errorf("postgres unavailable after retries: %w", lastErr)
 }
 
-func (c *Client) Conn() driver.Conn {
-	return c.conn
+func (p *Postgres) DB() *sql.DB {
+	return p.db
 }
 
-func (c *Client) Close() error {
-	return c.conn.Close()
+func (p *Postgres) Close() error {
+	return p.db.Close()
 }
 
-func (c *Client) Migrate(ctx context.Context, migrationsDir string) error {
+func (p *Postgres) Migrate(ctx context.Context, migrationsDir string) error {
 	entries, err := os.ReadDir(migrationsDir)
 	if err != nil {
 		return fmt.Errorf("read migrations dir: %w", err)
@@ -86,7 +75,7 @@ func (c *Client) Migrate(ctx context.Context, migrationsDir string) error {
 
 		statements := splitSQLStatements(string(content))
 		for _, statement := range statements {
-			if err := c.conn.Exec(ctx, statement); err != nil {
+			if _, err := p.db.ExecContext(ctx, statement); err != nil {
 				return fmt.Errorf("exec migration %s: %w", name, err)
 			}
 		}

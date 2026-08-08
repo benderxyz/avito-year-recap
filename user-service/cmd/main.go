@@ -17,36 +17,26 @@ import (
 )
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("load config: %v", err)
-	}
+	cfg := config.Load()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	client, err := db.Connect(
-		ctx,
-		cfg.ClickHouseHost,
-		cfg.ClickHousePort,
-		cfg.ClickHouseUser,
-		cfg.ClickHousePassword,
-		cfg.ClickHouseDatabase,
-	)
+	pg, err := db.Connect(ctx, cfg.PostgresDSN())
 	if err != nil {
 		cancel()
-		log.Fatalf("connect clickhouse: %v", err)
+		log.Fatalf("connect postgres: %v", err)
 	}
 	defer func() {
-		_ = client.Close()
+		_ = pg.Close()
 	}()
 
-	if err := client.Migrate(ctx, cfg.MigrationsDir); err != nil {
+	if err := pg.Migrate(ctx, cfg.MigrationsDir); err != nil {
 		cancel()
 		log.Fatalf("migrate: %v", err)
 	}
 
-	repo := users.NewRepository(client.Conn())
+	repo := users.NewRepository(pg.DB())
 	handler := api.NewHandler(repo)
 
 	mux := http.NewServeMux()

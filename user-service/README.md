@@ -1,15 +1,15 @@
 # User Service
 
-Manages test user profiles in ClickHouse (`ReplacingMergeTree`). No event ingest — events go to analytics-service.
+Manages test user profiles in Postgres. No event ingest — events go to analytics-service.
 
 ## API
 
 - `GET /health`
 - `PUT /users/{userID}` — upsert profile (`external_id`, `username`, `timezone`)
-- `GET /users/{userID}` — read current profile (`FINAL`)
+- `GET /users/{userID}` — read current profile
 
 ## Local
 
-Env vars: `CLICKHOUSE_HOST`, `CLICKHOUSE_PORT` (native, default `9000`), `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`, `SERVER_PORT`, `MIGRATIONS_DIR`.
+Env vars: `POSTGRES_HOST`, `POSTGRES_PORT` (default `5432`), `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE`, `POSTGRES_SSLMODE` (default `disable`), `SERVER_PORT`, `MIGRATIONS_DIR`.
 
-Migrations run on startup from `migrations/`.
+Migrations run on startup from `migrations/`. Upserts use `INSERT ... ON CONFLICT (user_id) DO UPDATE`; `created_at` / `updated_at` are managed by the database.

@@ -93,7 +93,7 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleS
 
 	for _, rule := range rules.stories {
 		if rule.visibility.allows(mode) && rule.when.eval(snapshot) {
-			story = append(story, rule.scene)
+			story = append(story, attachPercentile(cloneScene(rule.scene), m))
 		}
 	}
 
@@ -150,28 +150,42 @@ func buildOutro(mode models.RecapMode, shareURL string) map[string]any {
 	}
 }
 
-func statScene(
-	id string,
-	valueKey string,
-	percentileKey string,
-	title string,
-	_ clients.Metrics,
-	unit map[string]string,
-	eyebrow string,
-	percentile *float64,
-) map[string]any {
-	scene := map[string]any{
-		"id":    id,
-		"type":  "stat",
-		"value": valueKey,
-		"title": title,
-		"unit":  unit,
+func cloneScene(scene map[string]any) map[string]any {
+	cloned := make(map[string]any, len(scene))
+	for key, value := range scene {
+		cloned[key] = value
 	}
-	if eyebrow != "" {
-		scene["eyebrow"] = eyebrow
+	return cloned
+}
+
+func attachPercentile(scene map[string]any, m clients.Metrics) map[string]any {
+	valueKey, _ := scene["value"].(string)
+
+	var percentileKey models.MetricKey
+	var percentile *float64
+
+	switch valueKey {
+	case string(models.MetricListingsPublished):
+		percentileKey = models.MetricListingsPercentile
+		percentile = m.ListingsPercentile
+	case string(models.MetricViewsTotal):
+		percentileKey = models.MetricViewsPercentile
+		percentile = m.ViewsPercentile
+	case string(models.MetricFavoritesReceived):
+		percentileKey = models.MetricFavoritesPercentile
+		percentile = m.FavoritesPercentile
+	case string(models.MetricMessagesSent):
+		percentileKey = models.MetricMessagesPercentile
+		percentile = m.MessagesPercentile
+	case string(models.MetricDealsClosed):
+		percentileKey = models.MetricDealsPercentile
+		percentile = m.DealsPercentile
+	default:
+		return scene
 	}
+
 	if percentile != nil {
-		scene["percentile"] = percentileKey
+		scene["percentile"] = string(percentileKey)
 		scene["comparisonTemplate"] = "это больше, чем у {{percentile}}% пользователей"
 	}
 	return scene
@@ -248,4 +262,18 @@ func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.Me
 	}
 
 	return all
+}
+
+func addPercentileMetric(
+	all map[string]models.MetricValue,
+	key models.MetricKey,
+	value *float64,
+) {
+	if value == nil {
+		return
+	}
+	all[string(key)] = models.MetricValue{
+		Type:  models.MetricTypePercentile,
+		Value: *value,
+	}
 }

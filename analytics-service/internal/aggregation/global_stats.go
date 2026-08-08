@@ -30,7 +30,11 @@ func newGlobalStats(db FloatQuerier, ttl time.Duration) *globalStats {
 func (g *globalStats) counterTotal(ctx context.Context, req GlobalRequest) (Result, error) {
 	key := joinCacheKey("counter_total", req.EventType, formatCacheTime(req.From), formatCacheTime(req.To))
 	if cached, ok := g.cache.Get(key); ok {
-		return cached.(Result), nil
+		result, ok := cached.(Result)
+		if !ok {
+			return Result{}, fmt.Errorf("counter total cache: unexpected type %T", cached)
+		}
+		return result, nil
 	}
 
 	result, err := aggregateGlobalCounter(ctx, g.db, req)
@@ -56,7 +60,11 @@ func (g *globalStats) uniqueTotal(
 		formatCacheTime(req.To),
 	)
 	if cached, ok := g.cache.Get(key); ok {
-		return cached.(Result), nil
+		result, ok := cached.(Result)
+		if !ok {
+			return Result{}, fmt.Errorf("unique total cache: unexpected type %T", cached)
+		}
+		return result, nil
 	}
 
 	result, err := aggregateGlobalUnique(ctx, g.db, req, cfg)
@@ -74,7 +82,11 @@ func (g *globalStats) perUserTotals(
 	args []any,
 ) ([]float64, error) {
 	if cached, ok := g.cache.Get(key); ok {
-		return cached.([]float64), nil
+		totals, ok := cached.([]float64)
+		if !ok {
+			return nil, fmt.Errorf("per-user totals cache: unexpected type %T", cached)
+		}
+		return totals, nil
 	}
 
 	query := fmt.Sprintf(`

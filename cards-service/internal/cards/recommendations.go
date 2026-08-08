@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cards-service/internal/clients"
+	"cards-service/internal/models"
 )
 
 const maxRecommendations = 3
@@ -18,7 +19,7 @@ type recommendationRule struct {
 	linkLabel string
 	path      string
 	priority  int
-	cond      func(clients.Metrics) bool
+	when      condition
 }
 
 var recommendationRules = []recommendationRule{
@@ -28,11 +29,12 @@ var recommendationRules = []recommendationRule{
 		text:      "У вас есть объявления, но сделок пока немного. Продвижение поможет им найти покупателя быстрее.",
 		callout:   "Больше показов — больше сделок",
 		linkLabel: "Продвинуть объявления",
-		path:      "/promotion",
+		path:      "/profile",
 		priority:  100,
-		cond: func(m clients.Metrics) bool {
-			return m.ListingsPublished > 0 && m.DealsClosed == 0
-		},
+		when: condition{match: matchAll, predicates: []predicate{
+			{metric: models.MetricListingsPublished, op: opGt, value: 0},
+			{metric: models.MetricDealsClosed, op: opEq, value: 0},
+		}},
 	},
 	{
 		id:        "return-favorites",
@@ -42,9 +44,9 @@ var recommendationRules = []recommendationRule{
 		linkLabel: "Открыть избранное",
 		path:      "/favorites",
 		priority:  90,
-		cond: func(m clients.Metrics) bool {
-			return m.FavoritesReceived > 0
-		},
+		when: condition{predicates: []predicate{
+			{metric: models.MetricFavoritesReceived, op: opGt, value: 0},
+		}},
 	},
 	{
 		id:        "resume-delivery",
@@ -52,11 +54,11 @@ var recommendationRules = []recommendationRule{
 		text:      "Вы уже пользовались доставкой. С ней проще продавать и покупать по всей стране.",
 		callout:   "Продавайте покупателям из других городов",
 		linkLabel: "Подключить доставку",
-		path:      "/delivery",
+		path:      "/dostavka",
 		priority:  80,
-		cond: func(m clients.Metrics) bool {
-			return m.DeliveryOrders > 0
-		},
+		when: condition{predicates: []predicate{
+			{metric: models.MetricDeliveryOrders, op: opGt, value: 0},
+		}},
 	},
 	{
 		id:        "resume-active",
@@ -64,11 +66,11 @@ var recommendationRules = []recommendationRule{
 		text:      "У вас есть активные объявления. Освежите их, чтобы они снова поднялись в поиске.",
 		callout:   "Актуальные объявления смотрят чаще",
 		linkLabel: "К моим объявлениям",
-		path:      "/profile/items",
+		path:      "/profile",
 		priority:  70,
-		cond: func(m clients.Metrics) bool {
-			return m.ActiveListings > 0
-		},
+		when: condition{predicates: []predicate{
+			{metric: models.MetricActiveListings, op: opGt, value: 0},
+		}},
 	},
 	{
 		id:        "resume-search",
@@ -78,9 +80,10 @@ var recommendationRules = []recommendationRule{
 		linkLabel: "Продолжить поиск",
 		path:      "/",
 		priority:  60,
-		cond: func(m clients.Metrics) bool {
-			return m.SearchQueries > 0 || m.ViewsTotal > 0
-		},
+		when: condition{match: matchAny, predicates: []predicate{
+			{metric: models.MetricSearchQueries, op: opGt, value: 0},
+			{metric: models.MetricViewsTotal, op: opGt, value: 0},
+		}},
 	},
 	{
 		id:        "new-listing",
@@ -88,18 +91,20 @@ var recommendationRules = []recommendationRule{
 		text:      "В этом году вы ещё не продавали. Начните — это займёт пару минут.",
 		callout:   "Продайте то, чем больше не пользуетесь",
 		linkLabel: "Разместить объявление",
-		path:      "/add",
+		path:      "/additem",
 		priority:  50,
-		cond: func(m clients.Metrics) bool {
-			return m.ListingsPublished == 0
-		},
+		when: condition{predicates: []predicate{
+			{metric: models.MetricListingsPublished, op: opEq, value: 0},
+		}},
 	},
 }
 
 func buildRecommendations(m clients.Metrics, productBaseURL string) []map[string]any {
+	snapshot := metricsSnapshot(m)
+
 	matched := make([]recommendationRule, 0, len(recommendationRules))
 	for _, rule := range recommendationRules {
-		if rule.cond(m) {
+		if rule.when.eval(snapshot) {
 			matched = append(matched, rule)
 		}
 	}

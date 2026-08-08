@@ -11,12 +11,16 @@ import (
 	"time"
 
 	"cards-service/internal/api"
+	"cards-service/internal/cards"
 	"cards-service/internal/clients"
 	"cards-service/internal/config"
+	"cards-service/internal/db"
 )
 
 func main() {
 	cfg := config.Load()
+
+	ruleProvider := loadRuleProvider(cfg)
 
 	handler := api.NewHandler(
 		clients.NewUserClient(cfg.UserServiceURL),
@@ -24,6 +28,7 @@ func main() {
 		cfg.ShareSigningKey,
 		cfg.ShareBaseURL,
 		cfg.ProductBaseURL,
+		ruleProvider,
 	)
 
 	mux := api.RegisterRoutes(handler)
@@ -60,4 +65,29 @@ func main() {
 	}
 
 	log.Println("cards-service stopped")
+}
+
+func loadRuleProvider(cfg config.Config) *cards.RuleProvider {
+	if cfg.PostgresHost == "" {
+		slog.Info("postgres not configured, using built-in rules")
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	pg, err := db.Connect(ctx, cfg.PostgresDSN())
+	if err != nil {
+		slog.Error("postgres connect failed, using built-in rules", "error", err)
+		return nil
+	}
+
+	if err := pg.Migrate(ctx, cfg.MigrationsDir); err != nil {
+		slog.Error("postgres migrate failed, using built-in rules", "error", err)
+		_ = pg.Close()
+		return nil
+	}
+
+	slog.Info("rules loaded from postgres")
+	return cards.NewRuleProvider(cards.NewRuleStore(pg.DB()), time.Minute)
 }

@@ -34,11 +34,17 @@ type RecapPayload struct {
 }
 
 type Meta struct {
-	Vertical    string  `json:"vertical"`
-	Year        int     `json:"year"`
-	Locale      string  `json:"locale"`
-	Profile     Profile `json:"profile"`
-	GeneratedAt string  `json:"generatedAt"`
+	Vertical    string `json:"vertical"`
+	Year        int    `json:"year"`
+	Locale      string `json:"locale"`
+	User        User   `json:"user"`
+	GeneratedAt string `json:"generatedAt"`
+}
+
+type User struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	AvatarURL   string `json:"avatarUrl,omitempty"`
 }
 
 type Profile struct {

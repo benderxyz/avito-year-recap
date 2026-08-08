@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type Config struct {
 	Port                string
@@ -9,6 +12,13 @@ type Config struct {
 	ShareSigningKey     string
 	ShareBaseURL        string
 	ProductBaseURL      string
+	PostgresHost        string
+	PostgresPort        string
+	PostgresUser        string
+	PostgresPassword    string
+	PostgresDatabase    string
+	PostgresSSLMode     string
+	MigrationsDir       string
 }
 
 func Load() Config {
@@ -19,7 +29,21 @@ func Load() Config {
 		ShareSigningKey:     getEnv("SHARE_SIGNING_KEY", "dev-insecure-share-key"),
 		ShareBaseURL:        getEnv("SHARE_BASE_URL", "http://localhost:3000"),
 		ProductBaseURL:      getEnv("PRODUCT_BASE_URL", "https://www.avito.ru"),
+		PostgresHost:        getEnv("POSTGRES_HOST", ""),
+		PostgresPort:        getEnv("POSTGRES_PORT", "5432"),
+		PostgresUser:        getEnv("POSTGRES_USER", "recap"),
+		PostgresPassword:    getEnv("POSTGRES_PASSWORD", "recap"),
+		PostgresDatabase:    getEnv("POSTGRES_DATABASE", "cards"),
+		PostgresSSLMode:     getEnv("POSTGRES_SSLMODE", "disable"),
+		MigrationsDir:       getEnv("MIGRATIONS_DIR", "migrations"),
 	}
+}
+
+func (c Config) PostgresDSN() string {
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.PostgresDatabase, c.PostgresSSLMode,
+	)
 }
 
 func getEnv(key, fallback string) string {

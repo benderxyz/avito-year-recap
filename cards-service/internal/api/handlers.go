@@ -17,6 +17,7 @@ type Handler struct {
 	shareSigningKey []byte
 	shareBaseURL    string
 	productBaseURL  string
+	rules           *cards.RuleProvider
 }
 
 func NewHandler(
@@ -25,6 +26,7 @@ func NewHandler(
 	shareSigningKey string,
 	shareBaseURL string,
 	productBaseURL string,
+	rules *cards.RuleProvider,
 ) *Handler {
 	return &Handler{
 		userClient:      userClient,
@@ -32,6 +34,7 @@ func NewHandler(
 		shareSigningKey: []byte(shareSigningKey),
 		shareBaseURL:    shareBaseURL,
 		productBaseURL:  productBaseURL,
+		rules:           rules,
 	}
 }
 
@@ -104,12 +107,18 @@ func (h *Handler) buildRecap(
 		return models.RecapPayload{}, fmt.Errorf("metrics not found: %w", err)
 	}
 
-	return cards.BuildRecap(profile, year, metrics, cards.BuildOptions{
+	opts := cards.BuildOptions{
 		Mode:           mode,
 		SigningKey:     h.shareSigningKey,
 		ShareBaseURL:   h.shareBaseURL,
 		ProductBaseURL: h.productBaseURL,
-	}), nil
+	}
+	if h.rules != nil {
+		ruleSet := h.rules.Get(r.Context())
+		opts.Rules = &ruleSet
+	}
+
+	return cards.BuildRecap(profile, year, metrics, opts), nil
 }
 
 func writeRecapError(w http.ResponseWriter, _ error) {

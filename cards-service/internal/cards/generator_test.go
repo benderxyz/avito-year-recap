@@ -139,3 +139,28 @@ func TestBuildRecapBadgeShouldMaskExactCountInPublic(t *testing.T) {
 		}
 	}
 }
+
+func hasRecommendationScene(story []map[string]any) bool {
+	for _, scene := range story {
+		if id, ok := scene["id"].(string); ok && strings.HasPrefix(id, "reco-") {
+			return true
+		}
+	}
+	return false
+}
+
+func TestBuildRecapPrivateShouldIncludeRecommendations(t *testing.T) {
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
+
+	if !hasRecommendationScene(recap.Story) {
+		t.Fatal("expected recommendation scenes in private recap")
+	}
+}
+
+func TestBuildRecapPublicShouldOmitRecommendations(t *testing.T) {
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), BuildOptions{Mode: models.RecapModePublic})
+
+	if hasRecommendationScene(recap.Story) {
+		t.Fatal("public share-card must not include recommendation scenes")
+	}
+}

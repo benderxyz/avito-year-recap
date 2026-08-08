@@ -1,52 +1,113 @@
 # Cards Service
 
-Overview
+Builds the personalized "year recap" payload for a user. It fetches the user
+profile from **user-service** and yearly metrics from **analytics-service**, runs
+a data-driven rules engine (badges, story scenes, recommendations), and returns a
+single `RecapPayload` consumed by the frontend recap widget.
 
-The Cards Service prepares "recap" cards for a user: it fetches the user profile from the user-service and metrics from the analytics-service, then generates a set of cards returned to the client.
+## Key files
 
-Key files
+- [entrypoint](cmd/main.go)
+- [HTTP handlers / routes](internal/api/handlers.go)
+- [service clients (user / analytics)](internal/clients/clients.go)
+- [recap generator](internal/cards/generator.go)
+- [rules engine](internal/cards/rules.go), [Postgres rule store](internal/cards/rulestore.go), [cached provider](internal/cards/rules_provider.go)
+- [recap models](internal/models/recap.go)
+- [schema DDL](migrations/001_rules.sql), [seed data](seeds/001_rules.sql)
 
-- [entrypoint: main.go](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/cmd/main.go)
-- [HTTP handlers](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/internal/api/handlers.go)
-- [Service clients (user / analytics)](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/internal/clients/clients.go)
-- [Card generator](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/internal/cards/generator.go)
-- [Recap models](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/internal/models/recap.go)
+## API
 
-API
+### `GET /health`
 
-- GET /health
-  - Description: service health check
-  - Response: text/plain, body: "cards-service: OK\n"
+Health check. Response: `text/plain`, body `cards-service: OK`.
 
-- GET /api/recap/{id}
-  - Description: build a recap for the profile with the provided id
-  - Behavior: requests profile from user-service and metrics from analytics-service, then invokes the card generator
-  - Success response: 200 OK, application/json
-  - Response shape (Recap):
+### `GET /api/recap/{year}/{id}`
 
-    {
-      "profile_id": "<id>",
-      "cards": [
-        {
-          "type": "<type>",
-          "title": "<title>",
-          "text": "<text>",
-          "action": "<optional>",
-          "action_value": "<optional>"
-        }
-      ]
-    }
+Builds a **private** recap for the given user `id` and `year`.
 
-  - Errors:
-    - 404 "profile not found" — when user-service returns NotFound
-    - 404 "metrics not found" — when analytics-service returns an error
+- Fetches the profile from user-service and metrics from analytics-service, then
+  runs the generator in `private` mode: full metrics, recommendations, and a
+  share action (when a signing key is configured).
+- Success: `200 OK`, `application/json`, body `RecapPayload` (see below).
+- Errors:
+  - `400 invalid year` — `year` is not an integer.
+  - `404 recap not found` — profile or metrics could not be resolved.
 
-Configuration
+### `GET /api/share/{token}`
 
-The service is configured via environment variables (see [cmd/main.go](/home/darina/study/avito_hack/avito-year-recap.worktrees/seed-data-users-api-user-service/cards-service/cmd/main.go)):
+Builds a **public** recap from a signed share token (as embedded in a private
+recap's `features.shareUrl`).
 
-- USER_SERVICE_URL — URL of the user-service (default: http://localhost:8082)
-- ANALYTICS_SERVICE_URL — URL of the analytics-service (default: http://localhost:8080)
-- The HTTP server address is configured in code (default: :8081)
+- Decodes `id` and `year` from the token, then runs the generator in `public`
+  mode: metrics limited to a public allowlist, no recommendations, no share
+  action.
+- Success: `200 OK`, `application/json`, body `RecapPayload`.
+- Errors:
+  - `400 invalid share token` — token missing, malformed, or signature invalid.
+  - `404 recap not found` — profile or metrics could not be resolved.
 
+## Response shape (`RecapPayload`)
 
+```json
+{
+  "schemaVersion": 1,
+  "meta": {
+    "vertical": "marketplace",
+    "year": 2026,
+    "locale": "ru-RU",
+    "user": { "id": "avito-42", "displayName": "Alex", "avatarUrl": "…" },
+    "generatedAt": "2026-08-09T00:00:00Z"
+  },
+  "metrics": {
+    "listingsPublished": { "type": "number", "value": 12 },
+    "moneyEarned": { "type": "money", "value": 150000, "currency": "RUB" }
+  },
+  "badges": [
+    { "id": "active_user", "title": "…", "description": "…", "iconUrl": "/badges/active_user.svg" }
+  ],
+  "story": [
+    { "id": "intro", "type": "intro", "title": "…", "actions": [] }
+  ],
+  "features": { "shareEnabled": true, "shareUrl": "…" }
+}
+```
+
+`story` is an ordered list of scenes (`intro`, `stat`, `achievement`, `upsell`,
+`outro`). `features` is present only in private mode when sharing is enabled.
+
+## Rules & seeds
+
+Badges, story scenes, and recommendations are **data-driven**. On startup, if
+Postgres is configured, the service migrates the schema from `migrations/` and
+loads rules via a TTL-cached provider. If Postgres is not configured, or a load
+fails, the service falls back to the built-in default rule set — so it always
+serves a valid recap.
+
+Seed rows live in `seeds/` (separate from schema migrations) and are applied on
+startup only when `SEED_ON_START=true`. Seeds use `ON CONFLICT DO NOTHING`, so
+they are idempotent across restarts.
+
+## Configuration
+
+Environment variables (see [internal/config/config.go](internal/config/config.go)):
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `8081` | HTTP listen port |
+| `USER_SERVICE_URL` | `http://localhost:8082` | user-service base URL |
+| `ANALYTICS_SERVICE_URL` | `http://localhost:8080` | analytics-service base URL |
+| `SHARE_SIGNING_KEY` | `dev-insecure-share-key` | HMAC key for share tokens |
+| `SHARE_BASE_URL` | `http://localhost:3000` | base URL used to build share links |
+| `PRODUCT_BASE_URL` | `https://www.avito.ru` | base URL for recommendation links |
+| `POSTGRES_HOST` | _(empty)_ | Postgres host; empty disables rule storage (built-in rules only) |
+| `POSTGRES_PORT` | `5432` | Postgres port |
+| `POSTGRES_USER` | `recap` | Postgres user |
+| `POSTGRES_PASSWORD` | `recap` | Postgres password |
+| `POSTGRES_DATABASE` | `cards` | Postgres database |
+| `POSTGRES_SSLMODE` | `disable` | Postgres SSL mode |
+| `MIGRATIONS_DIR` | `migrations` | schema migrations directory |
+| `SEEDS_DIR` | `seeds` | seed files directory |
+| `SEED_ON_START` | `false` | apply seeds from `SEEDS_DIR` on startup |
+
+When `POSTGRES_HOST` is set, connect/migrate failures are fatal (the service
+exits) so it never runs against a misconfigured database.

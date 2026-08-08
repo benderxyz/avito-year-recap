@@ -5,42 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-	"time"
 
 	"user-service/internal/users"
 )
-
-func TestApplyUpsertTimestampsShouldPreserveCreatedAtWhenUserExists(t *testing.T) {
-	createdAt := time.Date(2025, 1, 10, 8, 0, 0, 0, time.UTC)
-	now := time.Date(2026, 8, 5, 12, 0, 0, 0, time.UTC)
-	existing := users.User{UserID: 42, CreatedAt: createdAt}
-
-	got := users.ApplyUpsertTimestamps(users.User{
-		UserID:   42,
-		Username: "Alex",
-		Timezone: "Europe/Moscow",
-	}, &existing, now)
-
-	if !got.CreatedAt.Equal(createdAt) {
-		t.Fatalf("expected created_at %v, got %v", createdAt, got.CreatedAt)
-	}
-	if !got.UpdatedAt.Equal(now) {
-		t.Fatalf("expected updated_at %v, got %v", now, got.UpdatedAt)
-	}
-}
-
-func TestApplyUpsertTimestampsShouldSetCreatedAtWhenUserIsNew(t *testing.T) {
-	now := time.Date(2026, 8, 5, 12, 0, 0, 0, time.UTC)
-
-	got := users.ApplyUpsertTimestamps(users.User{UserID: 7}, nil, now)
-
-	if !got.CreatedAt.Equal(now) {
-		t.Fatalf("expected created_at %v, got %v", now, got.CreatedAt)
-	}
-	if got.Timezone != "UTC" {
-		t.Fatalf("expected default timezone UTC, got %s", got.Timezone)
-	}
-}
 
 func TestMapScanErrorShouldReturnNotFoundWhenNoRows(t *testing.T) {
 	err := users.MapScanError(sql.ErrNoRows)

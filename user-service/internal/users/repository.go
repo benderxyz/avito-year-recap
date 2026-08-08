@@ -5,65 +5,45 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
-
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )
 
 var ErrNotFound = errors.New("user not found")
 
 type Repository struct {
-	conn driver.Conn
+	db *sql.DB
 }
 
-func NewRepository(conn driver.Conn) *Repository {
-	return &Repository{conn: conn}
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{db: db}
 }
 
 func (r *Repository) Upsert(ctx context.Context, user User) error {
-	now := time.Now().UTC()
-
-	existing, err := r.GetByID(ctx, user.UserID)
-	switch {
-	case err == nil:
-		user = ApplyUpsertTimestamps(user, &existing, now)
-	case errors.Is(err, ErrNotFound):
-		user = ApplyUpsertTimestamps(user, nil, now)
-	default:
-		return fmt.Errorf("lookup user before upsert: %w", err)
+	timezone := user.Timezone
+	if timezone == "" {
+		timezone = "UTC"
 	}
 
-	batch, err := r.conn.PrepareBatch(ctx, `
-		INSERT INTO users (user_id, external_id, username, timezone, created_at, updated_at)
-	`)
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO users (user_id, external_id, username, timezone)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id) DO UPDATE SET
+			external_id = EXCLUDED.external_id,
+			username = EXCLUDED.username,
+			timezone = EXCLUDED.timezone,
+			updated_at = now()
+	`, user.UserID, user.ExternalID, user.Username, timezone)
 	if err != nil {
-		return fmt.Errorf("prepare upsert batch: %w", err)
-	}
-
-	if err := batch.Append(
-		user.UserID,
-		user.ExternalID,
-		user.Username,
-		user.Timezone,
-		user.CreatedAt,
-		user.UpdatedAt,
-	); err != nil {
-		return fmt.Errorf("append user: %w", err)
-	}
-
-	if err := batch.Send(); err != nil {
-		return fmt.Errorf("send user upsert: %w", err)
+		return fmt.Errorf("upsert user: %w", err)
 	}
 
 	return nil
 }
 
 func (r *Repository) GetByID(ctx context.Context, userID uint64) (User, error) {
-	row := r.conn.QueryRow(ctx, `
+	row := r.db.QueryRowContext(ctx, `
 		SELECT user_id, external_id, username, timezone, created_at, updated_at
-		FROM users FINAL
-		WHERE user_id = ?
-		LIMIT 1
+		FROM users
+		WHERE user_id = $1
 	`, userID)
 
 	var user User
@@ -76,10 +56,6 @@ func (r *Repository) GetByID(ctx context.Context, userID uint64) (User, error) {
 		&user.UpdatedAt,
 	); err != nil {
 		return User{}, MapScanError(err)
-	}
-
-	if user.UserID == 0 {
-		return User{}, ErrNotFound
 	}
 
 	return user, nil

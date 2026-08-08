@@ -7,22 +7,6 @@ const (
 	RecapModePublic  RecapMode = "public"
 )
 
-var PublicMetricsAllowlist = map[string]bool{
-	"listingsPublished":   true,
-	"listingsPercentile":  true,
-	"viewsTotal":          true,
-	"viewsPercentile":     true,
-	"favoritesReceived":   true,
-	"favoritesPercentile": true,
-	"dealsClosed":         true,
-	"dealsPercentile":     true,
-	"daysActive":          true,
-	"categoriesTried":     true,
-	"peakDayViews":        true,
-	"searchQueries":       true,
-	"deliveryOrders":      true,
-}
-
 type Recap struct {
 	ProfileID string  `json:"profile_id"`
 	Badges    []Badge `json:"badges"`

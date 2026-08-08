@@ -107,15 +107,21 @@ func (h *Handler) buildRecap(
 		return models.RecapPayload{}, fmt.Errorf("metrics not found: %w", err)
 	}
 
+	if h.rules == nil {
+		return models.RecapPayload{}, fmt.Errorf("rules provider is not configured")
+	}
+
+	ruleSet, err := h.rules.Get(r.Context())
+	if err != nil {
+		return models.RecapPayload{}, fmt.Errorf("load rules: %w", err)
+	}
+
 	opts := cards.BuildOptions{
 		Mode:           mode,
 		SigningKey:     h.shareSigningKey,
 		ShareBaseURL:   h.shareBaseURL,
 		ProductBaseURL: h.productBaseURL,
-	}
-	if h.rules != nil {
-		ruleSet := h.rules.Get(r.Context())
-		opts.Rules = &ruleSet
+		Rules:          &ruleSet,
 	}
 
 	return cards.BuildRecap(profile, year, metrics, opts), nil

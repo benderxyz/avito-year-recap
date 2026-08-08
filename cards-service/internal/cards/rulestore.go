@@ -33,7 +33,17 @@ func (s *RuleStore) Load(ctx context.Context) (RuleSet, error) {
 		return RuleSet{}, err
 	}
 
-	return RuleSet{badges: badges, stories: stories, recommendations: recommendations}, nil
+	metrics, err := s.loadMetricDefinitions(ctx)
+	if err != nil {
+		return RuleSet{}, err
+	}
+
+	return RuleSet{
+		badges:          badges,
+		stories:         stories,
+		recommendations: recommendations,
+		metrics:         metrics,
+	}, nil
 }
 
 func (s *RuleStore) loadBadgeRules(ctx context.Context) ([]badgeRule, error) {
@@ -100,40 +110,6 @@ func (s *RuleStore) loadStoryRules(ctx context.Context) ([]storyRule, error) {
 	return rules, nil
 }
 
-func makeBadgeRule(id, title, description, iconURL, vis, metricKey, op string, threshold float64) badgeRule {
-	return badgeRule{
-		badge: models.Badge{
-			ID:          id,
-			Title:       title,
-			Description: description,
-			IconURL:     iconURL,
-		},
-		visibility: visibility(vis),
-		when: condition{predicates: []predicate{
-			{metric: models.MetricKey(metricKey), op: predicateOp(op), value: threshold},
-		}},
-	}
-}
-
-func makeStoryRule(vis, metricKey, op string, threshold float64, hasPredicate bool, payload []byte) (storyRule, error) {
-	var scene map[string]any
-	if err := json.Unmarshal(payload, &scene); err != nil {
-		return storyRule{}, fmt.Errorf("unmarshal story payload: %w", err)
-	}
-
-	rule := storyRule{
-		visibility: visibility(vis),
-		scene:      scene,
-	}
-	if hasPredicate {
-		rule.when = condition{predicates: []predicate{
-			{metric: models.MetricKey(metricKey), op: predicateOp(op), value: threshold},
-		}}
-	}
-
-	return rule, nil
-}
-
 func (s *RuleStore) loadRecommendationRules(ctx context.Context) ([]recommendationRule, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, title, text, callout, link_label, path, priority, condition
@@ -166,6 +142,75 @@ func (s *RuleStore) loadRecommendationRules(ctx context.Context) ([]recommendati
 	}
 
 	return rules, nil
+}
+
+func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricDefinition, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT key, value_type, currency, is_public, percentile_key
+		FROM metric_definitions
+		WHERE enabled = true
+		ORDER BY sort_order, key
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query metric_definitions: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var defs []models.MetricDefinition
+	for rows.Next() {
+		var key, valueType string
+		var currency, percentileKey sql.NullString
+		var isPublic bool
+		if err := rows.Scan(&key, &valueType, &currency, &isPublic, &percentileKey); err != nil {
+			return nil, fmt.Errorf("scan metric_definition: %w", err)
+		}
+		defs = append(defs, models.MetricDefinition{
+			Key:           key,
+			ValueType:     models.MetricType(valueType),
+			Currency:      models.Currency(currency.String),
+			IsPublic:      isPublic,
+			PercentileKey: percentileKey.String,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate metric_definitions: %w", err)
+	}
+
+	return defs, nil
+}
+
+func makeBadgeRule(id, title, description, iconURL, vis, metricKey, op string, threshold float64) badgeRule {
+	return badgeRule{
+		badge: models.Badge{
+			ID:          id,
+			Title:       title,
+			Description: description,
+			IconURL:     iconURL,
+		},
+		visibility: visibility(vis),
+		when: condition{predicates: []predicate{
+			{metric: models.MetricKey(metricKey), op: predicateOp(op), value: threshold},
+		}},
+	}
+}
+
+func makeStoryRule(vis, metricKey, op string, threshold float64, hasPredicate bool, payload []byte) (storyRule, error) {
+	var scene map[string]any
+	if err := json.Unmarshal(payload, &scene); err != nil {
+		return storyRule{}, fmt.Errorf("unmarshal story payload: %w", err)
+	}
+
+	rule := storyRule{
+		visibility: visibility(vis),
+		scene:      scene,
+	}
+	if hasPredicate {
+		rule.when = condition{predicates: []predicate{
+			{metric: models.MetricKey(metricKey), op: predicateOp(op), value: threshold},
+		}}
+	}
+
+	return rule, nil
 }
 
 func makeRecommendationRule(id, title, text, callout, linkLabel, path string, priority int, conditionPayload []byte) (recommendationRule, error) {

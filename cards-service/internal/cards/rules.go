@@ -40,25 +40,17 @@ type condition struct {
 	predicates []predicate
 }
 
+type storyRule struct {
+	visibility visibility
+	when       condition
+	scene      map[string]any
+}
+
 type RuleSet struct {
 	badges          []badgeRule
 	stories         []storyRule
 	recommendations []recommendationRule
-}
-
-func defaultRuleSet() RuleSet {
-	return RuleSet{
-		badges:          defaultBadgeRules,
-		stories:         defaultStatSceneRules,
-		recommendations: defaultRecommendationRules,
-	}
-}
-
-func resolveRuleSet(rules *RuleSet) RuleSet {
-	if rules != nil {
-		return *rules
-	}
-	return defaultRuleSet()
+	metrics         []models.MetricDefinition
 }
 
 func metricsSnapshot(m clients.Metrics) map[models.MetricKey]float64 {

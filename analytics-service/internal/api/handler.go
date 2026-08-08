@@ -100,7 +100,7 @@ func (h *Handler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snapshot, err := h.metrics.Metrics(r.Context(), userID, from, to)
+	snapshot, err := h.metrics.Metrics(r.Context(), userID, from, to, timezone)
 	if err != nil {
 		writeMappedError(w, err, "failed to aggregate metrics")
 		return

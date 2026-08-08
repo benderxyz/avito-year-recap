@@ -11,8 +11,8 @@ import (
 
 const shareTokenSeparator = "."
 
-func GenerateShareToken(signingKey []byte, externalID string, year int) string {
-	payload := shareTokenPayload(externalID, year)
+func GenerateShareToken(signingKey []byte, userID string, year int) string {
+	payload := shareTokenPayload(userID, year)
 	mac := signPayload(signingKey, payload)
 
 	return strings.Join([]string{
@@ -21,7 +21,7 @@ func GenerateShareToken(signingKey []byte, externalID string, year int) string {
 	}, shareTokenSeparator)
 }
 
-func DecodeShareToken(signingKey []byte, token string) (externalID string, year int, err error) {
+func DecodeShareToken(signingKey []byte, token string) (userID string, year int, err error) {
 	encodedPayload, encodedMAC, found := strings.Cut(token, shareTokenSeparator)
 	if !found {
 		return "", 0, fmt.Errorf("malformed share token")
@@ -55,8 +55,8 @@ func DecodeShareToken(signingKey []byte, token string) (externalID string, year 
 	return id, year, nil
 }
 
-func shareTokenPayload(externalID string, year int) string {
-	return externalID + ":" + strconv.Itoa(year)
+func shareTokenPayload(userID string, year int) string {
+	return userID + ":" + strconv.Itoa(year)
 }
 
 func signPayload(signingKey []byte, payload string) []byte {

@@ -5,6 +5,13 @@ x-clickhouse-client-env: &clickhouse-client-env
   CLICKHOUSE_PASSWORD: recap
   CLICKHOUSE_DATABASE: default
 
+x-postgres-client-env: &postgres-client-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: recap
+  POSTGRES_PASSWORD: recap
+  POSTGRES_SSLMODE: disable
+
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:24.8
@@ -24,6 +31,24 @@ services:
         soft: 262144
         hard: 262144
 
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: recap
+      POSTGRES_PASSWORD: recap
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   analytics:
     build:
       context: ./analytics-service
@@ -34,8 +59,12 @@ services:
       <<: *clickhouse-client-env
       SERVER_PORT: "8080"
       MIGRATIONS_DIR: /app/migrations
+      USER_SERVICE_URL: http://user:8082
     depends_on:
-      - clickhouse
+      clickhouse:
+        condition: service_started
+      user:
+        condition: service_healthy
 
   cards:
     build:
@@ -44,31 +73,21 @@ services:
     ports:
       - "8081:8081"
     environment:
+      <<: *postgres-client-env
+      PORT: "8081"
       USER_SERVICE_URL: http://user:8082
       ANALYTICS_SERVICE_URL: http://analytics:8080
-      POSTGRES_HOST: cards-postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: recap
-      POSTGRES_PASSWORD: recap
       POSTGRES_DATABASE: cards
-      POSTGRES_SSLMODE: disable
       MIGRATIONS_DIR: /app/migrations
       SEEDS_DIR: /app/seeds
       SEED_ON_START: "true"
     depends_on:
-      - analytics
-      - user
-      - cards-postgres
-
-  cards-postgres:
-    image: postgres:16
-    container_name: cards-postgres
-    environment:
-      POSTGRES_USER: recap
-      POSTGRES_PASSWORD: recap
-      POSTGRES_DB: cards
-    volumes:
-      - cards-postgres-data:/var/lib/postgresql/data
+      analytics:
+        condition: service_started
+      user:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   user:
     build:
@@ -77,26 +96,19 @@ services:
     ports:
       - "8082:8082"
     environment:
-      POSTGRES_HOST: user-postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: recap
-      POSTGRES_PASSWORD: recap
+      <<: *postgres-client-env
       POSTGRES_DATABASE: users
-      POSTGRES_SSLMODE: disable
       SERVER_PORT: "8082"
       MIGRATIONS_DIR: /app/migrations
     depends_on:
-      - user-postgres
-
-  user-postgres:
-    image: postgres:16
-    container_name: user-postgres
-    environment:
-      POSTGRES_USER: recap
-      POSTGRES_PASSWORD: recap
-      POSTGRES_DB: users
-    volumes:
-      - user-postgres-data:/var/lib/postgresql/data
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8082'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   frontend:
     build:
@@ -110,5 +122,4 @@ services:
 
 volumes:
   clickhouse-data:
-  cards-postgres-data:
-  user-postgres-data:
+  postgres-data:

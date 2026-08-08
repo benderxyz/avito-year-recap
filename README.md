@@ -38,15 +38,42 @@ curl localhost:8081/health
 curl localhost:8082/health
 ```
 
-Переменные для БД смотри в `.env.example`. Локальный пароль ClickHouse по умолчанию `recap`.
+Переменные для БД смотри в `.env.example`.
+
+Postgres один контейнер, порт `5432`. База `cards` для cards-service. База `users` для user-service. Init скрипт лежит в `infra/postgres/init/`.
+
+Локальный пароль ClickHouse по умолчанию `recap`. Пароль Postgres тоже `recap`.
+
+## Сиды
+
+Rules для cards берутся из `cards-service/seeds/`, если `SEED_ON_START=true`. В compose это уже включено. Миграции и сиды cards пишутся в базу `cards`.
+
+Пользователей и события заливает `seed-data/seed-script` через API. Профили уходят в user-service (база `users`). События уходят в analytics.
 
 Smoke после `docker compose up --build`
 
 ```sh
 curl -s localhost:8080/health
+curl -s localhost:8081/health
 curl -s localhost:8082/health
 go -C seed-data/seed-script run . -user 42 -year 2026
 curl -s 'localhost:8080/users/42/metrics?from=2026-01-01T00:00:00Z&to=2027-01-01T00:00:00Z'
+```
+
+Поднять стек для локальных сидов (Postgres, user, analytics, clickhouse, cards):
+
+```sh
+docker compose up -d postgres clickhouse user analytics cards
+```
+
+cards накатит schema и seed rules в `cards`. user накатит schema в `users`. analytics нужен seed-script для событий. После health можно запускать seed-script.
+
+Если volume `postgres-data` уже есть, а баз `cards` или `users` в нём нет, init не повторится. Тогда сбрось volume проекта и подними заново.
+
+```sh
+docker compose down -v
+docker volume rm avito-year-recap_cards-postgres-data avito-year-recap_user-postgres-data 2>/dev/null || true
+docker compose up --build
 ```
 
 Go-линтер для сервисов запускается из корня проекта:

@@ -12,6 +12,7 @@ import (
 
 	"analytics-service/internal/aggregation"
 	"analytics-service/internal/api"
+	"analytics-service/internal/clients"
 	"analytics-service/internal/config"
 	"analytics-service/internal/db"
 	"analytics-service/internal/events"
@@ -48,8 +49,8 @@ func main() {
 	registry := events.NewRegistry()
 	ingester := events.NewIngester(client.Conn(), registry)
 	querier := aggregation.NewClickHouseQuerier(client.Conn())
-	timezones := aggregation.NewClickHouseTimezoneResolver(client.Conn())
-	metrics := aggregation.NewService(registry, querier, timezones)
+	timezones := clients.NewUserClient(cfg.UserServiceURL)
+	metrics := aggregation.NewService(registry, querier)
 	handler := api.NewHandler(ingester, metrics, timezones)
 
 	mux := http.NewServeMux()

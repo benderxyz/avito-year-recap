@@ -19,9 +19,11 @@ curl -s -X PUT http://localhost:8082/users/42 \
 Generate a year of activity then push it to the services.
 
 ```sh
-docker compose up -d clickhouse analytics user
+docker compose up -d postgres clickhouse user analytics
 go -C seed-data/seed-script run . -year 2026
 ```
+
+Postgres is one container. user-service writes profiles into database `users`. Wait until `curl localhost:8082/health` and `curl localhost:8080/health` succeed before running the script.
 
 By default this seeds 10 users (42-51). Pass `-user` to limit the set.
 

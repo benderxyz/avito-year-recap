@@ -1,100 +1,59 @@
 ---
 title: Введение
-description: Установка Recap Engine и запуск первого интерактивного recap в React.
+description: Обзор Recap Engine — библиотеки для интерактивных итогов года в React.
 sidebar_position: 1
 ---
 
 # Recap Engine
 
-Recap Engine — набор TypeScript-библиотек для создания интерактивных историй с итогами
-года. Он разделён на два пакета:
+Recap Engine помогает собрать **интерактивную историю с итогами года** — как Stories в Instagram, но с вашими данными: числами, текстами, бейджами и кнопками.
 
-- `@recap-engine/core` — типы, подготовка данных, форматирование, темы и управление сценами;
-- `@recap-engine/react` — React-компоненты, layouts, анимации, навигация и autoplay.
+Пользователь листает полноэкранные **сцены** (экраны): приветствие → статистика → инсайты → финал. Библиотека берёт на себя анимации, свайпы, клавиатурную навигацию и progress bar.
+
+## Из чего состоит
+
+| Пакет | Что делает |
+|-------|------------|
+| [`@recap-engine/core`](./core/recap-payload) | Описывает **структуру данных** и **сцены**, готовит JSON с сервера, форматирует числа, задаёт тему |
+| [`@recap-engine/react`](./react/recap) | Рисует **компонент `<Recap>`** — плеер, который показывает сцены пользователю |
+
+Core можно использовать без React (например, на сервере). React всегда опирается на core.
+
+## Три вещи, которые вы передаёте в `<Recap>`
+
+```tsx
+<Recap theme={theme} data={data} scenes={scenes} />
+```
+
+| Prop | Простыми словами |
+|------|------------------|
+| `data` | **Данные** — имя пользователя, метрики, всё, что нужно показать на экранах |
+| `scenes` | **Сценарий** — список экранов: что на каждом показать и в каком порядке |
+| `theme` | **Оформление** — цвета, шрифты (результат `createTheme()`) |
+
+Откуда берутся `data` и `scenes` — два варианта, подробнее в [Архитектуре](./getting-started/architecture):
+
+1. **С сервера** — API отдаёт JSON, вы вызываете `prepareRecap(payload)`.
+2. **В коде** — вы сами описываете сцены через `defineScenes([...])`.
 
 ## Установка
 
 ```bash
-pnpm add @recap-engine/core @recap-engine/react
+pnpm add @recap-engine/core @recap-engine/react react react-dom
 ```
 
-React и React DOM являются peer dependencies:
-
-```bash
-pnpm add react react-dom
-```
-
-## Первый recap
-
-Опишите данные, соберите последовательность сцен и передайте их компоненту `Recap`.
-Значения сцены могут быть статическими или вычисляться из контекста.
+Подключите стили — без них компонент не будет выглядеть правильно:
 
 ```tsx
-import {
-  createTheme,
-  defineScenes,
-  ESceneType,
-  type SceneDefinition,
-} from '@recap-engine/core';
-import { Recap } from '@recap-engine/react';
 import '@recap-engine/react/styles.css';
-
-type RecapData = {
-  userName: string;
-  publishedAds: number;
-};
-
-const data: RecapData = {
-  userName: 'Максим',
-  publishedAds: 12,
-};
-
-const scenes: SceneDefinition<RecapData>[] = defineScenes([
-  {
-    id: 'intro',
-    type: ESceneType.Intro,
-    title: ({ data }) => `${data.userName}, это был ваш год`,
-    subtitle: 'Посмотрим, каким он получился',
-  },
-  {
-    id: 'ads',
-    type: ESceneType.Stat,
-    title: 'Опубликовано объявлений',
-    value: ({ data }) => data.publishedAds,
-    unit: {
-      one: 'объявление',
-      few: 'объявления',
-      many: 'объявлений',
-    },
-  },
-  {
-    id: 'outro',
-    type: ESceneType.Outro,
-    title: 'До встречи в следующем году!',
-  },
-]);
-
-const theme = createTheme({
-  colors: {
-    accent: '#00aaff',
-  },
-});
-
-export function YearRecap() {
-  return <Recap theme={theme} data={data} scenes={scenes} />;
-}
 ```
 
-`Recap` автоматически добавляет прогресс, навигацию с клавиатуры и свайпы. Поведение можно
-изменять через props:
+Нужен React 19 (peer dependency).
 
-- `autoplay` — автоматическое переключение сцен;
-- `loop` — возврат к первой сцене после завершения;
-- `initialSceneId` — начальная сцена;
-- `reducedMotion` — принудительное отключение сложных анимаций;
-- `onEvent` — обработка входа и выхода со сцены, действий, завершения и sharing.
+## Куда дальше
 
-## Куда двигаться дальше
+- [Быстрый старт](./getting-started/quickstart) — соберите первый recap за 5 минут
+- [Архитектура](./getting-started/architecture) — как устроена библиотека изнутри
+- [Интеграция с backend](./guides/backend-integration) — если данные приходят с API
 
-Следующие разделы документации могут раскрыть типы сцен, подготовку backend payload,
-кастомизацию темы и motion, пользовательские layouts и события плеера.
+Исходники: [GitHub](https://github.com/benderxyz/avito-year-recap).

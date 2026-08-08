@@ -1,0 +1,84 @@
+---
+title: Тема
+description: Цвета, шрифты и CSS-переменные для оформления recap.
+---
+
+# Тема
+
+**Тема** задаёт внешний вид recap: фон, цвет текста, акцент, шрифты, скругления.
+
+Создаётся функцией `createTheme()` и передаётся в `<Recap theme={theme} />` — это **обязательный** prop.
+
+## Базовое использование
+
+```ts
+import { createTheme } from '@recap-engine/core';
+
+// Дефолтная тема (тёмно-синий фон, голубой акцент)
+const theme = createTheme();
+
+// Или с переопределением
+const theme = createTheme({
+  colors: {
+    accent: '#00AAFF',
+    bg: '#0B1F33',
+  },
+});
+```
+
+Переопределяются только переданные поля — остальное берётся из дефолтов.
+
+## Что можно настроить
+
+```ts
+createTheme({
+  colors: {
+    bg: '#0B1F33',       // фон
+    fg: '#FFFFFF',       // основной текст
+    muted: 'rgba(255,255,255,0.72)',  // вторичный текст
+    accent: '#00AAFF',   // акцент (кнопки, progress)
+    accentSoft: '...',   // мягкий акцент
+    surface: '...',      // карточки
+    callout: '...',      // callout-блоки
+  },
+  fonts: {
+    display: '"Manrope", system-ui, sans-serif',
+    body: '"Manrope", system-ui, sans-serif',
+  },
+  radii: { button: 16, card: 24 },
+  space: { scenePadding: 24 },
+  assets: { background: '/bg-pattern.svg' },
+});
+```
+
+## CSS-переменные
+
+`createTheme()` возвращает объект с полем `cssVars`. React-слой применяет их на корневой элемент `.recap-root`:
+
+| Переменная | Назначение |
+|------------|------------|
+| `--recap-bg` | Фон |
+| `--recap-fg` | Текст |
+| `--recap-accent` | Акцент |
+| `--recap-muted` | Вторичный текст |
+| `--recap-font-display` | Шрифт заголовков |
+| `--recap-scene-padding` | Отступы сцены |
+
+Можно переопределить в своём CSS:
+
+```css
+.my-recap.recap-root {
+  --recap-accent: #ff6b00;
+}
+```
+
+```tsx
+<Recap className="my-recap" theme={theme} data={data} scenes={scenes} />
+```
+
+Подробнее про CSS — [Стили и слоты](../react/styling).
+
+## Связанное
+
+- [Компонент Recap](../react/recap) — prop `theme`
+- [Стили и слоты](../react/styling)

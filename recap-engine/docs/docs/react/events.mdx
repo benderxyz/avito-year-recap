@@ -1,0 +1,83 @@
+---
+title: События
+description: Колбэк onEvent — смена сцен, клики по кнопкам, завершение recap.
+---
+
+# События
+
+`<Recap>` принимает prop `onEvent` — функцию, которую библиотека вызывает при **важных моментах**: пользователь увидел экран, нажал кнопку, дошёл до конца.
+
+Типичные задачи:
+
+- отправить событие в аналитику;
+- закрыть modal, когда recap закончился;
+- обработать кнопку «Закрыть» или «Поделиться».
+
+## Подключение
+
+```tsx
+<Recap
+  theme={theme}
+  data={data}
+  scenes={scenes}
+  onEvent={(event) => {
+    console.log(event.type, event);
+  }}
+/>
+```
+
+## Какие события бывают
+
+| Событие | Когда срабатывает | Что в объекте |
+|---------|-------------------|---------------|
+| `scene_enter` | Экран стал видимым | `sceneId`, `index` |
+| `scene_exit` | Экран уходит | `sceneId`, `index` |
+| `action` | Клик по кнопке на сцене | `sceneId`, `action` |
+| `complete` | Пользователь дошёл до конца | — |
+| `share` | Нажали «Поделиться» | `sceneId`, `payload` |
+
+## Пример: аналитика и закрытие
+
+```tsx
+import { Recap, ERecapEventType, ESceneActionType } from '@recap-engine/react';
+
+function onEvent(event: RecapEvent) {
+  if (event.type === ERecapEventType.SceneEnter) {
+    analytics.track('recap_scene', { id: event.sceneId });
+  }
+
+  if (event.type === ERecapEventType.Complete) {
+    closeModal();
+  }
+
+  if (
+    event.type === ERecapEventType.Action &&
+    event.action.type === ESceneActionType.Custom &&
+    event.action.id === 'close'
+  ) {
+    closeModal();
+  }
+}
+```
+
+## Кнопки на сценах
+
+Кнопки задаются полем `actions` в описании сцены (часто на outro):
+
+```tsx
+{
+  id: 'outro',
+  type: ESceneType.Outro,
+  title: 'Спасибо!',
+  actions: [
+    { type: ESceneActionType.Custom, label: 'Закрыть', id: 'close' },
+  ],
+}
+```
+
+Кнопка типа `custom` **ничего не делает сама** — только вызывает `onEvent`. Встроенные типы (`next`, `link`, `share`) выполняют действие и тоже шлют событие.
+
+## Связанное
+
+- [Аналитика и действия](../guides/analytics-and-actions) — все типы кнопок
+- [Компонент Recap](./recap)

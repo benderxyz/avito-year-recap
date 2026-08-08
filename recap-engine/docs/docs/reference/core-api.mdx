@@ -1,0 +1,57 @@
+---
+title: Core API
+description: Справочник функций и типов @recap-engine/core.
+---
+
+# Core API
+
+Краткий справочник **@recap-engine/core** — всё, что не требует React.
+
+Если вы только начинаете, сначала прочитайте [Введение](../intro) и [Архитектуру](../getting-started/architecture). Эта страница — для быстрого поиска по API.
+
+Исходники: [packages/core/src](https://github.com/benderxyz/avito-year-recap/tree/main/recap-engine/packages/core/src).
+
+## Функции
+
+| Функция | Описание |
+|---------|----------|
+| `prepareRecap(payload)` | JSON с сервера → `{ data, scenes, badges, locale }` |
+| `buildScenesFromStory(payload)` | Только сборка `scenes` из `story` |
+| `defineScenes(scenes)` | Проверка уникальных `id`, типизация массива сцен |
+| `createTheme(tokens?)` | Тема + CSS-переменные |
+| `createFormatters(locale?)` | Форматирование чисел, валют, склонений |
+| `metricNumber(metrics, key)` | Число из payload |
+| `metricString(metrics, key)` | Строка из payload |
+| `metricList(metrics, key)` | Список из payload |
+| `fillTemplate(template, values)` | Подстановка `{{key}}` в строку |
+| `resolveValue(value, ctx)` | Вычисление функции в поле сцены |
+| `playerReducer(state, action)` | Переключение сцен (низкоуровневое) |
+| `normalizeMotion(motion)` | Нормализация пресета анимации |
+
+## Enums
+
+| Enum | Значения |
+|------|----------|
+| `ESceneType` | `intro`, `stat`, `insight`, `achievement`, `upsell`, `blocks`, `outro`, `custom` |
+| `EMetricType` | `number`, `money`, `percentile`, `ratio`, `string`, `list` |
+| `EMotionPreset` | `fade`, `slide-up`, `slide-left`, `scale-fade`, `count-up`, `badge-pop`, `stagger-text`, `callout-in`, `none` |
+| `EPlayerPhase` | `enter`, `active`, `exit` |
+| `ESceneActionType` | `next`, `prev`, `link`, `share`, `goto`, `custom` |
+| `ERecapEventType` | `scene_enter`, `scene_exit`, `action`, `complete`, `share` |
+
+## Ключевые types
+
+| Type | Описание |
+|------|----------|
+| `RecapPayload` | JSON от backend |
+| `PreparedRecap` | Результат `prepareRecap` |
+| `SceneDefinition` | Описание одного экрана |
+| `RecapContext` | Контекст для функций в полях сцены |
+| `ResolvedTheme` | Тема с `cssVars` |
+| `RecapEvent` | Событие для `onEvent` |
+| `SceneAction` | Описание кнопки на экране |
+
+## Связанное
+
+- [React API](./react-api)
+- [RecapPayload](../core/recap-payload)

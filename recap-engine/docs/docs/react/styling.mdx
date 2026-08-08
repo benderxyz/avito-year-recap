@@ -1,0 +1,80 @@
+---
+title: Стили и слоты
+description: Как изменить внешний вид recap — CSS, тема, замена частей UI.
+---
+
+# Стили и слоты
+
+Recap поставляется со **встроенными стилями**. Их можно дополнить или переопределить — без форка библиотеки.
+
+## Подключение базовых стилей
+
+```tsx
+import '@recap-engine/react/styles.css';
+```
+
+Классы имеют префикс `recap-*` (`recap-root`, `recap-stat__value`). CSS-in-JS внутри пакета не используется.
+
+## Брендинг через тему
+
+Самый простой способ — `createTheme()`:
+
+```tsx
+const theme = createTheme({ colors: { accent: '#ff6b00', bg: '#1a1a2e' } });
+```
+
+Тема превращается в CSS-переменные на корневом элементе. Подробнее — [Тема](../core/theme).
+
+## Переопределение через CSS
+
+```css
+.my-recap.recap-root {
+  --recap-accent: #ff6b00;
+  --recap-bg: #1a1a2e;
+}
+```
+
+```tsx
+<Recap className="my-recap" theme={theme} data={data} scenes={scenes} />
+```
+
+## slots — замена частей плеера
+
+Prop `slots` позволяет подменить отдельные блоки UI:
+
+```tsx
+<Recap
+  theme={theme}
+  data={data}
+  scenes={scenes}
+  slots={{
+    background: <MyBackground />,  // вместо стандартного фона
+    header: <MyProgressBar />,      // вместо progress bar
+    footer: <MyFooter />,
+  }}
+/>
+```
+
+## Фон отдельной сцены
+
+В описании сцены:
+
+```tsx
+{
+  id: 'hero',
+  type: ESceneType.Intro,
+  background: { type: EBackgroundType.Gradient, value: 'linear-gradient(...)' },
+}
+```
+
+Варианты: цвет, градиент, картинка.
+
+## Reduced motion
+
+При `reducedMotion={true}` или системной настройке «уменьшить движение» сложные анимации отключаются автоматически.
+
+## Связанное
+
+- [Тема](../core/theme)
+- [Motion](../core/motion)
+- [Компонент Recap](./recap)

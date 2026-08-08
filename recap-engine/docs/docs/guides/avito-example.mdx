@@ -1,0 +1,64 @@
+---
+title: Пример из репозитория
+description: Как recap-engine используется в demo-приложении avito-year-recap.
+---
+
+# Пример из репозитория
+
+В monorepo есть demo-приложение `frontend/` — modal с recap на mock-данных. Это **reference**, как связать части библиотеки вместе.
+
+## Файлы
+
+```
+frontend/src/
+├── components/RecapModal/RecapModal.tsx   # Modal + Recap
+└── mock/recapPayload.ts                   # Пример RecapPayload
+```
+
+## Что делает RecapModal
+
+1. **`prepareRecap(mockRecapPayload)`** — mock JSON превращается в `data`, `scenes`, `badges`.
+2. **`registerScene('top-categories', ...)`** — custom экран «Топ категорий» (список из list-метрики).
+3. **`<Recap {...prepared} autoplay theme={...} onEvent={...} />`** — плеер с автолистанием.
+4. **`onEvent`** — закрывает modal, когда recap завершён или нажата кнопка «Закрыть».
+
+```tsx
+const prepared = useMemo(() => prepareRecap(mockRecapPayload), []);
+
+const onEvent = (event: RecapEvent) => {
+  if (event.type === ERecapEventType.Complete) onClose();
+  if (
+    event.type === ERecapEventType.Action &&
+    event.action.type === ESceneActionType.Custom &&
+    event.action.id === 'close-recap'
+  ) {
+    onClose();
+  }
+};
+
+<Recap {...prepared} autoplay theme={theme} onEvent={onEvent} />
+```
+
+## Custom scene «top-categories»
+
+В mock payload в `story` есть экран:
+
+```ts
+{
+  type: ESceneType.Custom,
+  sceneType: 'top-categories',
+  props: { metricKey: 'favoriteCategories' },
+}
+```
+
+На клиенте зарегистрирован компонент с тем же именем — он читает list-метрику и рисует `<ul>`.
+
+## mockRecapPayload
+
+Полный пример JSON: 20+ метрик, story от intro до outro, narrative override, badges, share. В production замените fetch на реальный API — формат тот же, см. [RecapPayload](../core/recap-payload).
+
+## Связанное
+
+- [Интеграция с backend](./backend-integration)
+- [Кастомные сцены](../react/custom-scenes)
+- [События](../react/events)

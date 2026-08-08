@@ -1,0 +1,78 @@
+---
+title: Форматирование
+description: Числа, валюты и склонения для русского языка.
+---
+
+# Форматирование
+
+Recap показывает много чисел: просмотры, суммы, процентили. Библиотека форматирует их **с учётом локали** — пробелы в тысячах, знак рубля, правильные склонения («1 объявление», «12 объявлений»).
+
+## Как это работает в Recap
+
+Компонент `<Recap>` создаёт форматтеры автоматически из prop `locale` (по умолчанию `ru-RU`). В кастомных сценах они доступны через `useRecap()`:
+
+```tsx
+const { format } = useRecap();
+
+format.number(12840);           // "12 840"
+format.currency(186500, 'RUB'); // "186 500 ₽"
+format.plural(12, {
+  one: 'объявление',
+  few: 'объявления',
+  many: 'объявлений',
+});                              // "объявлений"
+```
+
+## Склонения (unit)
+
+На stat-сцене поле `unit` может быть строкой или объектом с тремя формами:
+
+```tsx
+unit: {
+  one: 'объявление',   // 1, 21, 31…
+  few: 'объявления',   // 2–4, 22–24…
+  many: 'объявлений',  // 0, 5–20, 25–30…
+}
+```
+
+Библиотека сама выберет форму по числу.
+
+## Шаблоны с подстановкой
+
+Для строк вида «Вы в топ-12% продавцов» используется `fillTemplate`:
+
+```ts
+fillTemplate('Вы в топ-{{percentile}}% продавцов', { percentile: 12 });
+// "Вы в топ-12% продавцов"
+```
+
+На stat-сцене это поле `comparison.template`.
+
+## Чтение метрик из payload
+
+Когда `data` — это `RecapPayload`, метрики лежат в `data.metrics` по ключам:
+
+```ts
+import { metricNumber, metricString, metricList } from '@recap-engine/core';
+
+metricNumber(data.metrics, 'listingsPublished');  // 47
+metricString(data.metrics, 'topCategory');         // "Электроника"
+metricList(data.metrics, 'favoriteCategories');    // [{ id, label, value }, ...]
+```
+
+Если ключ не найден — вернётся `0`, пустая строка или пустой массив.
+
+## createFormatters
+
+Если нужны форматтеры вне `<Recap>` (например, в Node):
+
+```ts
+const format = createFormatters('ru-RU');
+format.number(1000);
+```
+
+## Связанное
+
+- [RecapPayload](./recap-payload) — структура `metrics`
+- [Типы сцен](./scene-types) — `unit` и `comparison` на stat-сценах
+- [Примитивы](../react/primitives) — компонент `Stat`

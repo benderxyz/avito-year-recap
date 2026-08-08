@@ -1,0 +1,137 @@
+---
+title: Типы сцен
+description: Виды экранов recap — intro, stat, insight, achievement и другие.
+---
+
+# Типы сцен
+
+Каждый экран recap имеет **тип** (`ESceneType`). Тип определяет, **что рисуется на экране** и **какие поля обязательны**.
+
+Восемь типов покрывают типичный сценарий: поздороваться → показать цифры → рассказать инсайты → вручить бейдж → попрощаться.
+
+## Обзор
+
+| Тип | Что видит пользователь | Обязательные поля |
+|-----|------------------------|-------------------|
+| `intro` | Приветствие с заголовком | `title` |
+| `stat` | Большое число с подписью | `value` |
+| `insight` | Текстовый блок-инсайт | `text` |
+| `achievement` | Бейдж / достижение | — (данные из `badges` или полей сцены) |
+| `upsell` | Промо-блок с callout | `text` |
+| `blocks` | Несколько блоков на одном экране | `blocks[]` |
+| `outro` | Финальный экран | `title` |
+| `custom` | Ваша вёрстка | `render` или `sceneType` |
+
+## intro — приветствие
+
+Первый экран: имя пользователя, год, короткий подзаголовок.
+
+```tsx
+{
+  id: 'intro',
+  type: ESceneType.Intro,
+  title: ({ data }) => `${data.user.displayName}, ваш 2026`,
+  subtitle: 'Год находок и сделок',
+}
+```
+
+## stat — число
+
+Один экран = одна метрика. Число анимируется (count-up), можно добавить сравнение «вы в топ-N%».
+
+```tsx
+{
+  id: 'listings',
+  type: ESceneType.Stat,
+  eyebrow: 'За год',
+  title: 'Опубликовано объявлений',
+  value: ({ data }) => data.metrics.listingsPublished.value,
+  unit: { one: 'объявление', few: 'объявления', many: 'объявлений' },
+  comparison: {
+    template: 'Вы в топ-{{percentile}}% продавцов',
+    percentile: ({ data }) => 88,
+  },
+}
+```
+
+С payload с сервера удобнее брать метрики через `metricNumber(data.metrics, 'listingsPublished')` — см. [Форматирование](./formatting).
+
+## insight — текстовый инсайт
+
+Развёрнутый текст: «ваша главная категория», «пиковый день года».
+
+```tsx
+{
+  id: 'peak-day',
+  type: ESceneType.Insight,
+  title: 'Пиковый день',
+  text: 'В сентябре одно объявление набрало рекорд просмотров.',
+}
+```
+
+## achievement — достижение
+
+Показывает бейдж. Если передать `badgeId`, данные подтянутся из prop `badges` компонента `<Recap>`:
+
+```tsx
+{
+  id: 'badge-deals',
+  type: ESceneType.Achievement,
+  badgeId: 'deal-maker',
+}
+```
+
+## upsell — промо
+
+Текст + выделенный callout (скидка, предложение).
+
+```tsx
+{
+  id: 'promo',
+  type: ESceneType.Upsell,
+  title: 'Продвиньте объявления',
+  text: 'Получите больше просмотров.',
+  callout: 'Скидка 20% до конца года',
+}
+```
+
+## blocks — несколько блоков
+
+Stat, текст и callout на **одном** экране:
+
+```tsx
+{
+  id: 'summary',
+  type: ESceneType.Blocks,
+  blocks: [
+    { type: ESceneBlockType.Stat, value: 47, title: 'Объявлений' },
+    { type: ESceneBlockType.Text, text: 'Активный год!' },
+    { type: ESceneBlockType.Callout, text: 'Топ-12% по просмотрам' },
+  ],
+}
+```
+
+## outro — финал
+
+Последний экран. Часто с кнопками «Поделиться» или «Закрыть»:
+
+```tsx
+{
+  id: 'outro',
+  type: ESceneType.Outro,
+  title: 'До встречи в 2027!',
+  actions: [
+    { type: ESceneActionType.Share, label: 'Поделиться', share: { kind: EShareKind.Link, url: '...' } },
+  ],
+}
+```
+
+## custom — свой экран
+
+Когда стандартных layouts не хватает (топ-лист, карта, график). Два способа — см. [Кастомные сцены](../react/custom-scenes).
+
+## Связанное
+
+- [Сцены](./scenes) — как описывать массив экранов
+- [Кастомные сцены](../react/custom-scenes)
+- [Аналитика и действия](../guides/analytics-and-actions) — кнопки на outro

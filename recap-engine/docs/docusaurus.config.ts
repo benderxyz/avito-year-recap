@@ -13,6 +13,10 @@ const config: Config = {
   organizationName: 'benderxyz',
   projectName: 'avito-year-recap',
   onBrokenLinks: 'throw',
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   future: {
     v4: true,
   },
@@ -59,8 +63,18 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Документация',
-          items: [{ label: 'Введение', to: '/docs/intro' }],
+          title: 'Старт',
+          items: [
+            { label: 'Введение', to: '/docs/intro' },
+            { label: 'Быстрый старт', to: '/docs/getting-started/quickstart' },
+          ],
+        },
+        {
+          title: 'Практика',
+          items: [
+            { label: 'Интеграция с backend', to: '/docs/guides/backend-integration' },
+            { label: 'Пример Avito app', to: '/docs/guides/avito-example' },
+          ],
         },
         {
           title: 'Проект',

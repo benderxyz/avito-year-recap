@@ -1,0 +1,55 @@
+---
+title: Player
+description: Внутренняя логика переключения между сценами.
+---
+
+# Player
+
+**Player** — это логика «какая сцена сейчас на экране» и «куда перейти по свайпу или клику».
+
+В обычном использовании **вам не нужно с ним работать** — `<Recap>` управляет всем сам: свайпы, стрелки, autoplay, блокировка во время анимации.
+
+Эта страница для случаев, когда вы строите **свой UI поверх** recap или отлаживаете навигацию.
+
+## Состояние плеера
+
+```ts
+type PlayerState = {
+  index: number;       // текущая сцена: 0, 1, 2…
+  direction: 1 | -1;   // 1 = вперёд, -1 = назад
+  phase: 'enter' | 'active' | 'exit';  // фаза анимации
+  total: number;       // всего сцен
+};
+```
+
+## Фазы анимации
+
+| Фаза | Что происходит |
+|------|----------------|
+| `enter` | Новая сцена въезжает |
+| `active` | Сцена полностью видна, можно листать дальше |
+| `exit` | Текущая сцена уезжает |
+
+Пока идёт transition, повторные свайпы игнорируются.
+
+## API для продвинутых
+
+```ts
+import {
+  createInitialPlayerState,
+  playerReducer,
+  EPlayerActionType,
+} from '@recap-engine/core';
+
+let state = createInitialPlayerState(scenes.length);
+
+state = playerReducer(state, { type: EPlayerActionType.Next });   // следующая
+state = playerReducer(state, { type: EPlayerActionType.Prev });   // предыдущая
+state = playerReducer(state, { type: EPlayerActionType.GoTo, index: 2 }); // к сцене #2
+```
+
+## Связанное
+
+- [Motion](./motion) — анимации переходов
+- [События](../react/events) — `scene_enter` / `scene_exit` при смене сцен
+- [Компонент Recap](../react/recap)

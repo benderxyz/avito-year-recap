@@ -23,7 +23,29 @@ Event types are Avito marketplace actions (`item_published`, `deal_completed`, `
 
 - `GET /health`
 - `POST /events` — single event object or JSON array
-- `GET /users/{userID}/metrics?from=&to=` — both bounds required together (RFC3339); if omitted, uses the current year in the user timezone from ClickHouse `users`. Sparse metrics (`gauge` / `interval` / `milestone`) are JSON `null` when there is no data.
+- `GET /users/{userID}/metrics?from=&to=` — both bounds required together (RFC3339); if omitted, uses the current year in the user timezone from ClickHouse `users`. Each metric is an object `{ value, percentile, share }`. Fields are always present; `null` means no data or not applicable.
+
+### Metric object semantics
+
+| Category | value | share | percentile |
+|---|---|---|---|
+| counter | user total, `0` if no events | `user / global * 100` | % of users with a lower total |
+| unique | user distinct count, `0` if empty | `user / global * 100` | % of users with a lower count |
+| gauge | latest value, all `null` if absent | `null` | % of users with a lower gauge |
+| milestone | first event unix time, all `null` if absent | `null` | % of users with a later first event |
+| interval | avg duration seconds, all `null` if absent | `null` | % of users with a slower avg |
+
+Example:
+
+```json
+{
+  "metrics": {
+    "listingsPublished": { "value": 47, "percentile": 88, "share": 4.7 },
+    "firstListingAt": { "value": 1700000000, "percentile": 72, "share": null },
+    "activeListings": { "value": null, "percentile": null, "share": null }
+  }
+}
+```
 
 ## Local
 

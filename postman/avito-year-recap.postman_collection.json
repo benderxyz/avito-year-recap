@@ -1,0 +1,194 @@
+{
+  "info": {
+    "_postman_id": "avito-year-recap-local",
+    "name": "Avito Year Recap",
+    "description": "API для локального стека после `docker compose up --build`.\n\nПорты по умолчанию\n- analytics 8080\n- cards 8081\n- user 8082\n- frontend 3000\n\nПеред recap прогоните seed\n`go -C seed-data/seed-script run . -user {{user_id}} -year {{year}}`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "analytics_base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "cards_base_url",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "user_base_url",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "user_id",
+      "value": "42"
+    },
+    {
+      "key": "year",
+      "value": "2026"
+    },
+    {
+      "key": "metrics_from",
+      "value": "2026-01-01T00:00:00Z"
+    },
+    {
+      "key": "metrics_to",
+      "value": "2027-01-01T00:00:00Z"
+    },
+    {
+      "key": "share_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Analytics health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{analytics_base_url}}/health"
+          }
+        },
+        {
+          "name": "Cards health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{cards_base_url}}/health"
+          }
+        },
+        {
+          "name": "User health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{user_base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{user_base_url}}/users/{{user_id}}"
+          }
+        },
+        {
+          "name": "Upsert user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"external_id\": \"avito-{{user_id}}\",\n  \"username\": \"Alex\",\n  \"timezone\": \"Europe/Moscow\"\n}"
+            },
+            "url": "{{user_base_url}}/users/{{user_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics Service",
+      "item": [
+        {
+          "name": "Get user metrics (year range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{analytics_base_url}}/users/{{user_id}}/metrics?from={{metrics_from}}&to={{metrics_to}}",
+              "host": ["{{analytics_base_url}}"],
+              "path": ["users", "{{user_id}}", "metrics"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{metrics_from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{metrics_to}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get user metrics (default year in user timezone)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{analytics_base_url}}/users/{{user_id}}/metrics"
+          }
+        },
+        {
+          "name": "Ingest single event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{user_id}},\n  \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"event_type\": \"item_published\",\n  \"value\": 1,\n  \"payload\": \"{}\",\n  \"occurred_at\": \"2026-03-15T10:00:00Z\"\n}"
+            },
+            "url": "{{analytics_base_url}}/events"
+          }
+        },
+        {
+          "name": "Ingest events batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_published\",\n    \"value\": 1,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T10:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_view_received\",\n    \"value\": 12,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T11:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"day_active\",\n    \"value\": 0,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T12:00:00Z\"\n  }\n]"
+            },
+            "url": "{{analytics_base_url}}/events"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cards Service",
+      "item": [
+        {
+          "name": "Get private recap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{cards_base_url}}/api/recap/{{year}}/{{user_id}}"
+          }
+        },
+        {
+          "name": "Get public share recap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{cards_base_url}}/api/share/{{share_token}}",
+            "description": "Сначала вызовите Get private recap и скопируйте token из features.shareUrl в переменную share_token."
+          }
+        }
+      ]
+    }
+  ]
+}

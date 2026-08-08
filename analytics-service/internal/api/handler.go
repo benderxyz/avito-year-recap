@@ -23,7 +23,11 @@ func NewHandler(
 	metrics *aggregation.Service,
 	timezones aggregation.TimezoneResolver,
 ) *Handler {
-	return &Handler{ingester: ingester, metrics: metrics, timezones: timezones}
+	return &Handler{
+		ingester:  ingester,
+		metrics:   metrics,
+		timezones: timezones,
+	}
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {

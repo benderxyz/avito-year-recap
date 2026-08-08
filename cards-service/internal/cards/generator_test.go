@@ -9,20 +9,31 @@ import (
 )
 
 func fullMetrics() clients.Metrics {
+	listingsPercentile := float64(88)
+	viewsPercentile := float64(92)
+	favoritesPercentile := float64(79)
+	messagesPercentile := float64(85)
+	dealsPercentile := float64(74)
+
 	return clients.Metrics{
-		ListingsPublished: 12,
-		ViewsTotal:        3400,
-		FavoritesReceived: 87,
-		MessagesSent:      1250,
-		DealsClosed:       19,
-		MoneyEarned:       150000,
-		MoneySaved:        32000,
-		DaysActive:        210,
-		PeakDayViews:      340,
-		SearchQueries:     500,
-		CategoriesTried:   7,
-		DeliveryOrders:    5,
-		ActiveListings:    8,
+		ListingsPublished:   12,
+		ListingsPercentile:  &listingsPercentile,
+		ViewsTotal:          3400,
+		ViewsPercentile:     &viewsPercentile,
+		FavoritesReceived:   87,
+		FavoritesPercentile: &favoritesPercentile,
+		MessagesSent:        1250,
+		MessagesPercentile:  &messagesPercentile,
+		DealsClosed:         19,
+		DealsPercentile:     &dealsPercentile,
+		MoneyEarned:         150000,
+		MoneySaved:          32000,
+		DaysActive:          210,
+		PeakDayViews:        340,
+		SearchQueries:       500,
+		CategoriesTried:     7,
+		DeliveryOrders:      5,
+		ActiveListings:      8,
 	}
 }
 
@@ -40,6 +51,31 @@ func TestBuildRecapPrivateShouldExposeSensitiveMetrics(t *testing.T) {
 	for _, name := range []string{"moneyEarned", "moneySaved", "messagesSent"} {
 		if _, ok := recap.Metrics[name]; !ok {
 			t.Fatalf("expected %s in private metrics", name)
+		}
+	}
+}
+
+func TestBuildRecapPrivateShouldIncludePercentileMetrics(t *testing.T) {
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
+
+	for _, name := range []string{"listingsPercentile", "viewsPercentile", "messagesPercentile"} {
+		if _, ok := recap.Metrics[name]; !ok {
+			t.Fatalf("expected %s in private metrics", name)
+		}
+	}
+}
+
+func TestBuildRecapPrivateShouldAttachComparisonToStatScenes(t *testing.T) {
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
+
+	for _, scene := range recap.Story {
+		if scene["id"] == "stat-listings" {
+			if scene["percentile"] != "listingsPercentile" {
+				t.Fatalf("expected listings percentile key in story scene, got %v", scene["percentile"])
+			}
+			if scene["comparisonTemplate"] == nil {
+				t.Fatal("expected comparison template in listings scene")
+			}
 		}
 	}
 }

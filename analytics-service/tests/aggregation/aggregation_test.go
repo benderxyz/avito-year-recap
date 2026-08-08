@@ -25,6 +25,18 @@ func (q *recordingQuerier) QueryFloat64(_ context.Context, query string, args ..
 	return q.result, q.present, q.err
 }
 
+func (q *recordingQuerier) QueryFloat64s(_ context.Context, query string, args ...any) ([]float64, error) {
+	q.lastQuery = query
+	q.lastArgs = args
+	if q.err != nil {
+		return nil, q.err
+	}
+	if !q.present {
+		return nil, nil
+	}
+	return []float64{q.result}, nil
+}
+
 type staticTimezoneResolver struct {
 	timezone string
 	err      error
@@ -159,6 +171,14 @@ func TestUniqueAggregatorShouldIgnoreEmptyPayloadFieldWhenAggregating(t *testing
 	}
 }
 
+func TestUniqueAggregatorShouldFallbackToValueWhenPayloadFieldIsInvalid(t *testing.T) {
+	agg := aggregation.NewUniqueAggregator(&recordingQuerier{}, events.UniqueModePayload, "x'); DROP TABLE events; --")
+
+	if agg.PayloadField() != "value" {
+		t.Fatalf("expected fallback field value, got %s", agg.PayloadField())
+	}
+}
+
 func TestUniqueAggregatorShouldCountLocalDaysWhenModeIsDay(t *testing.T) {
 	querier := &recordingQuerier{result: 214, present: true}
 	agg := aggregation.NewUniqueAggregator(querier, events.UniqueModeDay, "")
@@ -194,8 +214,8 @@ func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.
 	if snapshot.Timezone != "Europe/Moscow" {
 		t.Fatalf("expected Europe/Moscow timezone, got %s", snapshot.Timezone)
 	}
-	if snapshot.Metrics["listingsPublished"] == nil || *snapshot.Metrics["listingsPublished"] != 3 {
-		t.Fatalf("expected listingsPublished=3, got %v", snapshot.Metrics["listingsPublished"])
+	if snapshot.Metrics["listingsPublished"].Value == nil || *snapshot.Metrics["listingsPublished"].Value != 3 {
+		t.Fatalf("expected listingsPublished=3, got %v", snapshot.Metrics["listingsPublished"].Value)
 	}
 	if len(snapshot.Metrics) != len(registry.All()) {
 		t.Fatalf("expected %d metrics, got %d", len(registry.All()), len(snapshot.Metrics))
@@ -214,11 +234,17 @@ func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if snapshot.Metrics["activeListings"] != nil {
-		t.Fatalf("expected null activeListings, got %v", snapshot.Metrics["activeListings"])
+	if snapshot.Metrics["activeListings"].Value != nil {
+		t.Fatalf("expected null activeListings value, got %v", snapshot.Metrics["activeListings"].Value)
 	}
-	if snapshot.Metrics["listingsPublished"] == nil || *snapshot.Metrics["listingsPublished"] != 0 {
-		t.Fatalf("expected listingsPublished=0, got %v", snapshot.Metrics["listingsPublished"])
+	if snapshot.Metrics["activeListings"].Percentile != nil {
+		t.Fatalf("expected null activeListings percentile, got %v", snapshot.Metrics["activeListings"].Percentile)
+	}
+	if snapshot.Metrics["activeListings"].Share != nil {
+		t.Fatalf("expected null activeListings share, got %v", snapshot.Metrics["activeListings"].Share)
+	}
+	if snapshot.Metrics["listingsPublished"].Value == nil || *snapshot.Metrics["listingsPublished"].Value != 0 {
+		t.Fatalf("expected listingsPublished=0, got %v", snapshot.Metrics["listingsPublished"].Value)
 	}
 }
 

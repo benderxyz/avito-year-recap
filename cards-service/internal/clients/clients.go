@@ -13,31 +13,36 @@ import (
 )
 
 type MetricsResponse struct {
-	From     string  `json:"from"`
-	To       string  `json:"to"`
-	UserID   uint64  `json:"user_id"`
-	Timezone string  `json:"timezone"`
-	Metrics  Metrics `json:"metrics"`
+	From     string                 `json:"from"`
+	To       string                 `json:"to"`
+	UserID   uint64                 `json:"user_id"`
+	Timezone string                 `json:"timezone"`
+	Metrics  map[string]MetricField `json:"metrics"`
 }
 
 type Metrics struct {
-	ActiveListings    int     `json:"activeListings"`
-	AvgReplySeconds   float64 `json:"avgReplySeconds"`
-	CategoriesTried   int     `json:"categoriesTried"`
-	DaysActive        int     `json:"daysActive"`
-	DealsClosed       int     `json:"dealsClosed"`
-	DeliveryOrders    int     `json:"deliveryOrders"`
-	FavoritesReceived int     `json:"favoritesReceived"`
-	FirstDealAt       int64   `json:"firstDealAt"`
-	FirstListingAt    int64   `json:"firstListingAt"`
-	ListingsPublished int     `json:"listingsPublished"`
-	MessagesSent      int     `json:"messagesSent"`
-	MoneyEarned       int64   `json:"moneyEarned"`
-	MoneySaved        int64   `json:"moneySaved"`
-	PeakDayViews      int     `json:"peakDayViews"`
-	SearchQueries     int     `json:"searchQueries"`
-	SellerRating      float64 `json:"sellerRating"`
-	ViewsTotal        int     `json:"viewsTotal"`
+	ActiveListings      int
+	AvgReplySeconds     float64
+	CategoriesTried     int
+	DaysActive          int
+	DealsClosed         int
+	DealsPercentile     *float64
+	DeliveryOrders      int
+	FavoritesReceived   int
+	FavoritesPercentile *float64
+	FirstDealAt         int64
+	FirstListingAt      int64
+	ListingsPublished   int
+	ListingsPercentile  *float64
+	MessagesSent        int
+	MessagesPercentile  *float64
+	MoneyEarned         int64
+	MoneySaved          int64
+	PeakDayViews        int
+	SearchQueries       int
+	SellerRating        float64
+	ViewsTotal          int
+	ViewsPercentile     *float64
 }
 
 type UserClient struct {
@@ -245,7 +250,7 @@ func (c *AnalyticsClient) GetMetrics(
 		"user_id", id,
 	)
 
-	return response.Metrics, nil
+	return ParseMetrics(response.Metrics), nil
 }
 
 func getYearRange(year int, timezone string) (string, string, error) {

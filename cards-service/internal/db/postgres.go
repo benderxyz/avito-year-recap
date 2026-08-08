@@ -52,9 +52,17 @@ func (p *Postgres) Close() error {
 }
 
 func (p *Postgres) Migrate(ctx context.Context, migrationsDir string) error {
-	entries, err := os.ReadDir(migrationsDir)
+	return p.execSQLDir(ctx, migrationsDir)
+}
+
+func (p *Postgres) Seed(ctx context.Context, seedsDir string) error {
+	return p.execSQLDir(ctx, seedsDir)
+}
+
+func (p *Postgres) execSQLDir(ctx context.Context, dir string) error {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("read migrations dir: %w", err)
+		return fmt.Errorf("read sql dir: %w", err)
 	}
 
 	var files []string
@@ -67,16 +75,16 @@ func (p *Postgres) Migrate(ctx context.Context, migrationsDir string) error {
 	sort.Strings(files)
 
 	for _, name := range files {
-		path := filepath.Join(migrationsDir, name)
+		path := filepath.Join(dir, name)
 		content, err := os.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("read migration %s: %w", name, err)
+			return fmt.Errorf("read sql file %s: %w", name, err)
 		}
 
 		statements := splitSQLStatements(string(content))
 		for _, statement := range statements {
 			if _, err := p.db.ExecContext(ctx, statement); err != nil {
-				return fmt.Errorf("exec migration %s: %w", name, err)
+				return fmt.Errorf("exec sql file %s: %w", name, err)
 			}
 		}
 	}

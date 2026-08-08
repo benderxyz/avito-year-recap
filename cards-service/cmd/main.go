@@ -78,14 +78,23 @@ func loadRuleProvider(cfg config.Config) *cards.RuleProvider {
 
 	pg, err := db.Connect(ctx, cfg.PostgresDSN())
 	if err != nil {
-		slog.Error("postgres connect failed, using built-in rules", "error", err)
-		return nil
+		slog.Error("postgres connect failed", "error", err)
+		os.Exit(1)
 	}
 
 	if err := pg.Migrate(ctx, cfg.MigrationsDir); err != nil {
-		slog.Error("postgres migrate failed, using built-in rules", "error", err)
+		slog.Error("postgres migrate failed", "error", err)
 		_ = pg.Close()
-		return nil
+		os.Exit(1)
+	}
+
+	if cfg.SeedOnStart {
+		if err := pg.Seed(ctx, cfg.SeedsDir); err != nil {
+			slog.Error("postgres seed failed", "error", err)
+			_ = pg.Close()
+			os.Exit(1)
+		}
+		slog.Info("rules seeded from files")
 	}
 
 	slog.Info("rules loaded from postgres")

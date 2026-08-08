@@ -18,7 +18,7 @@ func recoIDs(scenes []map[string]any) []string {
 }
 
 func TestBuildRecommendationsShouldCapAndRankByPriority(t *testing.T) {
-	scenes := buildRecommendations(fullMetrics(), "https://www.avito.ru")
+	scenes := buildRecommendations(defaultRecommendationRules, fullMetrics(), "https://www.avito.ru")
 
 	if len(scenes) == 0 {
 		t.Fatal("expected recommendations for an active user")
@@ -28,7 +28,7 @@ func TestBuildRecommendationsShouldCapAndRankByPriority(t *testing.T) {
 	}
 
 	ids := recoIDs(scenes)
-	if ids[0] != "reco-return-favorites" {
+	if ids[0] != "reco-listings-favorited" {
 		t.Fatalf("expected highest-priority matched rule first, got %q", ids[0])
 	}
 }
@@ -36,7 +36,7 @@ func TestBuildRecommendationsShouldCapAndRankByPriority(t *testing.T) {
 func TestBuildRecommendationsShouldSuggestPromotionForSellerWithoutDeals(t *testing.T) {
 	m := clients.Metrics{ListingsPublished: 5, DealsClosed: 0}
 
-	ids := recoIDs(buildRecommendations(m, "https://www.avito.ru"))
+	ids := recoIDs(buildRecommendations(defaultRecommendationRules, m, "https://www.avito.ru"))
 
 	if ids[0] != "reco-resume-listings" {
 		t.Fatalf("expected promotion recommendation first for seller without deals, got %v", ids)
@@ -44,7 +44,7 @@ func TestBuildRecommendationsShouldSuggestPromotionForSellerWithoutDeals(t *test
 }
 
 func TestBuildRecommendationsShouldSuggestFirstListingForInactiveUser(t *testing.T) {
-	ids := recoIDs(buildRecommendations(clients.Metrics{}, "https://www.avito.ru"))
+	ids := recoIDs(buildRecommendations(defaultRecommendationRules, clients.Metrics{}, "https://www.avito.ru"))
 
 	found := false
 	for _, id := range ids {
@@ -58,7 +58,7 @@ func TestBuildRecommendationsShouldSuggestFirstListingForInactiveUser(t *testing
 }
 
 func TestBuildRecommendationsShouldBuildAbsoluteAvitoLinks(t *testing.T) {
-	scenes := buildRecommendations(clients.Metrics{FavoritesReceived: 3}, "https://www.avito.ru")
+	scenes := buildRecommendations(defaultRecommendationRules, clients.Metrics{FavoritesReceived: 3}, "https://www.avito.ru")
 
 	actions, ok := scenes[0]["actions"].([]map[string]any)
 	if !ok || len(actions) == 0 {

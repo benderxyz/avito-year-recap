@@ -22,7 +22,7 @@ type recommendationRule struct {
 	when      condition
 }
 
-var recommendationRules = []recommendationRule{
+var defaultRecommendationRules = []recommendationRule{
 	{
 		id:        "resume-listings",
 		title:     "Продвиньте свои объявления",
@@ -37,12 +37,12 @@ var recommendationRules = []recommendationRule{
 		}},
 	},
 	{
-		id:        "return-favorites",
-		title:     "Ваше избранное ждёт",
-		text:      "Вы добавляли объявления в избранное. Загляните — часть из них ещё в продаже.",
-		callout:   "Вернитесь к тому, что вам понравилось",
-		linkLabel: "Открыть избранное",
-		path:      "/favorites",
+		id:        "listings-favorited",
+		title:     "Ваши объявления в избранном",
+		text:      "Покупатели добавляли ваши объявления в избранное. Освежите их и ответьте на вопросы, пока интерес высокий.",
+		callout:   "Вами интересуются покупатели",
+		linkLabel: "К моим объявлениям",
+		path:      "/profile",
 		priority:  90,
 		when: condition{predicates: []predicate{
 			{metric: models.MetricFavoritesReceived, op: opGt, value: 0},
@@ -99,11 +99,11 @@ var recommendationRules = []recommendationRule{
 	},
 }
 
-func buildRecommendations(m clients.Metrics, productBaseURL string) []map[string]any {
+func buildRecommendations(rules []recommendationRule, m clients.Metrics, productBaseURL string) []map[string]any {
 	snapshot := metricsSnapshot(m)
 
-	matched := make([]recommendationRule, 0, len(recommendationRules))
-	for _, rule := range recommendationRules {
+	matched := make([]recommendationRule, 0, len(rules))
+	for _, rule := range rules {
 		if rule.when.eval(snapshot) {
 			matched = append(matched, rule)
 		}

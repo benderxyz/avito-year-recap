@@ -24,6 +24,8 @@ func BuildRecap(
 ) models.RecapPayload {
 	ruleSet := resolveRuleSet(opts.Rules)
 
+	badges := buildBadges(ruleSet.badges, metrics, opts.Mode)
+
 	shareURL := ""
 	if opts.Mode == models.RecapModePrivate && len(opts.SigningKey) > 0 {
 		token := GenerateShareToken(
@@ -47,8 +49,8 @@ func BuildRecap(
 			GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		},
 		Metrics: buildMetrics(metrics, opts.Mode),
-		Badges:  buildBadges(ruleSet.badges, metrics, opts.Mode),
-		Story:   buildStory(profile, year, metrics, ruleSet, opts, shareURL),
+		Badges:  badges,
+		Story:   buildStory(profile, year, metrics, ruleSet, badges, opts, shareURL),
 	}
 
 	if shareURL != "" {
@@ -68,7 +70,7 @@ func buildShareURL(baseURL, token string) string {
 	return fmt.Sprintf("%s/share/%s", baseURL, token)
 }
 
-func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleSet, opts BuildOptions, shareURL string) []map[string]any {
+func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleSet, badges []models.Badge, opts BuildOptions, shareURL string) []map[string]any {
 	mode := opts.Mode
 	snapshot := metricsSnapshot(m)
 
@@ -95,7 +97,7 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleS
 		}
 	}
 
-	for _, b := range buildBadges(rules.badges, m, mode) {
+	for _, b := range badges {
 		story = append(story, map[string]any{
 			"id":      "achievement-" + b.ID,
 			"type":    "achievement",
@@ -104,7 +106,7 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleS
 	}
 
 	if mode == models.RecapModePrivate {
-		story = append(story, buildRecommendations(m, opts.ProductBaseURL)...)
+		story = append(story, buildRecommendations(rules.recommendations, m, opts.ProductBaseURL)...)
 	}
 
 	story = append(story, buildOutro(mode, shareURL))

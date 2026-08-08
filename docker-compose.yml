@@ -53,6 +53,8 @@ services:
       POSTGRES_DATABASE: cards
       POSTGRES_SSLMODE: disable
       MIGRATIONS_DIR: /app/migrations
+      SEEDS_DIR: /app/seeds
+      SEED_ON_START: "true"
     depends_on:
       - analytics
       - user

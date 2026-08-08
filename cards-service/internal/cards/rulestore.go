@@ -28,7 +28,12 @@ func (s *RuleStore) Load(ctx context.Context) (RuleSet, error) {
 		return RuleSet{}, err
 	}
 
-	return RuleSet{badges: badges, stories: stories}, nil
+	recommendations, err := s.loadRecommendationRules(ctx)
+	if err != nil {
+		return RuleSet{}, err
+	}
+
+	return RuleSet{badges: badges, stories: stories, recommendations: recommendations}, nil
 }
 
 func (s *RuleStore) loadBadgeRules(ctx context.Context) ([]badgeRule, error) {
@@ -127,4 +132,85 @@ func makeStoryRule(vis, metricKey, op string, threshold float64, hasPredicate bo
 	}
 
 	return rule, nil
+}
+
+func (s *RuleStore) loadRecommendationRules(ctx context.Context) ([]recommendationRule, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, title, text, callout, link_label, path, priority, condition
+		FROM recommendation_rules
+		WHERE enabled = true
+		ORDER BY priority DESC, id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query recommendation_rules: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var rules []recommendationRule
+	for rows.Next() {
+		var id, title, text, callout, linkLabel, path string
+		var priority int
+		var conditionPayload []byte
+		if err := rows.Scan(&id, &title, &text, &callout, &linkLabel, &path, &priority, &conditionPayload); err != nil {
+			return nil, fmt.Errorf("scan recommendation_rule: %w", err)
+		}
+
+		rule, err := makeRecommendationRule(id, title, text, callout, linkLabel, path, priority, conditionPayload)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate recommendation_rules: %w", err)
+	}
+
+	return rules, nil
+}
+
+func makeRecommendationRule(id, title, text, callout, linkLabel, path string, priority int, conditionPayload []byte) (recommendationRule, error) {
+	when, err := parseCondition(conditionPayload)
+	if err != nil {
+		return recommendationRule{}, err
+	}
+
+	return recommendationRule{
+		id:        id,
+		title:     title,
+		text:      text,
+		callout:   callout,
+		linkLabel: linkLabel,
+		path:      path,
+		priority:  priority,
+		when:      when,
+	}, nil
+}
+
+func parseCondition(payload []byte) (condition, error) {
+	if len(payload) == 0 {
+		return condition{}, nil
+	}
+
+	var dto struct {
+		Match      string `json:"match"`
+		Predicates []struct {
+			Metric string  `json:"metric"`
+			Op     string  `json:"op"`
+			Value  float64 `json:"value"`
+		} `json:"predicates"`
+	}
+	if err := json.Unmarshal(payload, &dto); err != nil {
+		return condition{}, fmt.Errorf("unmarshal condition: %w", err)
+	}
+
+	result := condition{match: matchMode(dto.Match)}
+	for _, p := range dto.Predicates {
+		result.predicates = append(result.predicates, predicate{
+			metric: models.MetricKey(p.Metric),
+			op:     predicateOp(p.Op),
+			value:  p.Value,
+		})
+	}
+
+	return result, nil
 }

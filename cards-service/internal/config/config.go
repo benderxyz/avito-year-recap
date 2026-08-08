@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -19,6 +20,8 @@ type Config struct {
 	PostgresDatabase    string
 	PostgresSSLMode     string
 	MigrationsDir       string
+	SeedsDir            string
+	SeedOnStart         bool
 }
 
 func Load() Config {
@@ -36,6 +39,8 @@ func Load() Config {
 		PostgresDatabase:    getEnv("POSTGRES_DATABASE", "cards"),
 		PostgresSSLMode:     getEnv("POSTGRES_SSLMODE", "disable"),
 		MigrationsDir:       getEnv("MIGRATIONS_DIR", "migrations"),
+		SeedsDir:            getEnv("SEEDS_DIR", "seeds"),
+		SeedOnStart:         getEnvBool("SEED_ON_START", false),
 	}
 }
 
@@ -51,4 +56,16 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

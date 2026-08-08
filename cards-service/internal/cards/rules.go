@@ -41,14 +41,16 @@ type condition struct {
 }
 
 type RuleSet struct {
-	badges  []badgeRule
-	stories []storyRule
+	badges          []badgeRule
+	stories         []storyRule
+	recommendations []recommendationRule
 }
 
 func defaultRuleSet() RuleSet {
 	return RuleSet{
-		badges:  defaultBadgeRules,
-		stories: defaultStatSceneRules,
+		badges:          defaultBadgeRules,
+		stories:         defaultStatSceneRules,
+		recommendations: defaultRecommendationRules,
 	}
 }
 

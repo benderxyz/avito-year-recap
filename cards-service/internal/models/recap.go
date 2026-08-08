@@ -8,15 +8,19 @@ const (
 )
 
 var PublicMetricsAllowlist = map[string]bool{
-	"listingsPublished": true,
-	"viewsTotal":        true,
-	"favoritesReceived": true,
-	"dealsClosed":       true,
-	"daysActive":        true,
-	"categoriesTried":   true,
-	"peakDayViews":      true,
-	"searchQueries":     true,
-	"deliveryOrders":    true,
+	"listingsPublished":   true,
+	"listingsPercentile":  true,
+	"viewsTotal":          true,
+	"viewsPercentile":     true,
+	"favoritesReceived":   true,
+	"favoritesPercentile": true,
+	"dealsClosed":         true,
+	"dealsPercentile":     true,
+	"daysActive":          true,
+	"categoriesTried":     true,
+	"peakDayViews":        true,
+	"searchQueries":       true,
+	"deliveryOrders":      true,
 }
 
 type Recap struct {

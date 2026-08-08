@@ -8,7 +8,7 @@ type Result struct {
 }
 
 type MetricsSnapshot struct {
-	Metrics  map[string]*float64
+	Metrics  map[string]MetricValue
 	Timezone string
 	From     time.Time
 	To       time.Time

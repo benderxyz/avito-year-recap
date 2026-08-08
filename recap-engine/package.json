@@ -16,7 +16,7 @@
     "check": "biome check .",
     "lintfix": "biome check . --write",
     "typecheck": "pnpm --filter @recap-engine/core run build && pnpm -r run typecheck",
-    "prepare": "cd .. && husky recap-engine/.husky"
+    "prepare": "cd .. && husky .husky"
   },
   "lint-staged": {
     "*": "biome check --write --files-ignore-unknown=true --no-errors-on-unmatched"

@@ -194,8 +194,8 @@ func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.
 	if snapshot.Timezone != "Europe/Moscow" {
 		t.Fatalf("expected Europe/Moscow timezone, got %s", snapshot.Timezone)
 	}
-	if snapshot.Metrics["listingsPublished"] == nil || *snapshot.Metrics["listingsPublished"] != 3 {
-		t.Fatalf("expected listingsPublished=3, got %v", snapshot.Metrics["listingsPublished"])
+	if snapshot.Metrics["listingsPublished"].Value == nil || *snapshot.Metrics["listingsPublished"].Value != 3 {
+		t.Fatalf("expected listingsPublished=3, got %v", snapshot.Metrics["listingsPublished"].Value)
 	}
 	if len(snapshot.Metrics) != len(registry.All()) {
 		t.Fatalf("expected %d metrics, got %d", len(registry.All()), len(snapshot.Metrics))
@@ -214,11 +214,17 @@ func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if snapshot.Metrics["activeListings"] != nil {
-		t.Fatalf("expected null activeListings, got %v", snapshot.Metrics["activeListings"])
+	if snapshot.Metrics["activeListings"].Value != nil {
+		t.Fatalf("expected null activeListings value, got %v", snapshot.Metrics["activeListings"].Value)
 	}
-	if snapshot.Metrics["listingsPublished"] == nil || *snapshot.Metrics["listingsPublished"] != 0 {
-		t.Fatalf("expected listingsPublished=0, got %v", snapshot.Metrics["listingsPublished"])
+	if snapshot.Metrics["activeListings"].Percentile != nil {
+		t.Fatalf("expected null activeListings percentile, got %v", snapshot.Metrics["activeListings"].Percentile)
+	}
+	if snapshot.Metrics["activeListings"].Share != nil {
+		t.Fatalf("expected null activeListings share, got %v", snapshot.Metrics["activeListings"].Share)
+	}
+	if snapshot.Metrics["listingsPublished"].Value == nil || *snapshot.Metrics["listingsPublished"].Value != 0 {
+		t.Fatalf("expected listingsPublished=0, got %v", snapshot.Metrics["listingsPublished"].Value)
 	}
 }
 

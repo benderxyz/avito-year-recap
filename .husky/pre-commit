@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+set -e
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT" || exit 1
+
+staged_go=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.go$' || true)
+if [ -n "$staged_go" ]; then
+  echo "$staged_go" | while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    gofmt -w "$file"
+    git add -- "$file"
+  done
+fi
+
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^recap-engine/'; then
+  if [ -x "$ROOT/recap-engine/node_modules/.bin/lint-staged" ]; then
+    cd "$ROOT/recap-engine" || exit 1
+    export PATH="$ROOT/recap-engine/node_modules/.bin:$PATH"
+    pnpm exec lint-staged
+  fi
+fi

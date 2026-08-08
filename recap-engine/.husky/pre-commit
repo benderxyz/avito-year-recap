@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-
-# Only lint when staged changes touch recap-engine
-git diff --cached --name-only --diff-filter=ACMR | grep -q '^recap-engine/' || exit 0
-
-ROOT=$(git rev-parse --show-toplevel)
-cd "$ROOT/recap-engine" || exit 1
-export PATH="$ROOT/recap-engine/node_modules/.bin:$PATH"
-pnpm exec lint-staged

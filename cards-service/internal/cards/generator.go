@@ -78,67 +78,33 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, mode models
 	})
 
 	if m.ListingsPublished > 0 {
-		story = append(story, map[string]any{
-			"id":    "stat-listings",
-			"type":  "stat",
-			"value": "listingsPublished",
-			"unit": map[string]string{
-				"one": "объявление", "few": "объявления", "many": "объявлений",
-			},
-			"title":   "вы опубликовали",
-			"eyebrow": fmt.Sprintf("За %d год", year),
-		})
+		story = append(story, statScene("stat-listings", "listingsPublished", "listingsPercentile", "вы опубликовали", m, map[string]string{
+			"one": "объявление", "few": "объявления", "many": "объявлений",
+		}, fmt.Sprintf("За %d год", year), m.ListingsPercentile))
 	}
 
 	if m.ViewsTotal > 0 {
-		story = append(story, map[string]any{
-			"id":    "stat-views",
-			"type":  "stat",
-			"value": "viewsTotal",
-			"unit": map[string]string{
-				"one": "просмотр", "few": "просмотра", "many": "просмотров",
-			},
-			"title": "собрали ваши объявления",
-		})
+		story = append(story, statScene("stat-views", "viewsTotal", "viewsPercentile", "собрали ваши объявления", m, map[string]string{
+			"one": "просмотр", "few": "просмотра", "many": "просмотров",
+		}, "", m.ViewsPercentile))
 	}
 
 	if m.FavoritesReceived > 0 {
-		story = append(story, map[string]any{
-			"id":    "stat-favorites",
-			"type":  "stat",
-			"value": "favoritesReceived",
-			"unit": map[string]string{
-				"one": "добавление", "few": "добавления", "many": "добавлений",
-			},
-			"title":   "в избранное",
-			"eyebrow": "Любимчики покупателей",
-		})
+		story = append(story, statScene("stat-favorites", "favoritesReceived", "favoritesPercentile", "в избранное", m, map[string]string{
+			"one": "добавление", "few": "добавления", "many": "добавлений",
+		}, "Любимчики покупателей", m.FavoritesPercentile))
 	}
 
 	if isPrivate && m.MessagesSent > 0 {
-		story = append(story, map[string]any{
-			"id":    "stat-messages",
-			"type":  "stat",
-			"value": "messagesSent",
-			"unit": map[string]string{
-				"one": "сообщение", "few": "сообщения", "many": "сообщений",
-			},
-			"title":   "в чатах с покупателями",
-			"eyebrow": "Диалоги",
-		})
+		story = append(story, statScene("stat-messages", "messagesSent", "messagesPercentile", "в чатах с покупателями", m, map[string]string{
+			"one": "сообщение", "few": "сообщения", "many": "сообщений",
+		}, "Диалоги", m.MessagesPercentile))
 	}
 
 	if m.DealsClosed > 0 {
-		story = append(story, map[string]any{
-			"id":    "stat-deals",
-			"type":  "stat",
-			"value": "dealsClosed",
-			"unit": map[string]string{
-				"one": "сделка", "few": "сделки", "many": "сделок",
-			},
-			"title":   "успешно закрыто",
-			"eyebrow": "Результат",
-		})
+		story = append(story, statScene("stat-deals", "dealsClosed", "dealsPercentile", "успешно закрыто", m, map[string]string{
+			"one": "сделка", "few": "сделки", "many": "сделок",
+		}, "Результат", m.DealsPercentile))
 	}
 
 	if isPrivate && m.MoneyEarned > 0 {
@@ -199,6 +165,33 @@ func buildOutro(mode models.RecapMode) map[string]any {
 	}
 }
 
+func statScene(
+	id string,
+	valueKey string,
+	percentileKey string,
+	title string,
+	_ clients.Metrics,
+	unit map[string]string,
+	eyebrow string,
+	percentile *float64,
+) map[string]any {
+	scene := map[string]any{
+		"id":    id,
+		"type":  "stat",
+		"value": valueKey,
+		"title": title,
+		"unit":  unit,
+	}
+	if eyebrow != "" {
+		scene["eyebrow"] = eyebrow
+	}
+	if percentile != nil {
+		scene["percentile"] = percentileKey
+		scene["comparisonTemplate"] = "это больше, чем у {{percentile}}% пользователей"
+	}
+	return scene
+}
+
 func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.MetricValue {
 	all := map[string]models.MetricValue{
 		string(models.MetricListingsPublished): {
@@ -253,6 +246,12 @@ func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.Me
 		},
 	}
 
+	addPercentileMetric(all, models.MetricListingsPercentile, m.ListingsPercentile)
+	addPercentileMetric(all, models.MetricViewsPercentile, m.ViewsPercentile)
+	addPercentileMetric(all, models.MetricFavoritesPercentile, m.FavoritesPercentile)
+	addPercentileMetric(all, models.MetricMessagesPercentile, m.MessagesPercentile)
+	addPercentileMetric(all, models.MetricDealsPercentile, m.DealsPercentile)
+
 	if mode == models.RecapModePublic {
 		filtered := make(map[string]models.MetricValue, len(all))
 		for key, value := range all {
@@ -264,6 +263,20 @@ func buildMetrics(m clients.Metrics, mode models.RecapMode) map[string]models.Me
 	}
 
 	return all
+}
+
+func addPercentileMetric(
+	all map[string]models.MetricValue,
+	key models.MetricKey,
+	value *float64,
+) {
+	if value == nil {
+		return
+	}
+	all[string(key)] = models.MetricValue{
+		Type:  models.MetricTypePercentile,
+		Value: *value,
+	}
 }
 
 func buildBadges(metrics clients.Metrics, mode models.RecapMode) []models.Badge {

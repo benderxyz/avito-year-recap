@@ -1,5 +1,11 @@
 # @recap-engine/react
 
+## 1.3.0
+
+### Minor Changes
+
+- 793b1ea: fixed problem with wrappinng unit text on counting up animation
+
 ## 1.2.1
 
 ### Patch Changes

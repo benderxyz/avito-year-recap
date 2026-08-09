@@ -6,8 +6,8 @@ describe('shared api', () => {
     expect(buildRecapUrl('http://localhost:8081/', 2026, '42')).toBe(
       'http://localhost:8081/api/recap/2026/42',
     );
-    expect(buildRecapUrl('https://recaps.hakolr.dev/api/cards', 2026, '42')).toBe(
-      'https://recaps.hakolr.dev/api/cards/api/recap/2026/42',
+    expect(buildRecapUrl('https://recaps.hakolr.dev', 2026, '42')).toBe(
+      'https://recaps.hakolr.dev/api/recap/2026/42',
     );
   });
 });

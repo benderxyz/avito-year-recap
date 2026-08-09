@@ -6,7 +6,7 @@ alwaysApply: false
 
 # TypeScript (recap-engine)
 
-Follow `recap-engine/biome.json`: single quotes, semicolons always, trailing commas, 2-space indent, line width 100.
+Follow root `biome.json`: single quotes, semicolons always, trailing commas, 2-space indent, line width 100.
 
 ## Naming
 

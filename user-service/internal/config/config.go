@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	ServerPort          string
-	CORSAllowedOrigins  []string
-	PostgresHost        string
-	PostgresPort        string
-	PostgresUser        string
-	PostgresPassword    string
-	PostgresDatabase    string
-	PostgresSSLMode     string
-	MigrationsDir       string
+	ServerPort         string
+	CORSAllowedOrigins []string
+	PostgresHost       string
+	PostgresPort       string
+	PostgresUser       string
+	PostgresPassword   string
+	PostgresDatabase   string
+	PostgresSSLMode    string
+	MigrationsDir      string
 }
 
 func Load() Config {

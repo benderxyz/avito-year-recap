@@ -81,11 +81,11 @@ func TestServiceShouldEnrichCounterMetricsWithShareAndPercentile(t *testing.T) {
 			"item_published": lowerPercentileTotals(88, 12, 0, 100),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -109,11 +109,11 @@ func TestServiceShouldReturnAllNullFieldsWhenSparseGaugeIsAbsent(t *testing.T) {
 			"active_items_count": false,
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -137,11 +137,11 @@ func TestServiceShouldReturnNullShareWhenGlobalCounterTotalIsZero(t *testing.T) 
 			"item_published": {0, 0, 10, 10},
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -165,11 +165,11 @@ func TestServiceShouldEnrichMilestoneWhenValueIsPresent(t *testing.T) {
 			"first_item_published": higherPercentileTotals(88, 12, 1_800_000_000, 1_600_000_000),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -188,11 +188,11 @@ func TestServiceShouldEnrichMilestoneWhenValueIsPresent(t *testing.T) {
 }
 
 func TestServiceShouldFailEnrichmentWhenFromIsNotBeforeTo(t *testing.T) {
-	service := aggregation.NewService(events.NewRegistry(), &enrichmentQuerier{}, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), &enrichmentQuerier{})
 	from := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	_, err := service.Metrics(context.Background(), 42, from, to)
+	_, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if !apperr.IsValidation(err) {
 		t.Fatalf("expected validation error, got %v", err)
@@ -211,17 +211,17 @@ func TestServiceShouldReuseCachedGlobalStatsWhenMetricsAreRequestedTwice(t *test
 			"item_published": lowerPercentileTotals(88, 12, 0, 100),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	if _, err := service.Metrics(context.Background(), 42, from, to); err != nil {
+	if _, err := service.Metrics(context.Background(), 42, from, to, "UTC"); err != nil {
 		t.Fatalf("unexpected first error: %v", err)
 	}
 	firstGlobalCalls := querier.globalSumCalls
 	firstTotalsCalls := querier.float64sCalls
 
-	if _, err := service.Metrics(context.Background(), 99, from, to); err != nil {
+	if _, err := service.Metrics(context.Background(), 99, from, to, "UTC"); err != nil {
 		t.Fatalf("unexpected second error: %v", err)
 	}
 

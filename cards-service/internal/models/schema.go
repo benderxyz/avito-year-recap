@@ -33,6 +33,7 @@ const (
 	MetricTypeNumber     MetricType = "number"
 	MetricTypeMoney      MetricType = "money"
 	MetricTypePercentile MetricType = "percentile"
+	MetricTypeString     MetricType = "string"
 )
 
 type Currency string

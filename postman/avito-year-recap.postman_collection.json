@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "avito-year-recap-local",
     "name": "Avito Year Recap",
-    "description": "API для локального стека после `docker compose up --build`.\n\nПорты по умолчанию\n- analytics 8080\n- cards 8081\n- user 8082\n- frontend 3000\n\nПеред recap прогоните seed\n`go -C seed-data/seed-script run . -user {{user_id}} -year {{year}}`",
+    "description": "API локального стека после `docker compose up --build`.\n\nПорты\n- analytics 8080\n- cards 8081\n- user 8082\n- frontend 3000\n\nSmoke\n1. Health\n2. Upsert user или seed\n3. Ingest events или seed\n4. Get metrics\n5. Get private recap\n6. Get public share recap (token подставится сам)\n\nSeed\n`go -C seed-data/seed-script run . -user {{user_id}} -year {{year}}`\n\nCards отвечает RecapPayload (schemaVersion, meta, metrics, badges, story, features).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,6 +17,10 @@
     {
       "key": "user_base_url",
       "value": "http://localhost:8082"
+    },
+    {
+      "key": "frontend_base_url",
+      "value": "http://localhost:3000"
     },
     {
       "key": "user_id",
@@ -48,7 +52,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{analytics_base_url}}/health"
+            "url": "{{analytics_base_url}}/health",
+            "description": "Ожидаемый ответ: `analytics-service: OK`"
           }
         },
         {
@@ -56,7 +61,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{cards_base_url}}/health"
+            "url": "{{cards_base_url}}/health",
+            "description": "Ожидаемый ответ: `cards-service: OK`"
           }
         },
         {
@@ -64,7 +70,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{user_base_url}}/health"
+            "url": "{{user_base_url}}/health",
+            "description": "Ожидаемый ответ: `user-service: OK`"
           }
         }
       ]
@@ -77,7 +84,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{user_base_url}}/users/{{user_id}}"
+            "url": "{{user_base_url}}/users/{{user_id}}",
+            "description": "Читает профиль из Postgres (база `users`)."
           }
         },
         {
@@ -94,7 +102,8 @@
               "mode": "raw",
               "raw": "{\n  \"external_id\": \"avito-{{user_id}}\",\n  \"username\": \"Alex\",\n  \"timezone\": \"Europe/Moscow\"\n}"
             },
-            "url": "{{user_base_url}}/users/{{user_id}}"
+            "url": "{{user_base_url}}/users/{{user_id}}",
+            "description": "Создаёт или обновляет профиль. Тело как в `seed-data/users/alex.json`."
           }
         }
       ]
@@ -121,7 +130,8 @@
                   "value": "{{metrics_to}}"
                 }
               ]
-            }
+            },
+            "description": "Метрики за диапазон. Каждая метрика: `{ value, percentile, share }`. `null` значит нет данных или поле не применимо."
           }
         },
         {
@@ -129,7 +139,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{analytics_base_url}}/users/{{user_id}}/metrics"
+            "url": "{{analytics_base_url}}/users/{{user_id}}/metrics",
+            "description": "Без `from`/`to` берется текущий год в timezone пользователя из user-service."
           }
         },
         {
@@ -146,7 +157,8 @@
               "mode": "raw",
               "raw": "{\n  \"user_id\": {{user_id}},\n  \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"event_type\": \"item_published\",\n  \"value\": 1,\n  \"payload\": \"{}\",\n  \"occurred_at\": \"2026-03-15T10:00:00Z\"\n}"
             },
-            "url": "{{analytics_base_url}}/events"
+            "url": "{{analytics_base_url}}/events",
+            "description": "Одно событие. Ответ 202: `{ \"accepted\": 1 }`."
           }
         },
         {
@@ -161,9 +173,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_published\",\n    \"value\": 1,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T10:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_view_received\",\n    \"value\": 12,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T11:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"day_active\",\n    \"value\": 0,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T12:00:00Z\"\n  }\n]"
+              "raw": "[\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_published\",\n    \"value\": 1,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T10:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_view_received\",\n    \"value\": 12,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T11:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"item_favorited\",\n    \"value\": 3,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T11:30:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"deal_completed\",\n    \"value\": 1,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T12:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"sale_proceeds\",\n    \"value\": 4500,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T12:05:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"active_items_count\",\n    \"value\": 4,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T13:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"first_item_published\",\n    \"value\": 0,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-01-20T09:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"category_opened\",\n    \"value\": 0,\n    \"payload\": \"{\\\"category\\\":\\\"electronics\\\"}\",\n    \"occurred_at\": \"2026-03-15T14:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"day_active\",\n    \"value\": 0,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T15:00:00Z\"\n  },\n  {\n    \"user_id\": {{user_id}},\n    \"session_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"event_type\": \"chat_reply\",\n    \"value\": 1710504000,\n    \"payload\": \"{}\",\n    \"occurred_at\": \"2026-03-15T16:00:00Z\"\n  }\n]"
             },
-            "url": "{{analytics_base_url}}/events"
+            "url": "{{analytics_base_url}}/events",
+            "description": "Batch по категориям registry: counter, gauge, milestone, unique (payload/day), interval.\n\nОсновные `event_type`: item_published, item_view_received, item_favorited, chat_message_sent, deal_completed, sale_proceeds, buyer_saving, delivery_order_created, search_performed, active_items_count, seller_rating, peak_day_views, first_item_published, first_deal_completed, category_opened, day_active, chat_reply."
           }
         }
       ]
@@ -173,10 +186,46 @@
       "item": [
         {
           "name": "Get private recap",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code !== 200) {",
+                  "  return;",
+                  "}",
+                  "",
+                  "const body = pm.response.json();",
+                  "const shareUrl = body && body.features && body.features.shareUrl;",
+                  "if (!shareUrl || typeof shareUrl !== 'string') {",
+                  "  return;",
+                  "}",
+                  "",
+                  "const marker = '/share/';",
+                  "const idx = shareUrl.lastIndexOf(marker);",
+                  "if (idx === -1) {",
+                  "  return;",
+                  "}",
+                  "",
+                  "const token = shareUrl.slice(idx + marker.length);",
+                  "if (!token) {",
+                  "  return;",
+                  "}",
+                  "",
+                  "pm.collectionVariables.set('share_token', token);",
+                  "if (pm.environment) {",
+                  "  pm.environment.set('share_token', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{cards_base_url}}/api/recap/{{year}}/{{user_id}}"
+            "url": "{{cards_base_url}}/api/recap/{{year}}/{{user_id}}",
+            "description": "Private RecapPayload для пользователя.\n\nВ ответе есть `features.shareUrl` вида `{{frontend_base_url}}/share/<token>`.\nTest-скрипт кладёт token в `share_token`."
           }
         },
         {
@@ -185,7 +234,7 @@
             "method": "GET",
             "header": [],
             "url": "{{cards_base_url}}/api/share/{{share_token}}",
-            "description": "Сначала вызовите Get private recap и скопируйте token из features.shareUrl в переменную share_token."
+            "description": "Public RecapPayload по share token.\nСначала вызовите Get private recap. Token подставится сам из `features.shareUrl`.\nВ public режиме приватные метрики и сцены отфильтрованы, `features` нет."
           }
         }
       ]

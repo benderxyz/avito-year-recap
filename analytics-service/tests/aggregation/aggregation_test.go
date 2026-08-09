@@ -37,15 +37,6 @@ func (q *recordingQuerier) QueryFloat64s(_ context.Context, query string, args .
 	return []float64{q.result}, nil
 }
 
-type staticTimezoneResolver struct {
-	timezone string
-	err      error
-}
-
-func (r staticTimezoneResolver) Timezone(_ context.Context, _ uint64) (string, error) {
-	return r.timezone, r.err
-}
-
 func sampleRequest(eventType string) aggregation.Request {
 	return aggregation.Request{
 		UserID:    42,
@@ -202,11 +193,11 @@ func TestUniqueAggregatorShouldCountLocalDaysWhenModeIsDay(t *testing.T) {
 func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.T) {
 	querier := &recordingQuerier{result: 3, present: true}
 	registry := events.NewRegistry()
-	service := aggregation.NewService(registry, querier, staticTimezoneResolver{timezone: "Europe/Moscow"})
+	service := aggregation.NewService(registry, querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "Europe/Moscow")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -225,11 +216,11 @@ func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.
 func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 	querier := &recordingQuerier{present: false}
 	registry := events.NewRegistry()
-	service := aggregation.NewService(registry, querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(registry, querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	snapshot, err := service.Metrics(context.Background(), 42, from, to)
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -250,13 +241,29 @@ func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 
 func TestServiceShouldFailWhenFromIsNotBeforeTo(t *testing.T) {
 	querier := &recordingQuerier{}
-	service := aggregation.NewService(events.NewRegistry(), querier, staticTimezoneResolver{timezone: "UTC"})
+	service := aggregation.NewService(events.NewRegistry(), querier)
 	from := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	_, err := service.Metrics(context.Background(), 42, from, to)
+	_, err := service.Metrics(context.Background(), 42, from, to, "UTC")
 
 	if !apperr.IsValidation(err) {
 		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestServiceShouldUseUTCWhenTimezoneIsEmpty(t *testing.T) {
+	querier := &recordingQuerier{result: 1, present: true}
+	service := aggregation.NewService(events.NewRegistry(), querier)
+	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	snapshot, err := service.Metrics(context.Background(), 42, from, to, "  ")
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if snapshot.Timezone != "UTC" {
+		t.Fatalf("expected UTC timezone, got %s", snapshot.Timezone)
 	}
 }

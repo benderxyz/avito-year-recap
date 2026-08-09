@@ -3,6 +3,7 @@ package aggregation
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"analytics-service/internal/apperr"
@@ -10,18 +11,16 @@ import (
 )
 
 type Service struct {
-	registry  *events.Registry
-	db        FloatQuerier
-	timezones TimezoneResolver
-	globals   *globalStats
+	registry *events.Registry
+	db       FloatQuerier
+	globals  *globalStats
 }
 
-func NewService(registry *events.Registry, db FloatQuerier, timezones TimezoneResolver) *Service {
+func NewService(registry *events.Registry, db FloatQuerier) *Service {
 	return &Service{
-		registry:  registry,
-		db:        db,
-		timezones: timezones,
-		globals:   newGlobalStats(db, defaultGlobalCacheTTL),
+		registry: registry,
+		db:       db,
+		globals:  newGlobalStats(db, defaultGlobalCacheTTL),
 	}
 }
 
@@ -29,18 +28,15 @@ func (s *Service) Metrics(
 	ctx context.Context,
 	userID uint64,
 	from, to time.Time,
+	timezone string,
 ) (MetricsSnapshot, error) {
 	if !from.Before(to) {
 		return MetricsSnapshot{}, apperr.Validation("from must be before to")
 	}
 
-	timezone := "UTC"
-	if s.timezones != nil {
-		resolved, err := s.timezones.Timezone(ctx, userID)
-		if err != nil {
-			return MetricsSnapshot{}, fmt.Errorf("timezone: %w", err)
-		}
-		timezone = resolved
+	timezone = strings.TrimSpace(timezone)
+	if timezone == "" {
+		timezone = "UTC"
 	}
 
 	result := make(map[string]MetricValue)

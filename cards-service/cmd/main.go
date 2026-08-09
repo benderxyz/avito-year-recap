@@ -69,8 +69,8 @@ func main() {
 
 func loadRuleProvider(cfg config.Config) *cards.RuleProvider {
 	if cfg.PostgresHost == "" {
-		slog.Info("postgres not configured, using built-in rules")
-		return nil
+		slog.Error("postgres is required for data dictionary rules")
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

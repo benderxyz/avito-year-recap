@@ -23,7 +23,7 @@ Event types are Avito marketplace actions (`item_published`, `deal_completed`, `
 
 - `GET /health`
 - `POST /events` — single event object or JSON array
-- `GET /users/{userID}/metrics?from=&to=` — both bounds required together (RFC3339); if omitted, uses the current year in the user timezone from ClickHouse `users`. Each metric is an object `{ value, percentile, share }`. Fields are always present; `null` means no data or not applicable.
+- `GET /users/{userID}/metrics?from=&to=` — both bounds required together (RFC3339); if omitted, uses the current year in the user timezone from user-service. Each metric is an object `{ value, percentile, share }`. Fields are always present; `null` means no data or not applicable.
 
 ### Metric object semantics
 
@@ -49,6 +49,8 @@ Example:
 
 ## Local
 
-Env vars: `CLICKHOUSE_HOST`, `CLICKHOUSE_PORT` (native, default `9000`), `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`, `SERVER_PORT`, `MIGRATIONS_DIR`.
+Env vars: `CLICKHOUSE_HOST`, `CLICKHOUSE_PORT` (native, default `9000`), `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`, `USER_SERVICE_URL` (default `http://localhost:8082`), `SERVER_PORT`, `MIGRATIONS_DIR`.
+
+Timezone for metrics comes from user-service via `GET /users/{userID}`. Missing user falls back to UTC.
 
 Migrations run on startup from `migrations/`.

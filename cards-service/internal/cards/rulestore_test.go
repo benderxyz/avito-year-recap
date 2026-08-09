@@ -69,11 +69,10 @@ func TestMakeStoryRuleShouldFailOnInvalidPayload(t *testing.T) {
 	}
 }
 
-func TestRuleProviderShouldFallBackWithoutStore(t *testing.T) {
+func TestRuleProviderShouldFailWithoutStore(t *testing.T) {
 	provider := NewRuleProvider(nil, time.Second)
 
-	set := provider.Get(context.Background())
-	if len(set.badges) != len(defaultBadgeRules) || len(set.stories) != len(defaultStatSceneRules) {
-		t.Fatalf("expected default rule set, got %d badges / %d stories", len(set.badges), len(set.stories))
+	if _, err := provider.Get(context.Background()); err == nil {
+		t.Fatal("expected error when rule store is missing")
 	}
 }

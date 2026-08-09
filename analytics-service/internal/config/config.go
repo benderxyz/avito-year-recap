@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	ServerPort         string
+	UserServiceURL     string
 	ClickHouseHost     string
 	ClickHousePort     int
 	ClickHouseUser     string
@@ -24,6 +25,7 @@ func Load() (Config, error) {
 
 	return Config{
 		ServerPort:         getEnv("SERVER_PORT", "8080"),
+		UserServiceURL:     getEnv("USER_SERVICE_URL", "http://localhost:8082"),
 		ClickHouseHost:     getEnv("CLICKHOUSE_HOST", "localhost"),
 		ClickHousePort:     port,
 		ClickHouseUser:     getEnv("CLICKHOUSE_USER", "default"),

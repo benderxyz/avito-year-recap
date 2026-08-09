@@ -1,0 +1,2 @@
+CREATE DATABASE cards;
+CREATE DATABASE users;

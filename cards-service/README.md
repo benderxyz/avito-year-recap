@@ -77,15 +77,16 @@ recap's `features.shareUrl`).
 
 ## Rules & seeds
 
-Badges, story scenes, and recommendations are **data-driven**. On startup, if
-Postgres is configured, the service migrates the schema from `migrations/` and
-loads rules via a TTL-cached provider. If Postgres is not configured, or a load
-fails, the service falls back to the built-in default rule set — so it always
-serves a valid recap.
+Badges, story scenes, recommendations, metric definitions come from Postgres.
+Built-in fallback rules are gone. Postgres is required.
 
-Seed rows live in `seeds/` (separate from schema migrations) and are applied on
+On startup the service migrates schema from `migrations/`, then loads rules
+through a TTL-cached provider. Missing `POSTGRES_HOST`, connect failure, or
+migrate failure stops the process.
+
+Seed rows live in `seeds/` (separate from schema migrations). They apply on
 startup only when `SEED_ON_START=true`. Seeds use `ON CONFLICT DO NOTHING`, so
-they are idempotent across restarts.
+restarts stay idempotent.
 
 ## Configuration
 
@@ -99,15 +100,15 @@ Environment variables (see [internal/config/config.go](internal/config/config.go
 | `SHARE_SIGNING_KEY` | `dev-insecure-share-key` | HMAC key for share tokens |
 | `SHARE_BASE_URL` | `http://localhost:3000` | base URL used to build share links |
 | `PRODUCT_BASE_URL` | `https://www.avito.ru` | base URL for recommendation links |
-| `POSTGRES_HOST` | _(empty)_ | Postgres host; empty disables rule storage (built-in rules only) |
+| `POSTGRES_HOST` | _(empty)_ | Postgres host (required). Empty value stops the process. In compose shares one Postgres with user-service |
 | `POSTGRES_PORT` | `5432` | Postgres port |
 | `POSTGRES_USER` | `recap` | Postgres user |
 | `POSTGRES_PASSWORD` | `recap` | Postgres password |
-| `POSTGRES_DATABASE` | `cards` | Postgres database |
+| `POSTGRES_DATABASE` | `cards` | Postgres database (`cards`, separate from `users`) |
 | `POSTGRES_SSLMODE` | `disable` | Postgres SSL mode |
 | `MIGRATIONS_DIR` | `migrations` | schema migrations directory |
 | `SEEDS_DIR` | `seeds` | seed files directory |
 | `SEED_ON_START` | `false` | apply seeds from `SEEDS_DIR` on startup |
 
-When `POSTGRES_HOST` is set, connect/migrate failures are fatal (the service
-exits) so it never runs against a misconfigured database.
+Empty `POSTGRES_HOST`, connect failure, or migrate failure is fatal. The service
+exits instead of serving recap without rules.

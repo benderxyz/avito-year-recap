@@ -27,6 +27,7 @@ RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc ./
 RUN pnpm install --frozen-lockfile --prod=false
 
+COPY frontend/vite.config.ts ./
 COPY --from=build /app/frontend/dist ./dist
 
 EXPOSE 3000

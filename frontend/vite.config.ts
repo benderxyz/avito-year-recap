@@ -13,6 +13,9 @@ export default defineConfig({
     }),
     react(),
   ],
+  preview: {
+    allowedHosts: ['recaps.hakolr.dev'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

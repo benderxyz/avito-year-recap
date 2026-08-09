@@ -22,6 +22,12 @@ type Config struct {
 	MigrationsDir       string
 	SeedsDir            string
 	SeedOnStart         bool
+	LLMAPIKey           string
+	LLMEnabled          bool
+	LLMProvider         string
+	LLMBaseURL          string
+	LLMModel            string
+	LLMTimeoutMs        int
 }
 
 func Load() Config {
@@ -41,6 +47,12 @@ func Load() Config {
 		MigrationsDir:       getEnv("MIGRATIONS_DIR", "migrations"),
 		SeedsDir:            getEnv("SEEDS_DIR", "seeds"),
 		SeedOnStart:         getEnvBool("SEED_ON_START", false),
+		LLMAPIKey:           getEnv("OPENAI_API_KEY", ""),
+		LLMEnabled:          getEnvBool("LLM_ENABLED", true),
+		LLMProvider:         getEnv("LLM_PROVIDER", "openai"),
+		LLMBaseURL:          getEnv("LLM_BASE_URL", "https://api.openai.com/v1"),
+		LLMModel:            getEnv("LLM_MODEL", "gpt-4o-mini"),
+		LLMTimeoutMs:        getEnvInt("LLM_TIMEOUT_MS", 10000),
 	}
 }
 
@@ -64,6 +76,18 @@ func getEnvBool(key string, fallback bool) bool {
 		return fallback
 	}
 	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func getEnvInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
 	if err != nil {
 		return fallback
 	}

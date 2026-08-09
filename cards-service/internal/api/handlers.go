@@ -3,11 +3,13 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
+	"cards-service/internal/llm"
 	"cards-service/internal/models"
 )
 
@@ -18,6 +20,7 @@ type Handler struct {
 	shareBaseURL    string
 	productBaseURL  string
 	rules           *cards.RuleProvider
+	llm             *llm.Service
 }
 
 func NewHandler(
@@ -36,6 +39,12 @@ func NewHandler(
 		productBaseURL:  productBaseURL,
 		rules:           rules,
 	}
+}
+
+// SetLLMService attaches an optional LLM enrichment service. When it is nil
+// (LLM disabled or unconfigured) the recap flow is unchanged.
+func (h *Handler) SetLLMService(s *llm.Service) {
+	h.llm = s
 }
 
 func RegisterRoutes(handler *Handler) *http.ServeMux {
@@ -124,7 +133,31 @@ func (h *Handler) buildRecap(
 		Rules:          &ruleSet,
 	}
 
-	return cards.BuildRecap(profile, year, metrics, opts), nil
+	payload := cards.BuildRecap(profile, year, metrics, opts)
+
+	// Optional LLM enrichment. It never breaks the recap: on any failure it
+	// returns the original payload plus a non-nil error we only log.
+	if h.llm != nil {
+		slog.Info("ллмка существует, обогащаем payloadу ура!", "user_id", id, "year", year)
+		enriched, report, err := h.llm.Enrich(r.Context(), llm.EnrichInput{
+			ID:      id,
+			Year:    year,
+			Mode:    mode,
+			Metrics: metrics,
+		}, payload)
+		if err != nil {
+			slog.Warn("llm enrich failed, serving base recap", "error", err, "user_id", id, "year", year)
+		}
+		slog.Debug("llm enrich",
+			"source", report.Source,
+			"badges_rewritten", report.BadgesRewritten,
+			"badges_fallback", report.BadgesFallback,
+			"insight_added", report.InsightAdded,
+		)
+		payload = enriched
+	}
+
+	return payload, nil
 }
 
 func writeRecapError(w http.ResponseWriter, _ error) {

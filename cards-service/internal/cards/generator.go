@@ -2,6 +2,7 @@ package cards
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ func BuildRecap(
 	}
 
 	badges := buildBadges(ruleSet.badges, metrics, opts.Mode)
+	slog.Debug("badges generated", "badges", badges)
 
 	shareURL := ""
 	if opts.Mode == models.RecapModePrivate && len(opts.SigningKey) > 0 {

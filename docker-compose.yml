@@ -81,6 +81,12 @@ services:
       MIGRATIONS_DIR: /app/migrations
       SEEDS_DIR: /app/seeds
       SEED_ON_START: "true"
+      LLM_ENABLED: "true"
+      LLM_PROVIDER: "openai"
+      LLM_BASE_URL: "https://openrouter.ai/api/v1"
+      LLM_MODEL: "openrouter/free"
+      LLM_TIMEOUT_MS: "15000"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}    
     depends_on:
       analytics:
         condition: service_started

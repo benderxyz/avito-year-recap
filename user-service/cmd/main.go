@@ -44,7 +44,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.ServerPort,
-		Handler:           mux,
+		Handler:           api.WithCORS(mux, cfg.CORSAllowedOrigins),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

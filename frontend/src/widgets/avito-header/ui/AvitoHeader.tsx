@@ -1,7 +1,7 @@
 import { Avatar, Button, Group, Text, TextInput } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { Link } from '@tanstack/react-router';
-import { getDemoUserById, getDemoUserInitial } from '@/entities/demo-user';
+import { getDemoUserInitial, useDemoUser } from '@/entities/demo-user';
 import { AvitoLogo } from '@/shared/ui';
 import styles from './AvitoHeader.module.css';
 
@@ -18,7 +18,7 @@ export function AvitoHeader({
   onSearchChange,
   onSearchSubmit,
 }: AvitoHeaderProps) {
-  const user = userId ? getDemoUserById(userId) : undefined;
+  const user = useDemoUser(userId);
   const isCompact = useMediaQuery('(max-width: 720px)');
 
   return (

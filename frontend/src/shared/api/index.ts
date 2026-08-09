@@ -1,5 +1,5 @@
 export { fetchRecapPayload } from './cards-api';
-export { buildRecapUrl, DUMMYJSON_BASE_URL, httpClient } from './http';
+export { buildRecapUrl, buildUsersListUrl, DUMMYJSON_BASE_URL, httpClient } from './http';
 export {
   type DummyJsonProduct,
   type DummyJsonProductsResponse,
@@ -7,3 +7,4 @@ export {
   fetchProducts,
   type ProductsQueryParams,
 } from './products-api';
+export { fetchUsers, type UserDto } from './users-api';

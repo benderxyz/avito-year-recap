@@ -1,5 +1,5 @@
 import { Alert, Center, Loader, Pagination, Stack } from '@mantine/core';
-import { getDemoUserById } from '@/entities/demo-user';
+import { useDemoUser } from '@/entities/demo-user';
 import { useOpenRecapModal } from '@/features/open-recap-modal';
 import { useProductFilters } from '@/features/product-filters';
 import { env } from '@/shared/config';
@@ -15,7 +15,7 @@ type DemoCatalogPageProps = {
 };
 
 export function DemoCatalogPage({ userId }: DemoCatalogPageProps) {
-  const user = getDemoUserById(userId);
+  const user = useDemoUser(userId);
   const { isOpen, open, close } = useOpenRecapModal();
   const [filters, setFilters] = useProductFilters();
   const { products, categories, total, isLoading, isError, error } = useProductsCatalog();

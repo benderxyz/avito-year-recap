@@ -70,7 +70,7 @@ func (r *Repository) List(ctx context.Context) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	users := make([]User, 0)
 	for rows.Next() {

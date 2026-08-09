@@ -35,7 +35,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           mux,
+		Handler:           api.WithCORS(mux, cfg.CORSAllowedOrigins),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -45,6 +45,7 @@ func main() {
 	go func() {
 		slog.Info("cards-service started",
 			"port", cfg.Port,
+			"corsAllowedOrigins", cfg.CORSAllowedOrigins,
 		)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server failed",

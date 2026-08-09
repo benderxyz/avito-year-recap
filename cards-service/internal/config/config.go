@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	ShareSigningKey     string
 	ShareBaseURL        string
 	ProductBaseURL      string
+	CORSAllowedOrigins  []string
 	PostgresHost        string
 	PostgresPort        string
 	PostgresUser        string
@@ -32,6 +34,7 @@ func Load() Config {
 		ShareSigningKey:     getEnv("SHARE_SIGNING_KEY", "dev-insecure-share-key"),
 		ShareBaseURL:        getEnv("SHARE_BASE_URL", "http://localhost:3000"),
 		ProductBaseURL:      getEnv("PRODUCT_BASE_URL", "https://www.avito.ru"),
+		CORSAllowedOrigins:  getEnvList("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3000"}),
 		PostgresHost:        getEnv("POSTGRES_HOST", ""),
 		PostgresPort:        getEnv("POSTGRES_PORT", "5432"),
 		PostgresUser:        getEnv("POSTGRES_USER", "recap"),
@@ -68,4 +71,25 @@ func getEnvBool(key string, fallback bool) bool {
 		return fallback
 	}
 	return parsed
+}
+
+// getEnvList reads a comma-separated env var, trimming spaces and dropping empty entries.
+func getEnvList(key string, fallback []string) []string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parts := strings.Split(value, ",")
+	list := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			list = append(list, trimmed)
+		}
+	}
+
+	if len(list) == 0 {
+		return fallback
+	}
+	return list
 }

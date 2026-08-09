@@ -61,6 +61,40 @@ func (r *Repository) GetByID(ctx context.Context, userID uint64) (User, error) {
 	return user, nil
 }
 
+func (r *Repository) List(ctx context.Context) ([]User, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT user_id, external_id, username, timezone, created_at, updated_at
+		FROM users
+		ORDER BY user_id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+
+	users := make([]User, 0)
+	for rows.Next() {
+		var user User
+		if scanErr := rows.Scan(
+			&user.UserID,
+			&user.ExternalID,
+			&user.Username,
+			&user.Timezone,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); scanErr != nil {
+			return nil, fmt.Errorf("list users: %w", scanErr)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+
+	return users, nil
+}
+
 func MapScanError(err error) error {
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound

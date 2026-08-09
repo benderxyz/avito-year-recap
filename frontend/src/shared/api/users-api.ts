@@ -1,4 +1,4 @@
-import { buildUsersListUrl, httpClient } from './http';
+import { httpClient } from './http';
 
 export type UserDto = {
   user_id: number;
@@ -10,6 +10,6 @@ export type UserDto = {
 };
 
 export async function fetchUsers(usersBaseUrl: string): Promise<UserDto[]> {
-  const response = await httpClient.get<UserDto[]>(buildUsersListUrl(usersBaseUrl));
+  const response = await httpClient.get<UserDto[]>(usersBaseUrl.replace(/\/$/, ''));
   return response.data;
 }

@@ -79,7 +79,7 @@ services:
       SEEDS_DIR: /app/seeds
       SEED_ON_START: ${SEED_ON_START:-true}
       SHARE_SIGNING_KEY: ${SHARE_SIGNING_KEY}
-      SHARE_BASE_URL: ${SHARE_BASE_URL:-https://recap.hakolr.dev}
+      SHARE_BASE_URL: ${SHARE_BASE_URL:-https://recaps.hakolr.dev}
       PRODUCT_BASE_URL: ${PRODUCT_BASE_URL:-https://www.avito.ru}
     depends_on:
       analytics:
@@ -128,7 +128,7 @@ services:
       context: ./recap-engine
       dockerfile: docs/Dockerfile
       args:
-        DOCS_URL: ${DOCS_URL:-https://recap.hakolr.dev:3001}
+        DOCS_URL: ${DOCS_URL:-https://recaps.hakolr.dev:3001}
     container_name: recap-docs
     ports:
       - "3001:80"

@@ -59,7 +59,13 @@ export function RecapStoryShell({
 
         {!isLoading && !isError && prepared ? (
           <div className={styles.recapRoot}>
-            <Recap {...prepared} theme={theme} onEvent={onEvent} className={styles.recapWidget} />
+            <Recap
+              {...prepared}
+              autoplay
+              theme={theme}
+              onEvent={onEvent}
+              className={styles.recapWidget}
+            />
           </div>
         ) : null}
 

@@ -12,8 +12,12 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
+RUN useradd --system --uid 10001 --no-create-home appuser
+
 COPY --from=builder /app/app .
 COPY --from=builder /app/migrations ./migrations
+
+USER appuser
 
 ENV MIGRATIONS_DIR=/app/migrations
 ENV SERVER_PORT=8080

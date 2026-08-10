@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -54,6 +55,19 @@ func TestWithCORSShouldAnswerPreflight(t *testing.T) {
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Methods"); got == "" {
 		t.Fatal("expected allow-methods on preflight response")
+	}
+}
+
+func TestWithCORSShouldAllowPreflightForUpsertMethod(t *testing.T) {
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/users/42", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
+	req.Header.Set("Access-Control-Request-Method", http.MethodPut)
+	recorder := httptest.NewRecorder()
+
+	newCORSHandler().ServeHTTP(recorder, req)
+
+	if got := recorder.Header().Get("Access-Control-Allow-Methods"); !strings.Contains(got, http.MethodPut) {
+		t.Fatalf("expected PUT in allow-methods, got %q", got)
 	}
 }
 

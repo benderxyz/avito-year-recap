@@ -2,7 +2,9 @@
 **/dist
 .git
 .gocache
+.golangci-cache
 .env
+.env.*
 **/.DS_Store
 analytics-service
 cards-service
@@ -10,5 +12,5 @@ user-service
 seed-data
 infra
 docs
-contracts
+recap-engine
 scripts

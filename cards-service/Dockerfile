@@ -15,9 +15,13 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+RUN useradd --system --uid 10001 --no-create-home appuser
+
 COPY --from=builder /app/app .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seeds ./seeds
+
+USER appuser
 
 EXPOSE 8081
 

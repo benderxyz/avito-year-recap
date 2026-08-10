@@ -8,16 +8,18 @@ Recap Engine Library
 
 [![Recap Engine CI](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-ci.yml/badge.svg)](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-ci.yml)
 [![Recap Engine Release](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-release.yml/badge.svg)](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-release.yml)
-[![Recap Engine Release](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-docs-deploy.yml/badge.svg)](https://github.com/benderxyz/avito-year-recap/actions/workflows/recap-engine-docs-deploy.yml)
+[![Recap Engine Release](https://github.com/benderxyz/avito-year-recap/actions/workflows/deploy.yml/badge.svg)](https://github.com/benderxyz/avito-year-recap/actions/workflows/deploy.yml)
 
 ### Recap Engine NPM packages
+
 
 [![@recap-engine/core NPM version](https://img.shields.io/npm/v/@recap-engine/core?style=flat-square&label=@recap-engine/core&color=CB3837&logo=npm)](https://www.npmjs.com/package/@recap-engine/core)
 [![@recap-engine/react NPM version](https://img.shields.io/npm/v/@recap-engine/core?style=flat-square&label=@recap-engine/react&color=CB3837&logo=npm)](https://www.npmjs.com/package/@recap-engine/react)
 
-### Documentation
+### Links
 
-[![Recap Engine Documentation Site](https://img.shields.io/badge/Recap%20Engine-View%20Documentation-3ECC5F?logo=Docusaurus)](https://recaps.hakolr.dev)
+[![Recap Engine Documentation Site](https://img.shields.io/badge/Recap%20Engine-View%20Documentation-3ECC5F?logo=Docusaurus)](https://recaps.hakolr.dev/docs)
+[![Recap Engine Documentation Site](https://img.shields.io/badge/Recaps%20Engine-View%20Demo-3ECC5F)](https://recaps.hakolr.dev)
 
 # Структура проекта
 

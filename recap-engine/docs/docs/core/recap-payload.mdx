@@ -1,0 +1,138 @@
+---
+title: RecapPayload
+description: Формат JSON, который backend отдаёт клиенту для построения recap.
+---
+
+# RecapPayload
+
+Если recap собирается **на сервере**, backend отдаёт клиенту один JSON-объект — `RecapPayload`. Клиент передаёт его в `prepareRecap()`, и библиотека сама строит сцены.
+
+## Что внутри payload
+
+Представьте payload как три слоя:
+
+1. **Кто и когда** — `meta` (имя пользователя, год, язык).
+2. **Факты** — `metrics` (сколько объявлений, сколько просмотров, топ категорий…).
+3. **Сценарий** — `story` (какие экраны показать и в каком порядке, ссылаясь на метрики по ключам).
+
+```ts
+type RecapPayload = {
+  schemaVersion: 1;
+  meta: RecapPayloadMeta;           // пользователь, год, locale
+  metrics: Record<string, MetricValue>;  // словарь метрик
+  story: StoryItem[];               // упорядоченный список экранов
+  narrative?: { ... };              // опциональные тексты поверх story
+  badges?: Badge[];                 // достижения для achievement-сцен
+  features?: { shareEnabled?: boolean };
+};
+```
+
+## meta — информация о пользователе
+
+```json
+{
+  "vertical": "marketplace",
+  "year": 2026,
+  "locale": "ru-RU",
+  "user": {
+    "id": "user-42",
+    "displayName": "Алекс",
+    "avatarUrl": "https://..."
+  },
+  "generatedAt": "2026-12-28T10:00:00.000Z"
+}
+```
+
+Поле `locale` используется для форматирования чисел (`12 840`, `186 500 ₽`).
+
+## metrics — словарь метрик
+
+Каждая метрика лежит по **строковому ключу**. Тип задаётся полем `type`:
+
+| type | Что хранит | Пример |
+|------|------------|--------|
+| `number` | Число | `{ "type": "number", "value": 47 }` |
+| `money` | Сумма с валютой | `{ "type": "money", "value": 186500, "currency": "RUB" }` |
+| `percentile` | Процентиль (топ-N%) | `{ "type": "percentile", "value": 88 }` |
+| `ratio` | Доля 0–1 | `{ "type": "ratio", "value": 0.41 }` |
+| `string` | Строка | `{ "type": "string", "value": "Электроника" }` |
+| `list` | Список (топ категорий) | `{ "type": "list", "value": [{ "id": "...", "label": "...", "value": 19 }] }` |
+
+Элементы `story` ссылаются на метрики по ключу: `"metricKey": "listingsPublished"`.
+
+## story — сценарий экранов
+
+Массив шагов recap **в нужном порядке**. Каждый элемент — один экран:
+
+```json
+{
+  "story": [
+    { "type": "intro", "id": "intro" },
+    {
+      "type": "stat",
+      "id": "listings",
+      "metricKey": "listingsPublished",
+      "percentileKey": "listingsPercentile"
+    },
+    { "type": "outro", "id": "outro" }
+  ]
+}
+```
+
+Backend решает, **какие экраны** показать и **в какой последовательности**. Клиент не собирает сцены вручную.
+
+## narrative — переопределение текстов
+
+Опционально. Позволяет подменить заголовки и тексты для конкретных сцен, не меняя `story`:
+
+```json
+{
+  "narrative": {
+    "scenes": {
+      "intro": {
+        "title": "Алекс, ваш 2026 на Авито",
+        "subtitle": "Год находок и сделок"
+      }
+    }
+  }
+}
+```
+
+## Минимальный пример целиком
+
+```json
+{
+  "schemaVersion": 1,
+  "meta": {
+    "vertical": "marketplace",
+    "year": 2026,
+    "locale": "ru-RU",
+    "user": { "id": "user-42", "displayName": "Алекс" },
+    "generatedAt": "2026-12-28T10:00:00.000Z"
+  },
+  "metrics": {
+    "listingsPublished": { "type": "number", "value": 47 },
+    "listingsPercentile": { "type": "percentile", "value": 88 }
+  },
+  "story": [
+    { "type": "intro", "id": "intro" },
+    {
+      "type": "stat",
+      "id": "listings",
+      "metricKey": "listingsPublished",
+      "percentileKey": "listingsPercentile"
+    },
+    { "type": "outro", "id": "outro" }
+  ]
+}
+```
+
+## Что дальше
+
+На клиенте этот JSON передаётся в [`prepareRecap()`](./prepare-recap) — функция вернёт `data`, `scenes` и `badges` для `<Recap>`.
+
+## Связанное
+
+- [prepareRecap](./prepare-recap)
+- [Интеграция с backend](../guides/backend-integration)
+- [Типы сцен](./scene-types)

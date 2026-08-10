@@ -24,6 +24,7 @@ func NewHandler(repo *users.Repository) *Handler {
 func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", h.Health)
 	mux.HandleFunc("PUT /users/{userID}", h.UpsertUser)
+	mux.HandleFunc("GET /users", h.ListUsers)
 	mux.HandleFunc("GET /users/{userID}", h.GetUser)
 }
 
@@ -89,6 +90,16 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, user)
+}
+
+func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	list, err := h.users.List(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list users")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, list)
 }
 
 func parseUserID(raw string) (uint64, error) {

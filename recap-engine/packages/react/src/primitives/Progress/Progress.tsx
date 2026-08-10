@@ -1,31 +1,50 @@
 import type { CSSProperties } from 'react';
 import { useRecap } from '../../context/RecapContext';
 
-function segmentFill(index: number, current: number, progress: number): number {
-  if (index < current) return 1;
-  if (index > current) return 0;
-  return Math.max(progress, 0.08);
-}
+const DEFAULT_AUTOPLAY_DELAY_MS = 3200;
 
 export function Progress() {
-  const { progress, player } = useRecap();
+  const { autoplay, blockMotionDone, goTo, isAnimating, player, reducedMotion, scenes } =
+    useRecap();
+
+  if (player.total <= 1) return null;
+
+  const currentScene = scenes[player.index];
+  const durationMs =
+    typeof autoplay === 'object'
+      ? autoplay.delayMs
+      : (currentScene?.durationMs ?? DEFAULT_AUTOPLAY_DELAY_MS);
+  const animated = Boolean(autoplay) && !reducedMotion;
+  const playing = animated && !isAnimating && blockMotionDone;
 
   return (
-    <div className="recap-progress" aria-hidden>
+    <nav className="recap-progress" aria-label="Навигация по сценам">
       {Array.from({ length: player.total }, (_, index) => (
-        // Positional segments have no identity beyond index.
-        // biome-ignore lint/suspicious/noArrayIndexKey: progress segments are positional
-        <div key={index} className="recap-progress__segment">
-          <div
-            className="recap-progress__fill"
-            style={
-              {
-                '--fill': segmentFill(index, player.index, progress),
-              } as CSSProperties
-            }
-          />
-        </div>
+        <button
+          key={scenes[index]?.id ?? index}
+          type="button"
+          className="recap-progress__segment"
+          aria-label={`Перейти к сцене ${index + 1} из ${player.total}`}
+          aria-current={index === player.index ? 'step' : undefined}
+          onClick={() => goTo(index)}
+        >
+          <span className="recap-progress__track">
+            <span
+              className="recap-progress__fill"
+              data-state={
+                index < player.index ? 'complete' : index === player.index ? 'current' : 'pending'
+              }
+              data-animated={index === player.index && animated}
+              data-playing={index === player.index && playing}
+              style={
+                {
+                  '--recap-progress-duration': `${durationMs}ms`,
+                } as CSSProperties
+              }
+            />
+          </span>
+        </button>
       ))}
-    </div>
+    </nav>
   );
 }

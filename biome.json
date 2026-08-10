@@ -1,0 +1,73 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+
+  "files": {
+    "includes": [
+      "**",
+      "!**/build",
+      "!**/.docusaurus",
+      "!**/.netlify",
+      "!**/dist",
+      "!**/coverage",
+      "!**/node_modules",
+      "!**/public",
+      "!**/routeTree.gen.ts"
+    ]
+  },
+
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+
+      "style": {
+        "useConst": "error",
+        "useTemplate": "error"
+      },
+
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "error"
+      },
+
+      "suspicious": {
+        "noConsole": "off",
+        "noExplicitAny": "off",
+        "noVar": "error"
+      },
+
+      "complexity": {
+        "noForEach": "off"
+      }
+    }
+  },
+
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+
+  "json": {
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2
+    }
+  }
+}

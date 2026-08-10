@@ -1,0 +1,91 @@
+---
+title: Кнопки и события
+description: Кнопки на экранах recap и обработка через onEvent.
+---
+
+# Кнопки и события
+
+На финальных и промо-экранах часто нужны кнопки: «Поделиться», «Открыть профиль», «Закрыть». Их задают в поле **`actions`** описания сцены.
+
+При клике библиотека выполняет встроенное действие (если есть) и вызывает ваш **`onEvent`**.
+
+## Типы кнопок
+
+| Тип | Что делает при клике |
+|-----|----------------------|
+| `next` | Следующий экран |
+| `prev` | Предыдущий экран |
+| `link` | Открывает URL |
+| `share` | Диалог «Поделиться» (Web Share API) |
+| `goto` | Переход к экрану по `sceneId` |
+| `custom` | **Ничего сам** — только `onEvent`, логику пишете вы |
+
+## Пример: outro с кнопками
+
+```tsx
+{
+  id: 'outro',
+  type: ESceneType.Outro,
+  title: 'Спасибо за год!',
+  actions: [
+    {
+      type: ESceneActionType.Share,
+      label: 'Поделиться',
+      share: {
+        kind: EShareKind.Link,
+        title: 'Мои итоги 2026',
+        url: 'https://example.com/recap/abc',
+      },
+    },
+    {
+      type: ESceneActionType.Link,
+      label: 'Открыть профиль',
+      href: '/profile',
+    },
+    {
+      type: ESceneActionType.Custom,
+      label: 'Закрыть',
+      id: 'close-recap',
+    },
+  ],
+}
+```
+
+## Обработка в onEvent
+
+```tsx
+function handleEvent(event: RecapEvent) {
+  // Пользователь увидел экран
+  if (event.type === ERecapEventType.SceneEnter) {
+    analytics.track('recap_scene', { id: event.sceneId });
+  }
+
+  // Дошёл до конца
+  if (event.type === ERecapEventType.Complete) {
+    analytics.track('recap_complete');
+  }
+
+  // Нажал «Поделиться»
+  if (event.type === ERecapEventType.Share) {
+    analytics.track('recap_share', { kind: event.payload.kind });
+  }
+
+  // Нажал custom-кнопку
+  if (
+    event.type === ERecapEventType.Action &&
+    event.action.type === ESceneActionType.Custom &&
+    event.action.id === 'close-recap'
+  ) {
+    closeRecap();
+  }
+}
+```
+
+## Custom-кнопки
+
+Тип `custom` — для любой логики, которую библиотека не знает: закрыть modal, открыть оплату, отправить feedback. Вы получаете `event.action.id` и решаете сами.
+
+## Связанное
+
+- [События](../react/events)
+- [Типы сцен](../core/scene-types) — поле `actions` на outro

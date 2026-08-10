@@ -20,3 +20,11 @@ if git diff --cached --name-only --diff-filter=ACMR | grep -q '^recap-engine/'; 
     pnpm exec lint-staged
   fi
 fi
+
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^frontend/'; then
+  if [ -x "$ROOT/frontend/node_modules/.bin/lint-staged" ]; then
+    cd "$ROOT/frontend" || exit 1
+    export PATH="$ROOT/frontend/node_modules/.bin:$PATH"
+    pnpm exec lint-staged
+  fi
+fi

@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -21,7 +21,6 @@ import (
 
 func main() {
 	cfg := config.Load()
-	setupLogger(cfg)
 
 	pg := setupPostgres(cfg)
 	defer func() {
@@ -30,31 +29,34 @@ func main() {
 		}
 	}()
 
+	ruleProvider := loadRuleProvider(pg)
+
 	handler := api.NewHandler(
 		clients.NewUserClient(cfg.UserServiceURL),
 		clients.NewAnalyticsClient(cfg.AnalyticsServiceURL),
 		cfg.ShareSigningKey,
 		cfg.ShareBaseURL,
 		cfg.ProductBaseURL,
-		loadRuleProvider(pg.DB()),
+		ruleProvider,
 	)
 
 	setupLLM(handler, cfg, pg.DB())
 
+	mux := api.RegisterRoutes(handler)
+
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           api.RegisterRoutes(handler),
+		Handler:           api.WithCORS(mux, cfg.CORSAllowedOrigins),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	defer signal.Stop(stop)
 
 	go func() {
-		slog.Info(
-			"cards-service started",
-			"port", strings.TrimPrefix(server.Addr, ":"),
+		slog.Info("cards-service started",
+			"port", cfg.Port,
+			"corsAllowedOrigins", cfg.CORSAllowedOrigins,
 		)
 
 		if err := server.ListenAndServe(); err != nil &&
@@ -74,28 +76,15 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		slog.Error("shutdown error", "error", err)
+		log.Printf("shutdown error: %v", err)
 	}
 
 	slog.Info("cards-service stopped")
 }
 
-func setupLogger(cfg config.Config) {
-	logger := slog.New(
-		slog.NewTextHandler(
-			os.Stdout,
-			&slog.HandlerOptions{
-				Level: parseLogLevel(cfg.LogLevel),
-			},
-		),
-	)
-
-	slog.SetDefault(logger)
-}
-
 func setupPostgres(cfg config.Config) *db.Postgres {
 	if cfg.PostgresHost == "" {
-		slog.Error("postgres is required for data dictionary rules")
+		slog.Error("postgres is required")
 		os.Exit(1)
 	}
 
@@ -138,16 +127,20 @@ func setupPostgres(cfg config.Config) *db.Postgres {
 	return pg
 }
 
-func loadRuleProvider(sqlDB *sql.DB) *cards.RuleProvider {
+func loadRuleProvider(pg *db.Postgres) *cards.RuleProvider {
 	slog.Info("rules loaded from postgres")
 
 	return cards.NewRuleProvider(
-		cards.NewRuleStore(sqlDB),
+		cards.NewRuleStore(pg.DB()),
 		time.Minute,
 	)
 }
 
-func setupLLM(handler *api.Handler, cfg config.Config, sqlDB *sql.DB) {
+func setupLLM(
+	handler *api.Handler,
+	cfg config.Config,
+	sqlDB *sql.DB,
+) {
 	if !cfg.LLMEnabled {
 		return
 	}
@@ -158,26 +151,6 @@ func setupLLM(handler *api.Handler, cfg config.Config, sqlDB *sql.DB) {
 		)
 		return
 	}
-
-	svc := loadLLMService(cfg, sqlDB)
-	if svc == nil {
-		return
-	}
-
-	slog.Debug("LLM enrichment service loaded")
-	handler.SetLLMService(svc)
-}
-
-func loadLLMService(
-	cfg config.Config,
-	sqlDB *sql.DB,
-) *llm.Service {
-	slog.Debug(
-		"loading llm enrichment service",
-		"provider", cfg.LLMProvider,
-		"model", cfg.LLMModel,
-		"timeout_ms", cfg.LLMTimeoutMs,
-	)
 
 	timeout := time.Duration(cfg.LLMTimeoutMs) * time.Millisecond
 
@@ -201,32 +174,22 @@ func loadLLMService(
 			"unknown llm provider, disabling llm",
 			"provider", cfg.LLMProvider,
 		)
-		return nil
+		return
 	}
 
-	slog.Info(
-		"llm enrichment enabled",
-		"provider", provider.Name(),
-		"model", cfg.LLMModel,
-	)
-
-	return llm.NewService(
+	service := llm.NewService(
 		provider,
 		llm.NewCache(sqlDB),
 		timeout,
 		cfg.LLMModel,
 	)
-}
 
-func parseLogLevel(level string) slog.Level {
-	switch strings.ToLower(strings.TrimSpace(level)) {
-	case "debug":
-		return slog.LevelDebug
-	case "warn", "warning":
-		return slog.LevelWarn
-	case "error":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
-	}
+	slog.Info(
+		"llm enrichment enabled",
+		"provider", provider.Name(),
+		"model", cfg.LLMModel,
+		"timeout_ms", cfg.LLMTimeoutMs,
+	)
+
+	handler.SetLLMService(service)
 }

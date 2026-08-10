@@ -6,6 +6,7 @@ Manages test user profiles in Postgres. No event ingest — events go to analyti
 
 - `GET /health`
 - `PUT /users/{userID}` — upsert profile (`external_id`, `username`, `timezone`)
+- `GET /users` — list all profiles
 - `GET /users/{userID}` — read current profile
 
 ## Local

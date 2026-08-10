@@ -1,0 +1,88 @@
+---
+title: Примитивы
+description: Готовые UI-компоненты для сборки кастомных экранов.
+---
+
+# Примитивы
+
+**Примитивы** — готовые React-компоненты (заголовок, число, кнопка «Далее»), которые использует библиотека внутри стандартных экранов.
+
+Вам они нужны, **только если вы собираете custom scene** через `registerScene` и хотите, чтобы он выглядел как остальной recap.
+
+Для обычного recap с `intro` / `stat` / `outro` импортировать примитивы **не нужно**.
+
+## Импорт
+
+```tsx
+import {
+  Title,
+  Subtitle,
+  Eyebrow,
+  Stat,
+  StaggerText,
+  Callout,
+  Next,
+  Prev,
+  SceneActions,
+} from '@recap-engine/react';
+```
+
+## Каталог
+
+### Текст
+
+| Компонент | Назначение |
+|-----------|------------|
+| `Title` | Заголовок экрана |
+| `Subtitle` | Подзаголовок |
+| `Eyebrow` | Мелкая подпись над заголовком («За год») |
+| `StaggerText` | Текст с поочерёдной анимацией |
+
+### Числа и блоки
+
+| Компонент | Назначение |
+|-----------|------------|
+| `Stat` | Большое число с unit и count-up |
+| `Comparison` | Строка сравнения («топ-12%») |
+| `Callout` | Выделенный блок |
+| `AchievementBadge` | Бейдж достижения |
+
+### Навигация и кнопки
+
+| Компонент | Назначение |
+|-----------|------------|
+| `Next` / `Prev` | Кнопки листания |
+| `SceneActions` | Рендерит `actions` из описания сцены |
+| `ShareButton` | Кнопка «Поделиться» |
+| `Progress` | Progress bar |
+| `Background` | Фон сцены |
+
+## Пример в custom scene
+
+```tsx
+registerScene<RecapPayload>('my-stat', ({ data, goNext }) => {
+  const value = metricNumber(data.metrics, 'listingsPublished');
+
+  return (
+    <>
+      <Eyebrow>За год</Eyebrow>
+      <Title>Опубликовано объявлений</Title>
+      <Stat value={value} unit="шт." animate />
+      <Next onClick={goNext} />
+    </>
+  );
+});
+```
+
+## useRecap
+
+Внутри любого компонента под `<Recap>`:
+
+```tsx
+const { data, format, next, theme } = useRecap();
+```
+
+## Связанное
+
+- [Кастомные сцены](./custom-scenes)
+- [Форматирование](../core/formatting)

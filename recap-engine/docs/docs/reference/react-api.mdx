@@ -1,0 +1,80 @@
+---
+title: React API
+description: Справочник @recap-engine/react — Recap, hooks, примитивы.
+---
+
+# React API
+
+Краткий справочник **@recap-engine/react**. Пакет re-экспортирует большинство функций из core — обычно импортируют всё из одного места.
+
+Начните с [Быстрого старта](../getting-started/quickstart) и [Компонента Recap](../react/recap).
+
+Исходники: [packages/react/src](https://github.com/benderxyz/avito-year-recap/tree/main/recap-engine/packages/react/src).
+
+## Экспорты пакета
+
+| Путь | Содержимое |
+|------|------------|
+| `@recap-engine/react` | Компоненты, hooks, re-export core |
+| `@recap-engine/react/styles.css` | Стили (обязательно подключить) |
+
+Peer dependencies: React 19.
+
+## Компоненты
+
+| Export | Описание |
+|--------|----------|
+| `Recap` | Плеер recap |
+| `Recap.Progress`, `Recap.Background` | Compound API |
+
+### RecapProps (основное)
+
+```ts
+{
+  theme: ResolvedTheme;      // обязательно
+  data: TData;               // обязательно
+  scenes: SceneDefinition[]; // обязательно
+  badges?: Badge[];
+  locale?: string;           // default 'ru-RU'
+  autoplay?: boolean | { delayMs: number };
+  loop?: boolean;
+  gestures?: boolean;
+  initialSceneId?: string;
+  reducedMotion?: boolean;
+  className?: string;
+  slots?: { background?, header?, footer? };
+  onEvent?: (event: RecapEvent) => void;
+}
+```
+
+## Hooks
+
+| Export | Описание |
+|--------|----------|
+| `useRecap()` | Доступ к data, format, next, theme внутри `<Recap>` |
+
+## Расширение
+
+| Export | Описание |
+|--------|----------|
+| `registerScene(type, Component)` | Регистрация custom экрана |
+| `CustomSceneComponentProps` | Props для зарегистрированного экрана |
+
+## Примитивы
+
+`Title`, `Subtitle`, `Eyebrow`, `Stat`, `StaggerText`, `Callout`, `Comparison`, `AchievementBadge`, `Next`, `Prev`, `ActionButton`, `LinkButton`, `ShareButton`, `SceneActions`, `Progress`, `Background`.
+
+Подробнее — [Примитивы](../react/primitives).
+
+## Re-export из core
+
+`prepareRecap`, `defineScenes`, `createTheme`, `metricNumber`, все enums и types — см. [Core API](./core-api).
+
+## Не публичное API
+
+Layouts (`IntroLayout`, …), внутренние hooks (`useRecapPlayer`, `useSwipe`, …) — не экспортируются, использовать не нужно.
+
+## Связанное
+
+- [Core API](./core-api)
+- [Компонент Recap](../react/recap)

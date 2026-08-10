@@ -1,10 +1,26 @@
 .recap-stat__value {
+  display: inline-grid;
   font-family: var(--recap-font-display);
   font-size: clamp(3rem, 12vw, 4.5rem);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--recap-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.recap-stat__value::before,
+.recap-stat__current {
+  grid-area: 1 / 1;
+}
+
+.recap-stat__value::before {
+  content: attr(data-target-value);
+  visibility: hidden;
+}
+
+.recap-stat__current {
+  justify-self: center;
 }
 
 .recap-stat__unit {

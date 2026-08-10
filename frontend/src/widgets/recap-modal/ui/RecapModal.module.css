@@ -1,0 +1,15 @@
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.body {
+  padding: 0;
+}

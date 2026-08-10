@@ -60,6 +60,7 @@ export function Recap<TData>({
         prev,
         goTo,
         progress,
+        autoplay,
         isAnimating,
         setAnimating,
         notifyBlockMotionComplete,

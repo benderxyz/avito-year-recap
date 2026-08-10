@@ -4,15 +4,20 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 const repositoryUrl = 'https://github.com/benderxyz/avito-year-recap';
 const siteUrl = process.env.DOCS_URL ?? 'https://recap-engine.netlify.app';
+const baseUrl = process.env.DOCS_BASE_URL ?? '/';
 
 const config: Config = {
   title: 'Recap Engine',
   tagline: 'Конструктор интерактивных итогов года для React',
   url: siteUrl,
-  baseUrl: '/',
+  baseUrl,
   organizationName: 'benderxyz',
   projectName: 'avito-year-recap',
   onBrokenLinks: 'throw',
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   future: {
     v4: true,
   },
@@ -25,6 +30,7 @@ const config: Config = {
       'classic',
       {
         docs: {
+          routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: `${repositoryUrl}/edit/main/recap-engine/docs/`,
         },
@@ -59,8 +65,18 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Документация',
-          items: [{ label: 'Введение', to: '/docs/intro' }],
+          title: 'Старт',
+          items: [
+            { label: 'Введение', to: '/docs/intro' },
+            { label: 'Быстрый старт', to: '/docs/getting-started/quickstart' },
+          ],
+        },
+        {
+          title: 'Практика',
+          items: [
+            { label: 'Интеграция с backend', to: '/docs/guides/backend-integration' },
+            { label: 'Пример Avito app', to: '/docs/guides/avito-example' },
+          ],
         },
         {
           title: 'Проект',

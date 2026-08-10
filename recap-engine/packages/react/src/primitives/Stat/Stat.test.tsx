@@ -16,9 +16,11 @@ describe('Stat', () => {
       />,
     );
 
-    expect(screen.getByText('021')).toHaveClass('value-extra');
+    const displayedValue = screen.getByText('021');
+    expect(displayedValue.parentElement).toHaveClass('value-extra');
+    expect(displayedValue.parentElement).toHaveAttribute('data-target-value', '021');
     expect(screen.getByText('товар')).toHaveClass('unit-extra');
-    expect(screen.getByText('021').parentElement).toHaveClass('root-extra');
+    expect(displayedValue.parentElement?.parentElement).toHaveClass('root-extra');
     await waitFor(() => expect(onMotionComplete).toHaveBeenCalledTimes(1));
     expect(value.notifyBlockMotionComplete).toHaveBeenCalledTimes(1);
   });

@@ -1,0 +1,10 @@
+.recap-stat__unit {
+  font-size: 24px;
+  font-weight: 600;
+  display: inline;
+  margin-left: 12px;
+}
+
+.recap-stat__current {
+  justify-self: start;
+}

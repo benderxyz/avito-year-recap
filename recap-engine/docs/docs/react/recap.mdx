@@ -1,0 +1,84 @@
+---
+title: Компонент Recap
+description: Главный React-компонент — плеер интерактивного recap.
+---
+
+# Компонент Recap
+
+`<Recap>` — **главный компонент библиотеки**. Это полноэкранный плеер, который показывает ваши сцены, рисует progress bar и обрабатывает навигацию.
+
+## Минимальный вызов
+
+```tsx
+import { createTheme, defineScenes, ESceneType } from '@recap-engine/react';
+import { Recap } from '@recap-engine/react';
+import '@recap-engine/react/styles.css';
+
+<Recap theme={createTheme()} data={data} scenes={scenes} />
+```
+
+Три обязательных prop:
+
+| Prop | Что передать |
+|------|--------------|
+| `theme` | Результат `createTheme()` |
+| `data` | Ваши данные (объект с метриками, именем и т.д.) |
+| `scenes` | Массив экранов из `defineScenes()` или из `prepareRecap()` |
+
+## С данными с сервера
+
+```tsx
+const prepared = prepareRecap(payload);
+
+<Recap
+  {...prepared}
+  theme={createTheme()}
+  locale={prepared.locale}
+/>
+```
+
+Spread `{...prepared}` передаёт `data`, `scenes`, `badges`.
+
+## Что включено из коробки
+
+- Progress bar (точки или полоска)
+- Свайпы, стрелки ← →, кнопки навигации
+- Анимации переходов и count-up на числах
+- Autoplay с паузой на анимации числа
+- Поддержка `prefers-reduced-motion`
+
+## Частые props
+
+| Prop | Default | Описание |
+|------|---------|----------|
+| `autoplay` | выкл. | Автолистание (`true` или `{ delayMs: 5000 }`) |
+| `loop` | `false` | Зациклить после последней сцены |
+| `gestures` | `true` | Свайпы |
+| `initialSceneId` | первая сцена | Стартовый экран по `id` |
+| `locale` | `'ru-RU'` | Локаль для чисел и валют |
+| `badges` | `[]` | Бейджи для achievement-сцен |
+| `reducedMotion` | системная настройка | Принудительно упростить анимации |
+| `className` | — | CSS-класс на корневой элемент |
+| `slots` | — | Заменить фон, progress bar или footer |
+| `onEvent` | — | Колбэк при смене сцены, кликах, завершении |
+
+## slots — замена частей UI
+
+```tsx
+<Recap
+  theme={theme}
+  data={data}
+  scenes={scenes}
+  slots={{
+    header: <MyProgressBar />,   // вместо стандартного progress
+    background: <MyBackground />,
+  }}
+/>
+```
+
+## Связанное
+
+- [Быстрый старт](../getting-started/quickstart)
+- [События](./events) — prop `onEvent`
+- [Стили и слоты](./styling)
+- [prepareRecap](../core/prepare-recap)

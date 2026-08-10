@@ -17,7 +17,7 @@ Recap Engine Library
 
 ### Documentation
 
-[![Recap Engine Documentation Site](https://img.shields.io/badge/Recap%20Engine-View%20Documentation-3ECC5F?logo=Docusaurus)](https://recap.hakolr.dev)
+[![Recap Engine Documentation Site](https://img.shields.io/badge/Recap%20Engine-View%20Documentation-3ECC5F?logo=Docusaurus)](https://recaps.hakolr.dev)
 
 # Быстрый старт
 

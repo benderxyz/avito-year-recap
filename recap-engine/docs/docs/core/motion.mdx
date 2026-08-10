@@ -1,0 +1,86 @@
+---
+title: Motion
+description: Анимации переходов между сценами и появления контента.
+---
+
+# Motion
+
+Recap анимирует два уровня:
+
+1. **Переход между сценами** — слайд, fade при листании.
+2. **Появление контента на сцене** — count-up числа, поочерёдный текст.
+
+## Переходы между сценами
+
+По умолчанию `<Recap>` использует:
+
+- вперёд — slide-up;
+- назад — slide-left;
+- при `prefers-reduced-motion` — fade.
+
+Переопределить можно prop `motions`:
+
+```tsx
+<Recap
+  motions={{
+    default: EMotionPreset.SlideUp,
+    back: EMotionPreset.SlideLeft,
+    reducedMotion: EMotionPreset.Fade,
+  }}
+  // ...
+/>
+```
+
+Или для одной сцены:
+
+```tsx
+{
+  id: 'hero',
+  type: ESceneType.Intro,
+  title: 'Ваш год',
+  motion: EMotionPreset.ScaleFade,
+}
+```
+
+## Пресеты переходов
+
+| Пресет | Эффект |
+|--------|--------|
+| `fade` | Плавное появление |
+| `slide-up` | Слайд снизу |
+| `slide-left` | Слайд влево |
+| `scale-fade` | Масштаб + fade |
+| `none` | Без анимации |
+
+## Анимация контента на сцене
+
+Отдельно от перехода — как **появляется** содержимое экрана:
+
+| Пресет | Где используется |
+|--------|------------------|
+| `count-up` | Число на stat-сцене «накручивается» от 0 |
+| `stagger-text` | Текст insight появляется по частям |
+| `badge-pop` | Бейдж achievement «выскакивает» |
+| `callout-in` | Callout на upsell-сцене |
+
+Задаётся полем `blockMotion` на сцене:
+
+```tsx
+{
+  type: ESceneType.Stat,
+  blockMotion: EMotionPreset.CountUp,
+  // ...
+}
+```
+
+## Reduced motion
+
+Если у пользователя в системе включено «уменьшить движение», или вы передали `reducedMotion={true}`:
+
+- переходы упрощаются до fade;
+- count-up отключается.
+
+## Связанное
+
+- [Player](./player) — фазы enter/active/exit
+- [Компонент Recap](../react/recap) — props `motions`, `reducedMotion`

@@ -1,0 +1,81 @@
+---
+title: prepareRecap
+description: Преобразование RecapPayload с сервера в props для компонента Recap.
+---
+
+# prepareRecap
+
+`prepareRecap` — функция, которая **превращает JSON с сервера в то, что понимает `<Recap>`**.
+
+Вы получаете payload от API → вызываете одну функцию → передаёте результат в компонент.
+
+## Зачем нужна
+
+Без `prepareRecap` вам пришлось бы вручную:
+
+- разбирать `metrics` и `story`;
+- собирать массив сцен;
+- подставлять тексты из `narrative`;
+- маппить бейджи.
+
+Функция делает это за вас.
+
+## Пример
+
+```tsx
+import { createTheme, prepareRecap, Recap, type RecapPayload } from '@recap-engine/react';
+import '@recap-engine/react/styles.css';
+
+// 1. Получаем JSON с сервера
+const payload: RecapPayload = await fetch('/api/recap/user-42').then((r) => r.json());
+
+// 2. Готовим props для Recap
+const prepared = prepareRecap(payload);
+
+// 3. Рендерим
+<Recap
+  {...prepared}
+  theme={createTheme()}
+  autoplay={{ delayMs: 5000 }}
+/>
+```
+
+Spread `{...prepared}` передаёт три поля: `data`, `scenes`, `badges`.
+
+## Что возвращает
+
+```ts
+type PreparedRecap = {
+  data: RecapPayload;                        // исходный payload как есть
+  scenes: SceneDefinition<RecapPayload>[];   // экраны, собранные из story
+  badges: Badge[];                           // достижения для achievement-сцен
+  locale: string;                            // из payload.meta.locale
+};
+```
+
+| Поле | Откуда |
+|------|--------|
+| `data` | Весь payload без изменений — сцены читают метрики из `data.metrics` |
+| `scenes` | Собраны из `payload.story` функцией `buildScenesFromStory` |
+| `badges` | Из `payload.badges` (поле `iconUrl` → `icon`) |
+| `locale` | `payload.meta.locale` — можно передать в `<Recap locale={...} />` |
+
+## prepareRecap vs defineScenes
+
+| | `prepareRecap` | `defineScenes` |
+|---|----------------|----------------|
+| Когда | Данные приходят с API | Сцены пишете в коде |
+| Вход | `RecapPayload` (JSON) | Массив объектов сцен |
+| Кто задаёт порядок экранов | Backend в поле `story` | Вы в коде |
+
+Оба способа в итоге вызывают один и тот же компонент:
+
+```tsx
+<Recap theme={theme} data={data} scenes={scenes} />
+```
+
+## Связанное
+
+- [RecapPayload](./recap-payload) — формат входного JSON
+- [Сцены](./scenes) — как описывать экраны вручную (способ 2)
+- [Компонент Recap](../react/recap)

@@ -25,6 +25,7 @@ export type RecapContextValue<TData = unknown> = {
   prev: () => void;
   goTo: (index: number) => void;
   progress: number;
+  autoplay?: boolean | { delayMs: number };
   isAnimating: boolean;
   setAnimating: (value: boolean) => void;
   notifyBlockMotionComplete: () => void;

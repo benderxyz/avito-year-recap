@@ -149,6 +149,7 @@ Environment variables (see [internal/config/config.go](internal/config/config.go
 | `SHARE_SIGNING_KEY` | `dev-insecure-share-key` | HMAC key for share tokens |
 | `SHARE_BASE_URL` | `http://localhost:3000` | base URL used to build share links |
 | `PRODUCT_BASE_URL` | `https://www.avito.ru` | base URL for recommendation links |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | comma-separated origins allowed to call the API from a browser |
 | `POSTGRES_HOST` | _(empty)_ | Postgres host (required). Empty value stops the process. In compose shares one Postgres with user-service |
 | `POSTGRES_PORT` | `5432` | Postgres port |
 | `POSTGRES_USER` | `recap` | Postgres user |
@@ -166,5 +167,21 @@ Environment variables (see [internal/config/config.go](internal/config/config.go
 | `LLM_TIMEOUT_MS` | `30000` | per-request timeout for the provider call |
 
 Empty `POSTGRES_HOST`, connect failure, or migrate failure is fatal. The service
-exits instead of serving recap without rules. LLM misconfiguration is **not**
-fatal: enrichment is skipped and the base recap is served.
+exits instead of serving recap without rules.
+
+## CORS
+
+The API is browser-facing, so [internal/api/cors.go](internal/api/cors.go) wraps
+the mux with an origin allowlist from `CORS_ALLOWED_ORIGINS`. Origins are matched
+exactly (scheme + host + port), so `http://localhost:3000` does not cover
+`http://127.0.0.1:3000` — list both if you need both.
+
+Requests from a listed origin get `Access-Control-Allow-Origin`; preflight
+`OPTIONS` is answered with `204` and never reaches the routes. Requests from an
+unlisted origin are still served, just without CORS headers, so the browser
+blocks them. Responses always carry `Vary: Origin` so a shared cache cannot serve
+one origin's headers to another.
+
+Credentials are not enabled: no `Access-Control-Allow-Credentials`, so browsers
+will not send cookies cross-origin. Add it here (and drop any wildcard) if the
+API ever moves to cookie auth.

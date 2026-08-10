@@ -1,0 +1,137 @@
+---
+title: Быстрый старт
+description: Установка Recap Engine и запуск первого интерактивного recap в React.
+---
+
+# Быстрый старт
+
+Здесь мы соберём **минимальный recap из трёх экранов**: приветствие → число → прощание. Данные и сцены опишем прямо в коде — без backend.
+
+## Шаг 1. Установка
+
+```bash
+pnpm add @recap-engine/core @recap-engine/react react react-dom
+```
+
+## Шаг 2. Подключите стили
+
+```tsx
+import '@recap-engine/react/styles.css';
+```
+
+Без этого файла у recap не будет фона, типографики и анимаций.
+
+## Шаг 3. Опишите данные
+
+`data` — любой объект с фактами, которые хотите показать:
+
+```tsx
+type RecapData = {
+  userName: string;
+  publishedAds: number;
+};
+
+const data: RecapData = {
+  userName: 'Максим',
+  publishedAds: 12,
+};
+```
+
+## Шаг 4. Опишите сцены
+
+`scenes` — массив экранов по порядку. Каждая сцена имеет:
+
+- `id` — уникальное имя (для навигации и аналитики);
+- `type` — вид экрана (`Intro`, `Stat`, `Outro`, …);
+- поля с контентом — заголовок, число, текст.
+
+Текст и числа могут быть **статическими** или **функциями** от `data`:
+
+```tsx
+title: ({ data }) => `${data.userName}, это был ваш год`
+```
+
+Функция получает ваш объект `data` и возвращает строку для экрана.
+
+## Шаг 5. Создайте тему и отрендерите
+
+```tsx
+import {
+  createTheme,
+  defineScenes,
+  ESceneType,
+  type SceneDefinition,
+} from '@recap-engine/core';
+import { Recap } from '@recap-engine/react';
+import '@recap-engine/react/styles.css';
+
+type RecapData = {
+  userName: string;
+  publishedAds: number;
+};
+
+const data: RecapData = {
+  userName: 'Максим',
+  publishedAds: 12,
+};
+
+const scenes: SceneDefinition<RecapData>[] = defineScenes([
+  {
+    id: 'intro',
+    type: ESceneType.Intro,
+    title: ({ data }) => `${data.userName}, это был ваш год`,
+    subtitle: 'Посмотрим, каким он получился',
+  },
+  {
+    id: 'ads',
+    type: ESceneType.Stat,
+    title: 'Опубликовано объявлений',
+    value: ({ data }) => data.publishedAds,
+    unit: {
+      one: 'объявление',
+      few: 'объявления',
+      many: 'объявлений',
+    },
+  },
+  {
+    id: 'outro',
+    type: ESceneType.Outro,
+    title: 'До встречи в следующем году!',
+  },
+]);
+
+const theme = createTheme({
+  colors: { accent: '#00aaff' },
+});
+
+export function YearRecap() {
+  return <Recap theme={theme} data={data} scenes={scenes} />;
+}
+```
+
+`defineScenes` проверяет, что у всех сцен разные `id`, и возвращает типизированный массив.
+
+## Что получится
+
+`<Recap>` из коробки даёт:
+
+- progress bar вверху;
+- свайпы влево/вправо и стрелки на клавиатуре;
+- анимации перехода между экранами;
+- count-up анимацию числа на stat-сцене.
+
+## Полезные props
+
+| Prop | Что делает |
+|------|------------|
+| `autoplay` | Автоматически листает сцены (`true` или `{ delayMs: 4000 }`) |
+| `loop` | После последней сцены возвращает к первой |
+| `initialSceneId` | С какой сцены начать (по `id`) |
+| `reducedMotion` | Отключить сложные анимации |
+| `onEvent` | Колбэк при смене сцены, клике на кнопку, завершении recap |
+
+## Что дальше
+
+- [Архитектура](./architecture) — два способа подключения (код vs сервер)
+- [Типы сцен](../core/scene-types) — все виды экранов
+- [Интеграция с backend](../guides/backend-integration) — если данные приходят с API

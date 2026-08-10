@@ -1,0 +1,85 @@
+---
+title: Кастомные сцены
+description: Свой экран recap, когда стандартных layouts не хватает.
+---
+
+# Кастомные сцены
+
+Стандартные типы (`stat`, `insight`, `outro`…) покрывают большинство кейсов. Если нужен **уникальный экран** — топ-лист, карта, график — используйте тип `custom`.
+
+## Способ 1: registerScene
+
+Подходит, когда backend в `story` ссылается на тип экрана по **имени строки**, а вёрстка живёт в React-коде.
+
+**Шаг 1.** Зарегистрируйте компонент **до** первого рендера `<Recap>`:
+
+```tsx
+import { registerScene, metricList, type RecapPayload } from '@recap-engine/react';
+
+registerScene<RecapPayload>('top-categories', ({ data, props }) => {
+  const items = metricList(data.metrics, 'favoriteCategories');
+
+  return (
+    <div>
+      <h2>Топ категорий</h2>
+      <ul>
+        {items.map((item, i) => (
+          <li key={item.id}>{i + 1}. {item.label} — {item.value}</li>
+        ))}
+      </ul>
+    </div>
+  );
+});
+```
+
+**Шаг 2.** В сценарии (в коде или в payload `story`) укажите этот тип:
+
+```tsx
+{
+  id: 'top-cats',
+  type: ESceneType.Custom,
+  sceneType: 'top-categories',  // должно совпадать с registerScene
+  props: { metricKey: 'favoriteCategories' },
+}
+```
+
+Компонент получает:
+
+- `data` — ваш payload или data из `<Recap>`;
+- `props` — объект из поля `props` сцены;
+- `format`, `theme`, `index`, `total` — контекст recap;
+- `goNext`, `goPrev` — перейти к следующему/предыдущему экрану.
+
+## Способ 2: render прямо в сцене
+
+Для прототипов — функция возвращает JSX без регистрации:
+
+```tsx
+{
+  id: 'custom',
+  type: ESceneType.Custom,
+  render: (ctx) => (
+    <div>
+      <h2>Экран {ctx.index + 1} из {ctx.total}</h2>
+      <button onClick={ctx.goNext}>Далее</button>
+    </div>
+  ),
+}
+```
+
+## useRecap в своих компонентах
+
+Если custom scene — отдельный React-компонент внутри `<Recap>`:
+
+```tsx
+function MyScene() {
+  const { data, format, next } = useRecap<MyData>();
+  return <button onClick={next}>{format.number(data.score)}</button>;
+}
+```
+
+## Связанное
+
+- [Типы сцен](../core/scene-types) — тип `custom`
+- [Примитивы](./primitives) — готовые Title, Stat, Next для своих экранов
+- [Пример в репозитории](../guides/avito-example)

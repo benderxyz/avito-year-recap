@@ -41,8 +41,6 @@ func NewHandler(
 	}
 }
 
-// SetLLMService attaches an optional LLM enrichment service. When it is nil
-// (LLM disabled or unconfigured) the recap flow is unchanged.
 func (h *Handler) SetLLMService(s *llm.Service) {
 	h.llm = s
 }
@@ -135,15 +133,13 @@ func (h *Handler) buildRecap(
 
 	payload := cards.BuildRecap(profile, year, metrics, opts)
 
-	// Optional LLM enrichment. It never breaks the recap: on any failure it
-	// returns the original payload plus a non-nil error we only log.
 	if h.llm != nil {
-		slog.Info("ллмка существует, обогащаем payloadу ура!", "user_id", id, "year", year)
 		enriched, report, err := h.llm.Enrich(r.Context(), llm.EnrichInput{
-			ID:      id,
-			Year:    year,
-			Mode:    mode,
-			Metrics: metrics,
+			ID:               id,
+			Year:             year,
+			Mode:             mode,
+			Metrics:          metrics,
+			PublicMetricKeys: ruleSet.PublicMetricKeys(),
 		}, payload)
 		if err != nil {
 			slog.Warn("llm enrich failed, serving base recap", "error", err, "user_id", id, "year", year)

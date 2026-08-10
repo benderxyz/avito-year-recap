@@ -12,13 +12,11 @@ import (
 	"cards-service/internal/models"
 )
 
-// --- test doubles -----------------------------------------------------------
-
 type fakeProvider struct {
 	calls    int
 	response string
 	err      error
-	block    bool // when true, block until ctx is cancelled, then return ctx.Err()
+	block    bool
 }
 
 func (f *fakeProvider) Name() string { return "fake" }
@@ -43,17 +41,19 @@ type fakeCache struct {
 
 func newFakeCache() *fakeCache { return &fakeCache{data: map[string]Result{}} }
 
-func cacheKey(userID string, year int) string { return fmt.Sprintf("%s:%d", userID, year) }
+func cacheKey(userID string, year int, mode, version string) string {
+	return fmt.Sprintf("%s:%d:%s:%s", userID, year, mode, version)
+}
 
-func (c *fakeCache) Get(_ context.Context, userID string, year int) (Result, bool, error) {
+func (c *fakeCache) Get(_ context.Context, userID string, year int, mode, version string) (Result, bool, error) {
 	c.getCalls++
-	r, ok := c.data[cacheKey(userID, year)]
+	r, ok := c.data[cacheKey(userID, year, mode, version)]
 	return r, ok, nil
 }
 
-func (c *fakeCache) Put(_ context.Context, userID string, year int, result Result) error {
+func (c *fakeCache) Put(_ context.Context, userID string, year int, mode, version string, result Result) error {
 	c.putCalls++
-	c.data[cacheKey(userID, year)] = result
+	c.data[cacheKey(userID, year, mode, version)] = result
 	return nil
 }
 
@@ -84,7 +84,7 @@ const validResponse = `{
 }`
 
 func newTestService(p Provider, c cacheStore) *Service {
-	return &Service{provider: p, cache: c, timeout: time.Second}
+	return &Service{provider: p, cache: c, timeout: time.Second, version: "testver"}
 }
 
 func sceneIndexByID(story []map[string]any, id string) int {
@@ -250,6 +250,67 @@ func TestEnrichSecondCallHitsCacheAndSkipsProvider(t *testing.T) {
 	}
 }
 
+func TestEnrichModeKeysCacheSeparately(t *testing.T) {
+	provider := &fakeProvider{response: validResponse}
+	cache := newFakeCache()
+	svc := newTestService(provider, cache)
+
+	if _, _, err := svc.Enrich(context.Background(),
+		EnrichInput{ID: "u1", Year: 2024, Mode: models.RecapModePrivate}, basePayload()); err != nil {
+		t.Fatalf("private enrich: %v", err)
+	}
+	_, report, err := svc.Enrich(context.Background(),
+		EnrichInput{ID: "u1", Year: 2024, Mode: models.RecapModePublic}, basePayload())
+	if err != nil {
+		t.Fatalf("public enrich: %v", err)
+	}
+	if report.Source != "llm" {
+		t.Errorf("public source = %q, want llm (private entry must not leak to public)", report.Source)
+	}
+	if provider.calls != 2 {
+		t.Errorf("provider calls = %d, want 2 (one per mode)", provider.calls)
+	}
+	if len(cache.data) != 2 {
+		t.Errorf("cache entries = %d, want 2 (separate per mode)", len(cache.data))
+	}
+}
+
+func TestEnrichPromptVersionInvalidatesCache(t *testing.T) {
+	provider := &fakeProvider{response: validResponse}
+	cache := newFakeCache()
+	svc := newTestService(provider, cache)
+
+	if _, _, err := svc.Enrich(context.Background(),
+		EnrichInput{ID: "u1", Year: 2024, Mode: models.RecapModePrivate}, basePayload()); err != nil {
+		t.Fatalf("first enrich: %v", err)
+	}
+	svc.version = "newver"
+	_, report, err := svc.Enrich(context.Background(),
+		EnrichInput{ID: "u1", Year: 2024, Mode: models.RecapModePrivate}, basePayload())
+	if err != nil {
+		t.Fatalf("second enrich: %v", err)
+	}
+	if report.Source != "llm" {
+		t.Errorf("source = %q, want llm (version change must invalidate cache)", report.Source)
+	}
+	if provider.calls != 2 {
+		t.Errorf("provider calls = %d, want 2 (version change → regenerate)", provider.calls)
+	}
+}
+
+func TestPromptVersionStableAndModelSensitive(t *testing.T) {
+	a := promptVersion("model-a")
+	if len(a) != 12 {
+		t.Errorf("promptVersion len = %d, want 12", len(a))
+	}
+	if a != promptVersion("model-a") {
+		t.Error("promptVersion should be stable for the same model")
+	}
+	if a == promptVersion("model-b") {
+		t.Error("promptVersion should differ across models")
+	}
+}
+
 func TestSanitizeIgnoresHallucinatedBadgeIDs(t *testing.T) {
 	resp := llmResponse{
 		Badges: map[string]BadgeText{
@@ -319,18 +380,32 @@ func TestInsertInsightWithoutIntroGoesToFront(t *testing.T) {
 	}
 }
 
-func TestMetricsSummarySkipsZeroValues(t *testing.T) {
-	m := clients.Metrics{ListingsPublished: 5, MessagesSent: 0, SellerRating: 4.8}
-	lines := metricsSummary(m)
+func TestMetricsSummaryFiltersToPublicKeys(t *testing.T) {
+	m := clients.Metrics{ListingsPublished: 5, ViewsTotal: 0, MessagesSent: 3, SellerRating: 4.8}
+	publicKeys := map[string]bool{"listingsPublished": true, "viewsTotal": true}
+	lines := metricsSummary(m, publicKeys)
 	joined := strings.Join(lines, "\n")
 	if !strings.Contains(joined, "listingsPublished: 5") {
-		t.Errorf("missing listingsPublished; got %q", joined)
+		t.Errorf("missing public listingsPublished; got %q", joined)
+	}
+	if strings.Contains(joined, "viewsTotal") {
+		t.Errorf("zero-valued public metric leaked; got %q", joined)
+	}
+	if strings.Contains(joined, "sellerRating") {
+		t.Errorf("private sellerRating leaked into prompt; got %q", joined)
 	}
 	if strings.Contains(joined, "messagesSent") {
-		t.Errorf("zero metric leaked; got %q", joined)
+		t.Errorf("private messagesSent leaked into prompt; got %q", joined)
 	}
-	if !strings.Contains(joined, "sellerRating: 4.8") {
-		t.Errorf("missing sellerRating; got %q", joined)
+}
+
+func TestMetricsSummaryFailClosedOnNilKeys(t *testing.T) {
+	m := clients.Metrics{ListingsPublished: 5, SellerRating: 4.8}
+	if lines := metricsSummary(m, nil); len(lines) != 0 {
+		t.Errorf("nil publicKeys should yield no lines, got %v", lines)
+	}
+	if lines := metricsSummary(m, map[string]bool{}); len(lines) != 0 {
+		t.Errorf("empty publicKeys should yield no lines, got %v", lines)
 	}
 }
 

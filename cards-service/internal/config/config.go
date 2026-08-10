@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	Port                string
+	LogLevel            string
 	UserServiceURL      string
 	AnalyticsServiceURL string
 	ShareSigningKey     string
@@ -33,6 +34,7 @@ type Config struct {
 func Load() Config {
 	return Config{
 		Port:                getEnv("PORT", "8081"),
+		LogLevel:            getEnv("LOG_LEVEL", "info"),
 		UserServiceURL:      getEnv("USER_SERVICE_URL", "http://localhost:8082"),
 		AnalyticsServiceURL: getEnv("ANALYTICS_SERVICE_URL", "http://localhost:8080"),
 		ShareSigningKey:     getEnv("SHARE_SIGNING_KEY", "dev-insecure-share-key"),
@@ -48,11 +50,11 @@ func Load() Config {
 		SeedsDir:            getEnv("SEEDS_DIR", "seeds"),
 		SeedOnStart:         getEnvBool("SEED_ON_START", false),
 		LLMAPIKey:           getEnv("OPENAI_API_KEY", ""),
-		LLMEnabled:          getEnvBool("LLM_ENABLED", true),
+		LLMEnabled:          getEnvBool("LLM_ENABLED", false),
 		LLMProvider:         getEnv("LLM_PROVIDER", "openai"),
-		LLMBaseURL:          getEnv("LLM_BASE_URL", "https://api.openai.com/v1"),
-		LLMModel:            getEnv("LLM_MODEL", "gpt-4o-mini"),
-		LLMTimeoutMs:        getEnvInt("LLM_TIMEOUT_MS", 10000),
+		LLMBaseURL:          getEnv("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
+		LLMModel:            getEnv("LLM_MODEL", "google/gemma-2-9b-it:free"),
+		LLMTimeoutMs:        getEnvInt("LLM_TIMEOUT_MS", 30000),
 	}
 }
 

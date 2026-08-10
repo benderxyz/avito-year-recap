@@ -10,6 +10,7 @@ const (
 	maxBadgeDescLen    = 120
 	maxInsightTitleLen = 60
 	maxInsightTextLen  = 200
+	maxDisplayNameLen  = 50
 )
 
 func validateShareableText(s string, maxLen int) (string, bool) {

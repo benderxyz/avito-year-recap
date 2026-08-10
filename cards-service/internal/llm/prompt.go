@@ -30,13 +30,10 @@ const systemPrompt = `Ты — копирайтер сервиса «Итоги 
 }
 Ключи в "badges" — это id из списка бейджей ниже. Если инсайта нет — верни "insight": null.`
 
-func buildMessages(displayName string, badges []models.Badge, m clients.Metrics) []Message {
+func buildMessages(displayName string, badges []models.Badge, m clients.Metrics, publicKeys map[string]bool) []Message {
 	var b strings.Builder
 
-	name := displayName
-	if name == "" {
-		name = "пользователь"
-	}
+	name := sanitizeName(displayName)
 	fmt.Fprintf(&b, "Пользователь: %s\n\n", name)
 
 	b.WriteString("Отобранные бейджи (перепиши каждый, сохранив id):\n")
@@ -45,7 +42,7 @@ func buildMessages(displayName string, badges []models.Badge, m clients.Metrics)
 	}
 
 	b.WriteString("\nМетрики пользователя за год (для рассуждения об инсайте, не выводи их числами):\n")
-	for _, line := range metricsSummary(m) {
+	for _, line := range metricsSummary(m, publicKeys) {
 		fmt.Fprintf(&b, "- %s\n", line)
 	}
 
@@ -55,7 +52,18 @@ func buildMessages(displayName string, badges []models.Badge, m clients.Metrics)
 	}
 }
 
-func metricsSummary(m clients.Metrics) []string {
+func sanitizeName(displayName string) string {
+	name := whitespaceRe.ReplaceAllString(strings.TrimSpace(displayName), " ")
+	if name == "" {
+		return "пользователь"
+	}
+	if runeLen(name) > maxDisplayNameLen {
+		name = string([]rune(name)[:maxDisplayNameLen])
+	}
+	return name
+}
+
+func metricsSummary(m clients.Metrics, publicKeys map[string]bool) []string {
 	pairs := []struct {
 		key string
 		val int64
@@ -77,11 +85,11 @@ func metricsSummary(m clients.Metrics) []string {
 
 	lines := make([]string, 0, len(pairs))
 	for _, p := range pairs {
-		if p.val != 0 {
+		if p.val != 0 && publicKeys[p.key] {
 			lines = append(lines, fmt.Sprintf("%s: %d", p.key, p.val))
 		}
 	}
-	if m.SellerRating != 0 {
+	if m.SellerRating != 0 && publicKeys["sellerRating"] {
 		lines = append(lines, fmt.Sprintf("sellerRating: %.1f", m.SellerRating))
 	}
 	return lines

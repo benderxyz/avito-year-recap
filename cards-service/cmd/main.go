@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,20 +20,15 @@ import (
 )
 
 func main() {
-
-	logger := slog.New(
-		slog.NewTextHandler(
-			os.Stdout,
-			&slog.HandlerOptions{
-				Level: slog.LevelDebug,
-			},
-		),
-	)
-
-	slog.SetDefault(logger)
 	cfg := config.Load()
+	setupLogger(cfg)
 
-	ruleProvider := loadRuleProvider(cfg)
+	pg := setupPostgres(cfg)
+	defer func() {
+		if err := pg.Close(); err != nil {
+			slog.Error("postgres close failed", "error", err)
+		}
+	}()
 
 	handler := api.NewHandler(
 		clients.NewUserClient(cfg.UserServiceURL),
@@ -40,37 +36,30 @@ func main() {
 		cfg.ShareSigningKey,
 		cfg.ShareBaseURL,
 		cfg.ProductBaseURL,
-		ruleProvider,
+		loadRuleProvider(pg.DB()),
 	)
 
-	if cfg.LLMEnabled && cfg.LLMAPIKey != "" {
-		if svc := loadLLMService(cfg); svc != nil {
-			slog.Debug("LLM enrichment service loaded")
-			handler.SetLLMService(svc)
-		}
-	} else if cfg.LLMEnabled {
-		slog.Warn("LLM_ENABLED is true but OPENAI_API_KEY is empty; serving base recap")
-	}
-
-	mux := api.RegisterRoutes(handler)
+	setupLLM(handler, cfg, pg.DB())
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           mux,
+		Handler:           api.RegisterRoutes(handler),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(stop)
 
 	go func() {
-		slog.Info("cards-service started",
-			"port", cfg.Port,
+		slog.Info(
+			"cards-service started",
+			"port", strings.TrimPrefix(server.Addr, ":"),
 		)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server failed",
-				"error", err,
-			)
+
+		if err := server.ListenAndServe(); err != nil &&
+			err != http.ErrServerClosed {
+			slog.Error("server failed", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -78,23 +67,42 @@ func main() {
 	<-stop
 	slog.Info("shutting down...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("shutdown error: %v", err)
+		slog.Error("shutdown error", "error", err)
 	}
 
-	log.Println("cards-service stopped")
+	slog.Info("cards-service stopped")
 }
 
-func loadRuleProvider(cfg config.Config) *cards.RuleProvider {
+func setupLogger(cfg config.Config) {
+	logger := slog.New(
+		slog.NewTextHandler(
+			os.Stdout,
+			&slog.HandlerOptions{
+				Level: parseLogLevel(cfg.LogLevel),
+			},
+		),
+	)
+
+	slog.SetDefault(logger)
+}
+
+func setupPostgres(cfg config.Config) *db.Postgres {
 	if cfg.PostgresHost == "" {
 		slog.Error("postgres is required for data dictionary rules")
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		60*time.Second,
+	)
 	defer cancel()
 
 	pg, err := db.Connect(ctx, cfg.PostgresDSN())
@@ -105,41 +113,71 @@ func loadRuleProvider(cfg config.Config) *cards.RuleProvider {
 
 	if err := pg.Migrate(ctx, cfg.MigrationsDir); err != nil {
 		slog.Error("postgres migrate failed", "error", err)
-		_ = pg.Close()
+
+		if closeErr := pg.Close(); closeErr != nil {
+			slog.Error("postgres close failed", "error", closeErr)
+		}
+
 		os.Exit(1)
 	}
 
 	if cfg.SeedOnStart {
 		if err := pg.Seed(ctx, cfg.SeedsDir); err != nil {
 			slog.Error("postgres seed failed", "error", err)
-			_ = pg.Close()
+
+			if closeErr := pg.Close(); closeErr != nil {
+				slog.Error("postgres close failed", "error", closeErr)
+			}
+
 			os.Exit(1)
 		}
+
 		slog.Info("rules seeded from files")
 	}
 
-	slog.Info("rules loaded from postgres")
-	return cards.NewRuleProvider(cards.NewRuleStore(pg.DB()), time.Minute)
+	return pg
 }
 
-// loadLLMService builds the optional LLM enrichment service. It uses its own
-// Postgres handle for the result cache (the recap_llm_cache table is created by
-// the migrations run in loadRuleProvider). Any failure disables LLM by
-// returning nil, leaving the base recap flow untouched.
-func loadLLMService(cfg config.Config) *llm.Service {
-	slog.Debug("loading llm enrichment service",
+func loadRuleProvider(sqlDB *sql.DB) *cards.RuleProvider {
+	slog.Info("rules loaded from postgres")
+
+	return cards.NewRuleProvider(
+		cards.NewRuleStore(sqlDB),
+		time.Minute,
+	)
+}
+
+func setupLLM(handler *api.Handler, cfg config.Config, sqlDB *sql.DB) {
+	if !cfg.LLMEnabled {
+		return
+	}
+
+	if cfg.LLMAPIKey == "" {
+		slog.Warn(
+			"LLM_ENABLED is true but OPENAI_API_KEY is empty; serving base recap",
+		)
+		return
+	}
+
+	svc := loadLLMService(cfg, sqlDB)
+	if svc == nil {
+		return
+	}
+
+	slog.Debug("LLM enrichment service loaded")
+	handler.SetLLMService(svc)
+}
+
+func loadLLMService(
+	cfg config.Config,
+	sqlDB *sql.DB,
+) *llm.Service {
+	slog.Debug(
+		"loading llm enrichment service",
 		"provider", cfg.LLMProvider,
 		"model", cfg.LLMModel,
 		"timeout_ms", cfg.LLMTimeoutMs,
 	)
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	pg, err := db.Connect(ctx, cfg.PostgresDSN())
-	if err != nil {
-		slog.Error("llm cache postgres connect failed, disabling llm", "error", err)
-		return nil
-	}
 
 	timeout := time.Duration(cfg.LLMTimeoutMs) * time.Millisecond
 
@@ -147,18 +185,48 @@ func loadLLMService(cfg config.Config) *llm.Service {
 		cfg.LLMAPIKey,
 		cfg.LLMBaseURL,
 		cfg.LLMModel,
-		&http.Client{Timeout: timeout + time.Second},
+		&http.Client{
+			Timeout: timeout + time.Second,
+		},
 	)
 
 	var provider llm.Provider
+
 	switch cfg.LLMProvider {
 	case "", "openai":
 		provider = llm.NewOpenAIProvider(llmClient)
+
 	default:
-		slog.Error("unknown llm provider, disabling llm", "provider", cfg.LLMProvider)
+		slog.Error(
+			"unknown llm provider, disabling llm",
+			"provider", cfg.LLMProvider,
+		)
 		return nil
 	}
 
-	slog.Info("llm enrichment enabled", "provider", provider.Name(), "model", cfg.LLMModel)
-	return llm.NewService(provider, llm.NewCache(pg.DB()), timeout)
+	slog.Info(
+		"llm enrichment enabled",
+		"provider", provider.Name(),
+		"model", cfg.LLMModel,
+	)
+
+	return llm.NewService(
+		provider,
+		llm.NewCache(sqlDB),
+		timeout,
+		cfg.LLMModel,
+	)
+}
+
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

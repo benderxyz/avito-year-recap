@@ -2,6 +2,8 @@ package llm
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -29,28 +31,40 @@ type Result struct {
 }
 
 type cacheStore interface {
-	Get(ctx context.Context, userID string, year int) (Result, bool, error)
-	Put(ctx context.Context, userID string, year int, result Result) error
+	Get(ctx context.Context, userID string, year int, mode, version string) (Result, bool, error)
+	Put(ctx context.Context, userID string, year int, mode, version string, result Result) error
 }
 
 type Service struct {
 	provider Provider
 	cache    cacheStore
 	timeout  time.Duration
+	version  string
 }
 
-func NewService(provider Provider, cache *Cache, timeout time.Duration) *Service {
+func NewService(provider Provider, cache *Cache, timeout time.Duration, model string) *Service {
 	if timeout <= 0 {
 		timeout = defaultTimeout
 	}
-	return &Service{provider: provider, cache: cache, timeout: timeout}
+	return &Service{
+		provider: provider,
+		cache:    cache,
+		timeout:  timeout,
+		version:  promptVersion(model),
+	}
+}
+
+func promptVersion(model string) string {
+	sum := sha256.Sum256([]byte(systemPrompt + "\x00" + model))
+	return hex.EncodeToString(sum[:])[:12]
 }
 
 type EnrichInput struct {
-	ID      string
-	Year    int
-	Mode    models.RecapMode
-	Metrics clients.Metrics
+	ID               string
+	Year             int
+	Mode             models.RecapMode
+	Metrics          clients.Metrics
+	PublicMetricKeys map[string]bool
 }
 
 type EnrichReport struct {
@@ -67,7 +81,7 @@ func (s *Service) Enrich(ctx context.Context, in EnrichInput, payload models.Rec
 	}
 
 	if s.cache != nil {
-		if cached, ok, err := s.cache.Get(ctx, in.ID, in.Year); err != nil {
+		if cached, ok, err := s.cache.Get(ctx, in.ID, in.Year, string(in.Mode), s.version); err != nil {
 			slog.Warn("llm cache get failed", "error", err)
 		} else if ok {
 			report.Source = "cache"
@@ -84,7 +98,7 @@ func (s *Service) Enrich(ctx context.Context, in EnrichInput, payload models.Rec
 
 	s.apply(&payload, result, &report)
 	if s.cache != nil {
-		if err := s.cache.Put(ctx, in.ID, in.Year, result); err != nil {
+		if err := s.cache.Put(ctx, in.ID, in.Year, string(in.Mode), s.version, result); err != nil {
 			slog.Warn("llm cache put failed", "error", err)
 		}
 	}
@@ -96,13 +110,11 @@ type llmResponse struct {
 	Insight *InsightText         `json:"insight"`
 }
 
-// generate calls the provider under a timeout and turns the raw text into a
-// validated Result. Any transport/parse failure is returned as an error.
 func (s *Service) generate(ctx context.Context, in EnrichInput, payload models.RecapPayload) (Result, error) {
 	cctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	messages := buildMessages(payload.Meta.User.DisplayName, payload.Badges, in.Metrics)
+	messages := buildMessages(payload.Meta.User.DisplayName, payload.Badges, in.Metrics, in.PublicMetricKeys)
 	raw, err := s.provider.Complete(cctx, CompletionRequest{
 		Messages:    messages,
 		Temperature: 0.7,
@@ -112,7 +124,7 @@ func (s *Service) generate(ctx context.Context, in EnrichInput, payload models.R
 		return Result{}, fmt.Errorf("llm complete: %w", err)
 	}
 
-	slog.Debug("LLM raw response", "response", raw)
+	slog.Debug("LLM raw response received", "bytes", len(raw))
 
 	cleaned := extractJSONObject(stripCodeFence(raw))
 	var resp llmResponse
@@ -123,8 +135,6 @@ func (s *Service) generate(ctx context.Context, in EnrichInput, payload models.R
 	return sanitize(resp, payload.Badges), nil
 }
 
-// sanitize normalizes and validates the model output, keeping only valid fields
-// for badges that were actually selected (guards against hallucinated ids).
 func sanitize(resp llmResponse, selected []models.Badge) Result {
 	known := make(map[string]bool, len(selected))
 	for _, b := range selected {
@@ -149,8 +159,6 @@ func sanitize(resp llmResponse, selected []models.Badge) Result {
 	return out
 }
 
-// apply merges a validated Result into the payload and fills in the report.
-// Badges without a valid rewrite keep their default text.
 func (s *Service) apply(payload *models.RecapPayload, result Result, report *EnrichReport) {
 	for i := range payload.Badges {
 		if text, ok := result.Badges[payload.Badges[i].ID]; ok {
@@ -167,8 +175,6 @@ func (s *Service) apply(payload *models.RecapPayload, result Result, report *Enr
 	}
 }
 
-// insertInsight places the generated insight scene right after the intro scene
-// (or at the front if there is no intro).
 func insertInsight(story []map[string]any, insight InsightText) []map[string]any {
 	scene := map[string]any{
 		"id":    "llm-insight",

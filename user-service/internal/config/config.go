@@ -16,6 +16,7 @@ type Config struct {
 	PostgresDatabase   string
 	PostgresSSLMode    string
 	MigrationsDir      string
+	LogLevel           string
 }
 
 func Load() Config {
@@ -29,6 +30,7 @@ func Load() Config {
 		PostgresDatabase:   getEnv("POSTGRES_DATABASE", "users"),
 		PostgresSSLMode:    getEnv("POSTGRES_SSLMODE", "disable"),
 		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations"),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
 	}
 }
 

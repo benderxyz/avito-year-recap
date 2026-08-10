@@ -20,15 +20,20 @@ RUN pnpm build
 
 FROM node:22-alpine AS runtime
 
+ENV HOME=/home/node
+
 WORKDIR /app/frontend
 
-RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate && \
+    chown node:node /app/frontend
 
-COPY frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc ./
+USER node
+
+COPY --chown=node:node frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc ./
 RUN pnpm install --frozen-lockfile --prod=false
 
-COPY frontend/vite.config.ts ./
-COPY --from=build /app/frontend/dist ./dist
+COPY --chown=node:node frontend/vite.config.ts ./
+COPY --from=build --chown=node:node /app/frontend/dist ./dist
 
 EXPOSE 3000
 

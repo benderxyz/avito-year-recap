@@ -67,15 +67,15 @@ const config: Config = {
         {
           title: 'Старт',
           items: [
-            { label: 'Введение', to: '/docs/intro' },
-            { label: 'Быстрый старт', to: '/docs/getting-started/quickstart' },
+            { label: 'Введение', to: '/intro' },
+            { label: 'Быстрый старт', to: '/getting-started/quickstart' },
           ],
         },
         {
           title: 'Практика',
           items: [
-            { label: 'Интеграция с backend', to: '/docs/guides/backend-integration' },
-            { label: 'Пример Avito app', to: '/docs/guides/avito-example' },
+            { label: 'Интеграция с backend', to: '/guides/backend-integration' },
+            { label: 'Пример Avito app', to: '/guides/avito-example' },
           ],
         },
         {

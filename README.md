@@ -59,6 +59,8 @@ Recap Engine Library
 
 - **Максим Шудегов** — `analytics-service` (ClickHouse, ingest событий, агрегации, глобальная аналитика и кэш запросов), `seed-data`, рефакторинг бейджей и правил в `cards-service` с вынесением story, badges и metric definitions в Postgres, список пользователей в `user-service`, prod-конфиг LLM и proxy.
 
+- **Максим Гайворонский** – `recap-engine`: @recap-engine/core и @recap-engine/react. На базе библиотеки собрал `frontend` на React + Vite. Для Recap Engine поднял сайт документации на Docusaurus https://recaps.hakolr.dev/docs/. Настроил деплой и CI/CD для фронтенд проектов: Link, Typecheck, Tests frontend и recap-engine, релиз npm-пакетов и деплой на VPS через Docker Compose с nginx как reverse proxy. Деплой идёт по push в main с детектом изменений — пересобираются только затронутые сервисы (frontend, backend, docs).
+
 # Быстрый старт
 
 Запуск контейнера:

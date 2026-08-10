@@ -82,6 +82,12 @@ services:
       MIGRATIONS_DIR: /app/migrations
       SEEDS_DIR: /app/seeds
       SEED_ON_START: "true"
+      LLM_ENABLED: "true"
+      LLM_PROVIDER: "openai"
+      LLM_BASE_URL: "https://openrouter.ai/api/v1"
+      LLM_MODEL: "google/gemma-2-9b-it:free"
+      LLM_TIMEOUT_MS: "30000"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       analytics:
         condition: service_started

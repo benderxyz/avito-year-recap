@@ -3,11 +3,13 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
+	"cards-service/internal/llm"
 	"cards-service/internal/models"
 )
 
@@ -18,6 +20,7 @@ type Handler struct {
 	shareBaseURL    string
 	productBaseURL  string
 	rules           *cards.RuleProvider
+	llm             *llm.Service
 }
 
 func NewHandler(
@@ -36,6 +39,10 @@ func NewHandler(
 		productBaseURL:  productBaseURL,
 		rules:           rules,
 	}
+}
+
+func (h *Handler) SetLLMService(s *llm.Service) {
+	h.llm = s
 }
 
 func RegisterRoutes(handler *Handler) *http.ServeMux {
@@ -124,7 +131,29 @@ func (h *Handler) buildRecap(
 		Rules:          &ruleSet,
 	}
 
-	return cards.BuildRecap(profile, year, metrics, opts), nil
+	payload := cards.BuildRecap(profile, year, metrics, opts)
+
+	if h.llm != nil {
+		enriched, report, err := h.llm.Enrich(r.Context(), llm.EnrichInput{
+			ID:               id,
+			Year:             year,
+			Mode:             mode,
+			Metrics:          metrics,
+			PublicMetricKeys: ruleSet.PublicMetricKeys(),
+		}, payload)
+		if err != nil {
+			slog.Warn("llm enrich failed, serving base recap", "error", err, "user_id", id, "year", year)
+		}
+		slog.Debug("llm enrich",
+			"source", report.Source,
+			"badges_rewritten", report.BadgesRewritten,
+			"badges_fallback", report.BadgesFallback,
+			"insight_added", report.InsightAdded,
+		)
+		payload = enriched
+	}
+
+	return payload, nil
 }
 
 func writeRecapError(w http.ResponseWriter, _ error) {

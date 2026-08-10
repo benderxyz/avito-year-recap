@@ -7,10 +7,6 @@ import (
 
 const corsPreflightMaxAge = "600"
 
-// WithCORS answers cross-origin requests from the configured origins and
-// short-circuits preflight requests. Origins are matched exactly; a request
-// from an unlisted origin is served without CORS headers, so the browser
-// blocks it.
 func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 	allowed := make(map[string]struct{}, len(allowedOrigins))
 	for _, origin := range allowedOrigins {
@@ -19,10 +15,6 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-
-		// Vary on Origin regardless of the outcome: the response body is the
-		// same for every origin, but the CORS headers are not, and caches
-		// must not reuse an allowed origin's response for a denied one.
 		w.Header().Add("Vary", "Origin")
 
 		if _, ok := allowed[origin]; ok {

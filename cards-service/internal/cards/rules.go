@@ -53,6 +53,16 @@ type RuleSet struct {
 	metrics         []models.MetricDefinition
 }
 
+func (r RuleSet) PublicMetricKeys() map[string]bool {
+	keys := make(map[string]bool, len(r.metrics))
+	for _, def := range r.metrics {
+		if def.IsPublic {
+			keys[def.Key] = true
+		}
+	}
+	return keys
+}
+
 func metricsSnapshot(m clients.Metrics) map[models.MetricKey]float64 {
 	return map[models.MetricKey]float64{
 		models.MetricListingsPublished: float64(m.ListingsPublished),

@@ -15,8 +15,10 @@ COPY packages/core packages/core
 COPY packages/react packages/react
 COPY docs docs
 
-ARG DOCS_URL=https://recaps.hakolr.dev:3001
+ARG DOCS_URL=https://recaps.hakolr.dev
+ARG DOCS_BASE_URL=/docs/
 ENV DOCS_URL=$DOCS_URL
+ENV DOCS_BASE_URL=$DOCS_BASE_URL
 
 RUN pnpm docs:build
 

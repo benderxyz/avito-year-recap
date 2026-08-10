@@ -128,7 +128,8 @@ services:
       context: ./recap-engine
       dockerfile: docs/Dockerfile
       args:
-        DOCS_URL: ${DOCS_URL:-https://recaps.hakolr.dev:3001}
+        DOCS_URL: ${DOCS_URL:-https://recaps.hakolr.dev}
+        DOCS_BASE_URL: ${DOCS_BASE_URL:-/docs/}
     container_name: recap-docs
     ports:
       - "3001:80"
@@ -150,6 +151,8 @@ services:
       cards:
         condition: service_started
       user:
+        condition: service_started
+      docs:
         condition: service_started
     restart: unless-stopped
 

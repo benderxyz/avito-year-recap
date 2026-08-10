@@ -4,12 +4,13 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 const repositoryUrl = 'https://github.com/benderxyz/avito-year-recap';
 const siteUrl = process.env.DOCS_URL ?? 'https://recap-engine.netlify.app';
+const baseUrl = process.env.DOCS_BASE_URL ?? '/';
 
 const config: Config = {
   title: 'Recap Engine',
   tagline: 'Конструктор интерактивных итогов года для React',
   url: siteUrl,
-  baseUrl: '/',
+  baseUrl,
   organizationName: 'benderxyz',
   projectName: 'avito-year-recap',
   onBrokenLinks: 'throw',
@@ -29,6 +30,7 @@ const config: Config = {
       'classic',
       {
         docs: {
+          routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: `${repositoryUrl}/edit/main/recap-engine/docs/`,
         },

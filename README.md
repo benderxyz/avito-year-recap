@@ -55,7 +55,7 @@ Recap Engine Library
 
 # Команда
 
-TODO: распределение ответственности между участниками.
+- **Максим Шудегов** — `analytics-service` (ClickHouse, ingest событий, агрегации, глобальная аналитика и кэш запросов), `seed-data`, рефакторинг бейджей и правил в `cards-service` с вынесением story, badges и metric definitions в Postgres, список пользователей в `user-service`, prod-конфиг LLM и proxy.
 
 # Быстрый старт
 

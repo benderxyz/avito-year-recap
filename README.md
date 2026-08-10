@@ -19,6 +19,44 @@ Recap Engine Library
 
 [![Recap Engine Documentation Site](https://img.shields.io/badge/Recap%20Engine-View%20Documentation-3ECC5F?logo=Docusaurus)](https://recaps.hakolr.dev)
 
+# Структура проекта
+
+Монорепа: три Go-сервиса, React-фронтенд и npm-библиотека Recap Engine.
+
+```
+.
+├── analytics-service/     Go, порт 8080. События и метрики, хранилище ClickHouse
+├── cards-service/         Go, порт 8081. Сборка recap, бейджи, шеринг, LLM-обогащение
+├── user-service/          Go, порт 8082. Профили пользователей, база users
+├── frontend/              React + Vite, порт 3000. Витрина и модалка recap
+├── recap-engine/          pnpm-воркспейс: npm-пакеты и сайт документации
+│   ├── packages/core/     @recap-engine/core, движок сцен
+│   ├── packages/react/    @recap-engine/react, React-обвязка
+│   └── docs/              Docusaurus, деплоится как сервис docs
+├── seed-data/             Тестовые данные
+│   ├── seed-script/       Go-скрипт, заливает профили и события через API
+│   └── users/             JSON-профили для сидов
+├── infra/                 Конфигурация окружения
+│   ├── nginx/             Реверс-прокси для прода
+│   └── postgres/init/     Создание баз cards и users при первом старте
+├── scripts/deploy.sh      Деплой на VPS, запускается из GitHub Actions
+├── docs/                  Архитектура и заметки по Recap Engine (не Docusaurus)
+├── postman/               Коллекция и окружение для ручных запросов
+└── .github/workflows/     CI сервисов и фронта, релиз npm, деплой
+```
+
+Каждый Go-сервис устроен одинаково: `cmd/` — точка входа, `internal/` — логика,
+`migrations/` — SQL-миграции, свой `Dockerfile` и `README.md`. Модули связаны
+через `go.work` в корне.
+
+В корне лежат общие конфиги: `docker-compose.yml` для локального запуска,
+`docker-compose.prod.yml` для VPS, `biome.json` — один на `frontend` и
+`recap-engine`, `.golangci.yaml` — один на все Go-модули.
+
+# Команда
+
+TODO: распределение ответственности между участниками.
+
 # Быстрый старт
 
 Запуск контейнера:

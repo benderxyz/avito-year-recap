@@ -81,6 +81,11 @@ services:
       SHARE_SIGNING_KEY: ${SHARE_SIGNING_KEY}
       SHARE_BASE_URL: ${SHARE_BASE_URL:-https://recaps.hakolr.dev}
       PRODUCT_BASE_URL: ${PRODUCT_BASE_URL:-https://www.avito.ru}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://openrouter.ai/api/v1}
+      LLM_MODEL: ${LLM_MODEL:-google/gemma-2-9b-it:free}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-30000}
     depends_on:
       analytics:
         condition: service_started

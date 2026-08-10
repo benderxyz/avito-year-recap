@@ -9,9 +9,13 @@ import {
 import { useEffect, useMemo } from 'react';
 import {
   buildRecapTheme,
+  enrichShareActionsWithUrl,
+  getPrivateRecapTitle,
+  getSharedRecapTitle,
   shouldCloseRecapOnEvent,
   useRecapQuery,
   useResolvedRecapColorScheme,
+  useSharedRecapQuery,
 } from '@/entities/recap';
 import styles from './RecapModal.module.css';
 import { RecapStoryShell, recapStoryShellStyles } from './RecapStoryShell';
@@ -49,13 +53,21 @@ function ensureTopCategoriesScene() {
 }
 
 type RecapModalProps = {
-  userId: string;
   opened: boolean;
   onClose: () => void;
-};
+} & ({ mode: 'private'; userId: string } | { mode: 'shared'; shareToken: string });
 
-export function RecapModal({ userId, opened, onClose }: RecapModalProps) {
-  const { data, isLoading, isError, error } = useRecapQuery(userId, opened);
+export function RecapModal(props: RecapModalProps) {
+  const { opened, onClose, mode } = props;
+  const privateQuery = useRecapQuery(
+    mode === 'private' ? props.userId : '',
+    opened && mode === 'private',
+  );
+  const sharedQuery = useSharedRecapQuery(
+    mode === 'shared' ? props.shareToken : '',
+    opened && mode === 'shared',
+  );
+  const { data, isLoading, isError, error } = mode === 'private' ? privateQuery : sharedQuery;
   const resolvedColorScheme = useResolvedRecapColorScheme();
   const theme = useMemo(() => buildRecapTheme(resolvedColorScheme), [resolvedColorScheme]);
 
@@ -63,7 +75,19 @@ export function RecapModal({ userId, opened, onClose }: RecapModalProps) {
     ensureTopCategoriesScene();
   }, []);
 
-  const prepared = useMemo(() => (data ? prepareRecap(data) : null), [data]);
+  const prepared = useMemo(() => {
+    if (!data) {
+      return null;
+    }
+
+    const payload = mode === 'private' ? enrichShareActionsWithUrl(data) : data;
+    return prepareRecap(payload);
+  }, [data, mode]);
+
+  const title =
+    mode === 'shared'
+      ? getSharedRecapTitle(data?.meta.user.displayName)
+      : getPrivateRecapTitle(data?.meta.year);
 
   const onEvent = (event: RecapEvent) => {
     if (shouldCloseRecapOnEvent(event)) {
@@ -92,7 +116,7 @@ export function RecapModal({ userId, opened, onClose }: RecapModalProps) {
       aria-labelledby="recap-modal-title"
     >
       <RecapStoryShell
-        title={`Итоги ${data?.meta.year ?? ''}`}
+        title={title}
         onClose={onClose}
         isLoading={isLoading}
         isError={isError}

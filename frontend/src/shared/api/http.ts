@@ -8,4 +8,8 @@ export function buildRecapUrl(cardsBaseUrl: string, year: number, userId: string
   return `${cardsBaseUrl.replace(/\/$/, '')}/api/recap/${year}/${userId}`;
 }
 
+export function buildShareRecapUrl(cardsBaseUrl: string, token: string): string {
+  return `${cardsBaseUrl.replace(/\/$/, '')}/api/share/${token}`;
+}
+
 export const DUMMYJSON_BASE_URL = 'https://dummyjson.com';

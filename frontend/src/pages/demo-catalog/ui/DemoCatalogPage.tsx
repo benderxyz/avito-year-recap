@@ -63,7 +63,7 @@ export function DemoCatalogPage({ userId }: DemoCatalogPageProps) {
         ) : null}
       </main>
 
-      <RecapModal userId={userId} opened={isOpen} onClose={close} />
+      <RecapModal mode="private" userId={userId} opened={isOpen} onClose={close} />
     </div>
   );
 }

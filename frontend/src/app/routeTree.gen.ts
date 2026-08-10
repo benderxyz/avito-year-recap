@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as DemoIdRouteImport } from './routes/demo/$id'
+import { Route as ShareTokenRouteImport } from './routes/share/$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,34 +29,43 @@ const DemoIdRoute = DemoIdRouteImport.update({
   path: '/demo/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo/$id': typeof DemoIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/demo/': typeof DemoIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo/$id': typeof DemoIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/demo': typeof DemoIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/demo/$id': typeof DemoIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/demo/': typeof DemoIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo/$id' | '/demo/'
+  fullPaths: '/' | '/demo/$id' | '/share/$token' | '/demo/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/$id' | '/demo'
-  id: '__root__' | '/' | '/demo/$id' | '/demo/'
+  to: '/' | '/demo/$id' | '/share/$token' | '/demo'
+  id: '__root__' | '/' | '/demo/$id' | '/share/$token' | '/demo/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DemoIdRoute: typeof DemoIdRoute
+  ShareTokenRoute: typeof ShareTokenRoute
   DemoIndexRoute: typeof DemoIndexRoute
 }
 
@@ -82,12 +92,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoIdRoute: DemoIdRoute,
+  ShareTokenRoute: ShareTokenRoute,
   DemoIndexRoute: DemoIndexRoute,
 }
 export const routeTree = rootRouteImport

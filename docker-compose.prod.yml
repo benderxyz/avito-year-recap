@@ -87,6 +87,9 @@ services:
       LLM_MODEL: ${LLM_MODEL:-google/gemma-2-9b-it:free}
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-30000}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
+      NO_PROXY: ${NO_PROXY:-postgres,user,analytics,localhost,127.0.0.1}
     depends_on:
       analytics:
         condition: service_started

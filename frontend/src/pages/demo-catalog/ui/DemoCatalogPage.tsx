@@ -18,7 +18,7 @@ export function DemoCatalogPage({ userId }: DemoCatalogPageProps) {
   const user = useDemoUser(userId);
   const { isOpen, open, close } = useOpenRecapModal();
   const [filters, setFilters] = useProductFilters();
-  const { products, categories, total, isLoading, isError, error } = useProductsCatalog();
+  const { products, categories, total, isLoading, isError } = useProductsCatalog();
 
   const totalPages = Math.max(1, Math.ceil(total / 12));
 
@@ -43,7 +43,7 @@ export function DemoCatalogPage({ userId }: DemoCatalogPageProps) {
 
         {isError ? (
           <Alert color="red" title="Не удалось загрузить объявления">
-            {error instanceof Error ? error.message : 'Unknown error'}
+            Попробуйте обновить страницу немного позже
           </Alert>
         ) : null}
 

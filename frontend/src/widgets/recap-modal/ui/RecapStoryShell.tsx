@@ -8,7 +8,6 @@ type RecapStoryShellProps = {
   onClose: () => void;
   isLoading: boolean;
   isError: boolean;
-  error: unknown;
   prepared: PreparedRecap | null;
   theme: ResolvedTheme;
   onEvent: (event: RecapEvent) => void;
@@ -19,7 +18,6 @@ export function RecapStoryShell({
   onClose,
   isLoading,
   isError,
-  error,
   prepared,
   theme,
   onEvent,
@@ -52,7 +50,7 @@ export function RecapStoryShell({
         {isError ? (
           <div className={styles.storyState}>
             <Alert color="red" title="Не удалось загрузить итоги года">
-              {error instanceof Error ? error.message : 'Unknown error'}
+              Попробуйте открыть итоги немного позже
             </Alert>
           </div>
         ) : null}

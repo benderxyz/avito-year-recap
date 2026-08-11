@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { getDemoUserInitial, useUsersQuery } from '@/entities/demo-user';
 
 export function DemoAccountsPage() {
-  const { data: users, isLoading, isError, error } = useUsersQuery();
+  const { data: users, isLoading, isError } = useUsersQuery();
 
   return (
     <div className="page-shell">
@@ -21,7 +21,7 @@ export function DemoAccountsPage() {
 
         {isError ? (
           <Alert color="red" title="Не удалось загрузить пользователей">
-            {error instanceof Error ? error.message : 'Unknown error'}
+            Попробуйте обновить страницу немного позже
           </Alert>
         ) : null}
 

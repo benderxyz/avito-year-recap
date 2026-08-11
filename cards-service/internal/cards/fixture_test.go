@@ -55,9 +55,8 @@ func testStoryRules() []storyRule {
 		must("both", "searchQueries", "gt", 0, true, `{"id":"blocks-search","type":"blocks","blocks":[{"type":"stat","value":"searchQueries","title":"запросов за год"}]}`),
 		must("both", "deliveryOrders", "gt", 0, true, `{"id":"stat-delivery","type":"stat","value":"deliveryOrders","title":"через Авито Доставку"}`),
 		must("private", "activeListings", "gt", 0, true, `{"id":"stat-active-listings","type":"stat","value":"activeListings","title":"сейчас активны"}`),
-		must("private", "sellerRating", "gt", 0, true, `{"id":"stat-rating","type":"stat","value":"sellerRating","title":"ваш рейтинг продавца"}`),
 		must("private", "avgReplySeconds", "gt", 0, true, `{"id":"stat-reply","type":"stat","value":"avgReplySeconds","title":"в среднем до ответа"}`),
-		must("private", "firstListingAt", "gt", 0, true, `{"id":"insight-first-listing","type":"insight","title":"Первое объявление","text":"Вы опубликовали первое объявление {{value}}"}`),
+		must("private", "firstListingAt", "gt", 0, true, `{"id":"insight-first-listing","type":"insight","title":"Первое объявление","text":"Первое объявление в этом году вы опубликовали {{value}}"}`),
 		must("private", "firstDealAt", "gt", 0, true, `{"id":"insight-first-deal","type":"insight","title":"Первая сделка","text":"Первую сделку закрыли {{value}}"}`),
 		must("both", "", "", 0, false, `{"id":"outro","type":"outro","title":"Это был ваш год на Авито","subtitle":"Сохраните итоги или вернитесь к объявлениям","actions":[{"type":"share","label":"Поделиться","share":{"kind":"link","title":"Мои итоги на Авито","text":"Посмотрите, каким был мой год на Авито!"}},{"type":"custom","id":"close-recap","label":"На главную","variant":"primary"}]}`),
 	}

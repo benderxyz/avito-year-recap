@@ -162,6 +162,10 @@ func applySceneTemplates(scene map[string]any, displayName string, year int, m c
 }
 
 func formatMetricTemplateValue(m clients.Metrics, key string) (string, bool) {
+	if models.MetricKey(key) == models.MetricFirstListingAt && m.FirstListingAt != 0 {
+		return formatRussianDate(time.Unix(m.FirstListingAt, 0).UTC()), true
+	}
+
 	value, ok := extractMetricValue(m, key)
 	if !ok {
 		return "", false
@@ -179,6 +183,14 @@ func formatMetricTemplateValue(m clients.Metrics, key string) (string, bool) {
 	default:
 		return fmt.Sprint(v), true
 	}
+}
+
+func formatRussianDate(value time.Time) string {
+	months := [...]string{
+		"января", "февраля", "марта", "апреля", "мая", "июня",
+		"июля", "августа", "сентября", "октября", "ноября", "декабря",
+	}
+	return fmt.Sprintf("%d %s", value.Day(), months[value.Month()-1])
 }
 
 func applyReplacements(text string, replacements map[string]string) string {
@@ -253,13 +265,18 @@ func attachPercentile(scene map[string]any, m clients.Metrics, defsByKey map[str
 		return scene
 	}
 
-	if _, ok := extractMetricValue(m, def.PercentileKey); !ok {
+	percentile, ok := extractMetricValue(m, def.PercentileKey)
+	if !ok {
+		return scene
+	}
+	percentileValue, ok := percentile.(float64)
+	if !ok || percentileValue <= 0 {
 		return scene
 	}
 
 	scene["percentile"] = def.PercentileKey
 	if _, hasTemplate := scene["comparisonTemplate"]; !hasTemplate {
-		scene["comparisonTemplate"] = "это больше, чем у {{percentile}}% пользователей"
+		scene["comparisonTemplate"] = "Ваш результат выше, чем у {{percentile}}% пользователей"
 	}
 	return scene
 }

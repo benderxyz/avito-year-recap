@@ -104,8 +104,28 @@ func TestBuildRecapPrivateShouldAttachComparisonToStatScenes(t *testing.T) {
 			if scene["comparisonTemplate"] == nil {
 				t.Fatal("expected comparison template in listings scene")
 			}
+			if scene["comparisonTemplate"] != "Ваш результат выше, чем у {{percentile}}% пользователей" {
+				t.Fatalf("unexpected comparison template %v", scene["comparisonTemplate"])
+			}
 		}
 	}
+}
+
+func TestBuildRecapShouldSkipZeroPercentileComparison(t *testing.T) {
+	metrics := fullMetrics()
+	zero := float64(0)
+	metrics.ListingsPercentile = &zero
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, metrics, privateOptions([]byte("k")))
+
+	for _, scene := range recap.Story {
+		if scene["id"] == "stat-listings" {
+			if _, ok := scene["percentile"]; ok {
+				t.Fatal("did not expect zero percentile comparison")
+			}
+			return
+		}
+	}
+	t.Fatal("expected stat-listings scene")
 }
 
 func TestBuildRecapPublicShouldFilterSensitiveMetrics(t *testing.T) {
@@ -228,7 +248,7 @@ func TestBuildRecapPrivateShouldIncludeScenesForCalculatedMetrics(t *testing.T) 
 
 	for _, want := range []string{
 		"stat-saved", "blocks-days-active", "stat-peak-views", "stat-categories",
-		"blocks-search", "stat-delivery", "stat-active-listings", "stat-rating",
+		"blocks-search", "stat-delivery", "stat-active-listings",
 		"stat-reply", "insight-first-listing", "insight-first-deal",
 	} {
 		found := false
@@ -250,7 +270,7 @@ func TestBuildRecapPrivateShouldFormatInsightDates(t *testing.T) {
 	for _, scene := range recap.Story {
 		if scene["id"] == "insight-first-listing" {
 			text, _ := scene["text"].(string)
-			if !strings.Contains(text, "2024-01-01") {
+			if text != "Первое объявление в этом году вы опубликовали 1 января" {
 				t.Fatalf("expected formatted first listing date in insight text, got %q", text)
 			}
 		}

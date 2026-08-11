@@ -6,6 +6,7 @@ export enum EMetricType {
   Percentile = 'percentile',
   Ratio = 'ratio',
   String = 'string',
+  Date = 'date',
   List = 'list',
 }
 
@@ -26,6 +27,8 @@ type RatioMetricValue = { type: EMetricType.Ratio; value: number };
 
 type StringMetricValue = { type: EMetricType.String; value: string };
 
+type DateMetricValue = { type: EMetricType.Date; value: string };
+
 type ListMetricValue = { type: EMetricType.List; value: MetricListItem[] };
 
 export type MetricValue =
@@ -34,6 +37,7 @@ export type MetricValue =
   | PercentileMetricValue
   | RatioMetricValue
   | StringMetricValue
+  | DateMetricValue
   | ListMetricValue;
 
 export type NarrativeSceneCopy = {

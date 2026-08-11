@@ -2,6 +2,8 @@ package llm
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 
 	"cards-service/internal/clients"
@@ -30,7 +32,7 @@ const systemPrompt = `Ты — копирайтер сервиса «Итоги 
 }
 Ключи в "badges" — это id из списка бейджей ниже. Если инсайта нет — верни "insight": null.`
 
-func buildMessages(displayName string, badges []models.Badge, m clients.Metrics, publicKeys map[string]bool) []Message {
+func buildMessages(displayName string, badges []models.Badge, m clients.Metrics, defs []models.MetricDefinition) []Message {
 	var b strings.Builder
 
 	name := sanitizeName(displayName)
@@ -42,7 +44,7 @@ func buildMessages(displayName string, badges []models.Badge, m clients.Metrics,
 	}
 
 	b.WriteString("\nМетрики пользователя за год (для рассуждения об инсайте, не выводи их числами):\n")
-	for _, line := range metricsSummary(m, publicKeys) {
+	for _, line := range metricsSummary(m, defs) {
 		fmt.Fprintf(&b, "- %s\n", line)
 	}
 
@@ -63,34 +65,26 @@ func sanitizeName(displayName string) string {
 	return name
 }
 
-func metricsSummary(m clients.Metrics, publicKeys map[string]bool) []string {
-	pairs := []struct {
-		key string
-		val int64
-	}{
-		{"listingsPublished", int64(m.ListingsPublished)},
-		{"viewsTotal", int64(m.ViewsTotal)},
-		{"favoritesReceived", int64(m.FavoritesReceived)},
-		{"messagesSent", int64(m.MessagesSent)},
-		{"dealsClosed", int64(m.DealsClosed)},
-		{"moneyEarned", m.MoneyEarned},
-		{"moneySaved", m.MoneySaved},
-		{"daysActive", int64(m.DaysActive)},
-		{"peakDayViews", int64(m.PeakDayViews)},
-		{"searchQueries", int64(m.SearchQueries)},
-		{"categoriesTried", int64(m.CategoriesTried)},
-		{"deliveryOrders", int64(m.DeliveryOrders)},
-		{"activeListings", int64(m.ActiveListings)},
-	}
-
-	lines := make([]string, 0, len(pairs))
-	for _, p := range pairs {
-		if p.val != 0 && publicKeys[p.key] {
-			lines = append(lines, fmt.Sprintf("%s: %d", p.key, p.val))
+func metricsSummary(m clients.Metrics, defs []models.MetricDefinition) []string {
+	lines := make([]string, 0, len(defs))
+	for _, def := range defs {
+		if !def.IncludeInLLM || !def.IsPublic {
+			continue
 		}
-	}
-	if m.SellerRating != 0 && publicKeys["sellerRating"] {
-		lines = append(lines, fmt.Sprintf("sellerRating: %.1f", m.SellerRating))
+
+		value, ok := m.Value(def)
+		if !ok || value == 0 {
+			continue
+		}
+
+		lines = append(lines, fmt.Sprintf("%s: %s", def.Key, formatPromptNumber(value)))
 	}
 	return lines
+}
+
+func formatPromptNumber(value float64) string {
+	if value == math.Trunc(value) {
+		return strconv.FormatInt(int64(value), 10)
+	}
+	return strconv.FormatFloat(value, 'f', 1, 64)
 }

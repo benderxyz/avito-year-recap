@@ -10,6 +10,7 @@ export type Formatters = {
   number: (n: number, opts?: Intl.NumberFormatOptions) => string;
   currency: (n: number, currency?: string) => string;
   plural: (n: number, forms: PluralForms) => string;
+  date: (value: Date, opts?: Intl.DateTimeFormatOptions) => string;
 };
 
 export type RecapContext<TData = unknown> = {

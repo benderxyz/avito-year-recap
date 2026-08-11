@@ -21,6 +21,7 @@ format.plural(12, {
   few: 'объявления',
   many: 'объявлений',
 });                              // "объявлений"
+format.date(new Date('2026-03-14')); // "14 марта"
 ```
 
 ## Склонения (unit)
@@ -53,14 +54,34 @@ fillTemplate('Вы в топ-{{percentile}}% продавцов', { percentile: 
 Когда `data` — это `RecapPayload`, метрики лежат в `data.metrics` по ключам:
 
 ```ts
-import { metricNumber, metricString, metricList } from '@recap-engine/core';
+import { metricNumber, metricString, metricDate, metricList } from '@recap-engine/core';
 
 metricNumber(data.metrics, 'listingsPublished');  // 47
 metricString(data.metrics, 'topCategory');         // "Электроника"
+metricDate(data.metrics, 'firstListingAt');        // Date(2026-03-14)
 metricList(data.metrics, 'favoriteCategories');    // [{ id, label, value }, ...]
 ```
 
-Если ключ не найден — вернётся `0`, пустая строка или пустой массив.
+Если ключ не найден — вернётся `0`, пустая строка, `null` или пустой массив.
+
+## Подстановка {{value}} в текст сцены
+
+Сцены `insight` и `upsell` могут содержать `{{value}}` в полях `text`, `title` и
+`callout`. Библиотека подставляет туда метрику из поля `value` сцены и
+форматирует по её типу: деньги через `format.currency`, числа через
+`format.number`, даты через `format.date`. Формат даты настраивается полем
+`dateFormat` сцены (`Intl.DateTimeFormatOptions`).
+
+```json
+{
+  "id": "insight-first-listing",
+  "type": "insight",
+  "value": "firstListingAt",
+  "text": "Первое объявление вы опубликовали {{value}}"
+}
+```
+
+Если метрики нет в payload, шаблон остаётся как есть.
 
 ## createFormatters
 

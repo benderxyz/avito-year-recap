@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegistryShouldReturnConfigWhenEventTypeIsRegistered(t *testing.T) {
-	registry := events.NewRegistry()
+	registry := testRegistry()
 
 	cfg, err := registry.Get("item_published")
 
@@ -23,7 +23,7 @@ func TestRegistryShouldReturnConfigWhenEventTypeIsRegistered(t *testing.T) {
 }
 
 func TestRegistryShouldFailWhenEventTypeIsUnknown(t *testing.T) {
-	registry := events.NewRegistry()
+	registry := testRegistry()
 
 	_, err := registry.Get("not_registered")
 
@@ -33,7 +33,7 @@ func TestRegistryShouldFailWhenEventTypeIsUnknown(t *testing.T) {
 }
 
 func TestRegistryShouldExposeUniqueFieldForCategoryOpened(t *testing.T) {
-	registry := events.NewRegistry()
+	registry := testRegistry()
 
 	cfg, err := registry.Get("category_opened")
 
@@ -49,7 +49,7 @@ func TestRegistryShouldExposeUniqueFieldForCategoryOpened(t *testing.T) {
 }
 
 func TestRegistryShouldUseDayModeForDayActive(t *testing.T) {
-	registry := events.NewRegistry()
+	registry := testRegistry()
 
 	cfg, err := registry.Get("day_active")
 

@@ -1,7 +1,6 @@
 package cards
 
 import (
-	"cards-service/internal/clients"
 	"cards-service/internal/models"
 )
 
@@ -11,9 +10,7 @@ type badgeRule struct {
 	when       condition
 }
 
-func buildBadges(rules []badgeRule, m clients.Metrics, mode models.RecapMode) []models.Badge {
-	snapshot := metricsSnapshot(m)
-
+func buildBadges(rules []badgeRule, snapshot metricSnapshot, mode models.RecapMode) []models.Badge {
 	var badges []models.Badge
 	for _, rule := range rules {
 		if !rule.visibility.allows(mode) {

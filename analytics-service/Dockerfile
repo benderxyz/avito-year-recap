@@ -16,10 +16,14 @@ RUN useradd --system --uid 10001 --no-create-home appuser
 
 COPY --from=builder /app/app .
 COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/migrations-pg ./migrations-pg
+COPY --from=builder /app/seeds ./seeds
 
 USER appuser
 
 ENV MIGRATIONS_DIR=/app/migrations
+ENV PG_MIGRATIONS_DIR=/app/migrations-pg
+ENV PG_SEEDS_DIR=/app/seeds
 ENV SERVER_PORT=8080
 
 EXPOSE 8080

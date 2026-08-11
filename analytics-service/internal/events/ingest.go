@@ -12,12 +12,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type Ingester struct {
-	conn     driver.Conn
-	registry *Registry
+type registryProvider interface {
+	Get(ctx context.Context) (*Registry, error)
 }
 
-func NewIngester(conn driver.Conn, registry *Registry) *Ingester {
+type Ingester struct {
+	conn     driver.Conn
+	registry registryProvider
+}
+
+func NewIngester(conn driver.Conn, registry registryProvider) *Ingester {
 	return &Ingester{conn: conn, registry: registry}
 }
 
@@ -26,11 +30,16 @@ func (i *Ingester) Ingest(ctx context.Context, items []IngestEvent) error {
 		return apperr.Validation("empty events batch")
 	}
 
+	registry, err := i.registry.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("event registry unavailable: %w", err)
+	}
+
 	events := make([]Event, 0, len(items))
 	now := time.Now().UTC()
 
 	for idx, item := range items {
-		event, err := i.BuildEvent(item, now)
+		event, err := BuildEvent(registry, item, now)
 		if err != nil {
 			return apperr.Validationf("event[%d]: %v", idx, err)
 		}
@@ -70,7 +79,7 @@ func (i *Ingester) Ingest(ctx context.Context, items []IngestEvent) error {
 	return nil
 }
 
-func (i *Ingester) BuildEvent(item IngestEvent, now time.Time) (Event, error) {
+func BuildEvent(registry *Registry, item IngestEvent, now time.Time) (Event, error) {
 	if item.UserID == 0 {
 		return Event{}, fmt.Errorf("user_id is required")
 	}
@@ -78,7 +87,7 @@ func (i *Ingester) BuildEvent(item IngestEvent, now time.Time) (Event, error) {
 		return Event{}, fmt.Errorf("event_type is required")
 	}
 
-	cfg, err := i.registry.Get(item.EventType)
+	cfg, err := registry.Get(item.EventType)
 	if err != nil {
 		return Event{}, err
 	}

@@ -12,39 +12,6 @@ import (
 	"time"
 )
 
-type MetricsResponse struct {
-	From     string                 `json:"from"`
-	To       string                 `json:"to"`
-	UserID   uint64                 `json:"user_id"`
-	Timezone string                 `json:"timezone"`
-	Metrics  map[string]MetricField `json:"metrics"`
-}
-
-type Metrics struct {
-	ActiveListings      int
-	AvgReplySeconds     float64
-	CategoriesTried     int
-	DaysActive          int
-	DealsClosed         int
-	DealsPercentile     *float64
-	DeliveryOrders      int
-	FavoritesReceived   int
-	FavoritesPercentile *float64
-	FirstDealAt         int64
-	FirstListingAt      int64
-	ListingsPublished   int
-	ListingsPercentile  *float64
-	MessagesSent        int
-	MessagesPercentile  *float64
-	MoneyEarned         int64
-	MoneySaved          int64
-	PeakDayViews        int
-	SearchQueries       int
-	SellerRating        float64
-	ViewsTotal          int
-	ViewsPercentile     *float64
-}
-
 type UserClient struct {
 	baseURL    string
 	httpClient *http.Client

@@ -146,7 +146,7 @@ func (s *RuleStore) loadRecommendationRules(ctx context.Context) ([]recommendati
 
 func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricDefinition, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT key, value_type, currency, is_public, percentile_key
+		SELECT key, value_type, currency, is_public, percentile_key, source_key, source_field, include_in_llm
 		FROM metric_definitions
 		WHERE enabled = true
 		ORDER BY sort_order, key
@@ -158,10 +158,10 @@ func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricD
 
 	var defs []models.MetricDefinition
 	for rows.Next() {
-		var key, valueType string
-		var currency, percentileKey sql.NullString
-		var isPublic bool
-		if err := rows.Scan(&key, &valueType, &currency, &isPublic, &percentileKey); err != nil {
+		var key, valueType, sourceField string
+		var currency, percentileKey, sourceKey sql.NullString
+		var isPublic, includeInLLM bool
+		if err := rows.Scan(&key, &valueType, &currency, &isPublic, &percentileKey, &sourceKey, &sourceField, &includeInLLM); err != nil {
 			return nil, fmt.Errorf("scan metric_definition: %w", err)
 		}
 		defs = append(defs, models.MetricDefinition{
@@ -170,6 +170,9 @@ func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricD
 			Currency:      models.Currency(currency.String),
 			IsPublic:      isPublic,
 			PercentileKey: percentileKey.String,
+			SourceKey:     sourceKey.String,
+			SourceField:   models.MetricSourceField(sourceField),
+			IncludeInLLM:  includeInLLM,
 		})
 	}
 	if err := rows.Err(); err != nil {

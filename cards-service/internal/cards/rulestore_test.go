@@ -25,7 +25,7 @@ func TestMakeBadgeRuleShouldBuildSinglePredicateCondition(t *testing.T) {
 	}
 
 	p := rule.when.predicates[0]
-	if p.metric != models.MetricMessagesSent || p.op != opGt || p.value != 1000 {
+	if p.metric != "messagesSent" || p.op != opGt || p.value != 1000 {
 		t.Fatalf("unexpected predicate %+v", p)
 	}
 }
@@ -44,7 +44,7 @@ func TestMakeStoryRuleShouldDecodePayloadAndPredicate(t *testing.T) {
 	if rule.scene["id"] != "stat-earned" || rule.scene["value"] != "moneyEarned" {
 		t.Fatalf("unexpected scene %+v", rule.scene)
 	}
-	if len(rule.when.predicates) != 1 || rule.when.predicates[0].metric != models.MetricMoneyEarned {
+	if len(rule.when.predicates) != 1 || rule.when.predicates[0].metric != "moneyEarned" {
 		t.Fatalf("unexpected predicate %+v", rule.when.predicates)
 	}
 }

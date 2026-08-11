@@ -53,39 +53,25 @@ type RuleSet struct {
 	metrics         []models.MetricDefinition
 }
 
-func (r RuleSet) PublicMetricKeys() map[string]bool {
-	keys := make(map[string]bool, len(r.metrics))
-	for _, def := range r.metrics {
-		if def.IsPublic {
-			keys[def.Key] = true
+func (r RuleSet) MetricDefinitions() []models.MetricDefinition {
+	return r.metrics
+}
+
+type metricSnapshot map[models.MetricKey]float64
+
+func metricsSnapshot(m clients.Metrics, defs []models.MetricDefinition) metricSnapshot {
+	snapshot := make(metricSnapshot, len(defs))
+	for _, def := range defs {
+		value, ok := m.Value(def)
+		if !ok {
+			continue
 		}
+		snapshot[models.MetricKey(def.Key)] = value
 	}
-	return keys
+	return snapshot
 }
 
-func metricsSnapshot(m clients.Metrics) map[models.MetricKey]float64 {
-	return map[models.MetricKey]float64{
-		models.MetricListingsPublished: float64(m.ListingsPublished),
-		models.MetricViewsTotal:        float64(m.ViewsTotal),
-		models.MetricFavoritesReceived: float64(m.FavoritesReceived),
-		models.MetricMessagesSent:      float64(m.MessagesSent),
-		models.MetricDealsClosed:       float64(m.DealsClosed),
-		models.MetricMoneyEarned:       float64(m.MoneyEarned),
-		models.MetricMoneySaved:        float64(m.MoneySaved),
-		models.MetricDaysActive:        float64(m.DaysActive),
-		models.MetricPeakDayViews:      float64(m.PeakDayViews),
-		models.MetricSearchQueries:     float64(m.SearchQueries),
-		models.MetricCategoriesTried:   float64(m.CategoriesTried),
-		models.MetricDeliveryOrders:    float64(m.DeliveryOrders),
-		models.MetricActiveListings:    float64(m.ActiveListings),
-		models.MetricSellerRating:      m.SellerRating,
-		models.MetricAvgReplySeconds:   m.AvgReplySeconds,
-		models.MetricFirstListingAt:    float64(m.FirstListingAt),
-		models.MetricFirstDealAt:       float64(m.FirstDealAt),
-	}
-}
-
-func (p predicate) eval(snapshot map[models.MetricKey]float64) bool {
+func (p predicate) eval(snapshot metricSnapshot) bool {
 	value, ok := snapshot[p.metric]
 	switch p.op {
 	case opExists:
@@ -101,7 +87,7 @@ func (p predicate) eval(snapshot map[models.MetricKey]float64) bool {
 	}
 }
 
-func (c condition) eval(snapshot map[models.MetricKey]float64) bool {
+func (c condition) eval(snapshot metricSnapshot) bool {
 	if len(c.predicates) == 0 {
 		return true
 	}

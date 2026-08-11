@@ -30,7 +30,9 @@ func BuildRecap(
 		ruleSet = *opts.Rules
 	}
 
-	badges := buildBadges(ruleSet.badges, metrics, opts.Mode)
+	snapshot := metricsSnapshot(metrics, ruleSet.metrics)
+
+	badges := buildBadges(ruleSet.badges, snapshot, opts.Mode)
 	slog.Debug("badges generated", "badges", badges)
 
 	shareURL := ""
@@ -57,7 +59,7 @@ func BuildRecap(
 		},
 		Metrics: buildMetrics(metrics, opts.Mode, ruleSet.metrics),
 		Badges:  badges,
-		Story:   buildStory(profile, year, metrics, ruleSet, badges, opts, shareURL),
+		Story:   buildStory(profile, year, snapshot, ruleSet, badges, opts, shareURL),
 	}
 
 	if shareURL != "" {
@@ -77,9 +79,8 @@ func buildShareURL(baseURL, token string) string {
 	return fmt.Sprintf("%s/share/%s", baseURL, token)
 }
 
-func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleSet, badges []models.Badge, opts BuildOptions, shareURL string) []map[string]any {
+func buildStory(profile models.Profile, year int, snapshot metricSnapshot, rules RuleSet, badges []models.Badge, opts BuildOptions, shareURL string) []map[string]any {
 	mode := opts.Mode
-	snapshot := metricsSnapshot(m)
 	defsByKey := metricDefinitionsByKey(rules.metrics)
 
 	name := profile.Username
@@ -99,8 +100,8 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleS
 		sceneType, _ := scene["type"].(string)
 		metricKey := ruleMetricKey(rule)
 
-		scene = applySceneTemplates(scene, name, year, m, metricKey)
-		scene = attachPercentile(scene, m, defsByKey)
+		scene = applySceneTemplates(scene, name, year, metricKey)
+		scene = attachPercentile(scene, snapshot, defsByKey)
 
 		if sceneType == "outro" {
 			outro = finalizeOutro(scene, mode, shareURL)
@@ -119,7 +120,7 @@ func buildStory(profile models.Profile, year int, m clients.Metrics, rules RuleS
 	}
 
 	if mode == models.RecapModePrivate {
-		story = append(story, buildRecommendations(rules.recommendations, m, opts.ProductBaseURL)...)
+		story = append(story, buildRecommendations(rules.recommendations, snapshot, opts.ProductBaseURL)...)
 	}
 
 	if outro != nil {
@@ -136,20 +137,14 @@ func ruleMetricKey(rule storyRule) string {
 	return string(rule.when.predicates[0].metric)
 }
 
-func applySceneTemplates(scene map[string]any, displayName string, year int, m clients.Metrics, metricKey string) map[string]any {
+func applySceneTemplates(scene map[string]any, displayName string, year int, metricKey string) map[string]any {
 	replacements := map[string]string{
 		"{{displayName}}": displayName,
 		"{{year}}":        strconv.Itoa(year),
 	}
 
-	valueKey, _ := scene["value"].(string)
-	if valueKey == "" {
-		valueKey = metricKey
-	}
-	if valueKey != "" {
-		if formatted, ok := formatMetricTemplateValue(m, valueKey); ok {
-			replacements["{{value}}"] = formatted
-		}
+	if valueKey, _ := scene["value"].(string); valueKey == "" && metricKey != "" {
+		scene["value"] = metricKey
 	}
 
 	for key, raw := range scene {
@@ -159,38 +154,6 @@ func applySceneTemplates(scene map[string]any, displayName string, year int, m c
 	}
 
 	return scene
-}
-
-func formatMetricTemplateValue(m clients.Metrics, key string) (string, bool) {
-	if models.MetricKey(key) == models.MetricFirstListingAt && m.FirstListingAt != 0 {
-		return formatRussianDate(time.Unix(m.FirstListingAt, 0).UTC()), true
-	}
-
-	value, ok := extractMetricValue(m, key)
-	if !ok {
-		return "", false
-	}
-
-	switch v := value.(type) {
-	case string:
-		return v, true
-	case float64:
-		return strconv.FormatFloat(v, 'f', -1, 64), true
-	case int:
-		return strconv.Itoa(v), true
-	case int64:
-		return strconv.FormatInt(v, 10), true
-	default:
-		return fmt.Sprint(v), true
-	}
-}
-
-func formatRussianDate(value time.Time) string {
-	months := [...]string{
-		"января", "февраля", "марта", "апреля", "мая", "июня",
-		"июля", "августа", "сентября", "октября", "ноября", "декабря",
-	}
-	return fmt.Sprintf("%d %s", value.Day(), months[value.Month()-1])
 }
 
 func applyReplacements(text string, replacements map[string]string) string {
@@ -254,7 +217,7 @@ func cloneScene(scene map[string]any) map[string]any {
 	return cloned
 }
 
-func attachPercentile(scene map[string]any, m clients.Metrics, defsByKey map[string]models.MetricDefinition) map[string]any {
+func attachPercentile(scene map[string]any, snapshot metricSnapshot, defsByKey map[string]models.MetricDefinition) map[string]any {
 	valueKey, _ := scene["value"].(string)
 	if valueKey == "" {
 		return scene
@@ -265,11 +228,7 @@ func attachPercentile(scene map[string]any, m clients.Metrics, defsByKey map[str
 		return scene
 	}
 
-	percentile, ok := extractMetricValue(m, def.PercentileKey)
-	if !ok {
-		return scene
-	}
-	percentileValue, ok := percentile.(float64)
+	percentileValue, ok := snapshot[models.MetricKey(def.PercentileKey)]
 	if !ok || percentileValue <= 0 {
 		return scene
 	}
@@ -293,7 +252,7 @@ func buildMetrics(m clients.Metrics, mode models.RecapMode, defs []models.Metric
 	all := make(map[string]models.MetricValue, len(defs))
 
 	for _, def := range defs {
-		value, ok := extractMetricValue(m, def.Key)
+		value, ok := extractMetricValue(m, def)
 		if !ok {
 			continue
 		}
@@ -324,74 +283,21 @@ func buildMetrics(m clients.Metrics, mode models.RecapMode, defs []models.Metric
 	return all
 }
 
-func extractMetricValue(m clients.Metrics, key string) (any, bool) {
-	switch models.MetricKey(key) {
-	case models.MetricListingsPublished:
-		return m.ListingsPublished, true
-	case models.MetricListingsPercentile:
-		if m.ListingsPercentile == nil {
-			return nil, false
-		}
-		return *m.ListingsPercentile, true
-	case models.MetricViewsTotal:
-		return m.ViewsTotal, true
-	case models.MetricViewsPercentile:
-		if m.ViewsPercentile == nil {
-			return nil, false
-		}
-		return *m.ViewsPercentile, true
-	case models.MetricFavoritesReceived:
-		return m.FavoritesReceived, true
-	case models.MetricFavoritesPercentile:
-		if m.FavoritesPercentile == nil {
-			return nil, false
-		}
-		return *m.FavoritesPercentile, true
-	case models.MetricMessagesSent:
-		return m.MessagesSent, true
-	case models.MetricMessagesPercentile:
-		if m.MessagesPercentile == nil {
-			return nil, false
-		}
-		return *m.MessagesPercentile, true
-	case models.MetricDealsClosed:
-		return m.DealsClosed, true
-	case models.MetricDealsPercentile:
-		if m.DealsPercentile == nil {
-			return nil, false
-		}
-		return *m.DealsPercentile, true
-	case models.MetricMoneyEarned:
-		return m.MoneyEarned, true
-	case models.MetricMoneySaved:
-		return m.MoneySaved, true
-	case models.MetricDaysActive:
-		return m.DaysActive, true
-	case models.MetricPeakDayViews:
-		return m.PeakDayViews, true
-	case models.MetricSearchQueries:
-		return m.SearchQueries, true
-	case models.MetricCategoriesTried:
-		return m.CategoriesTried, true
-	case models.MetricDeliveryOrders:
-		return m.DeliveryOrders, true
-	case models.MetricActiveListings:
-		return m.ActiveListings, true
-	case models.MetricSellerRating:
-		return m.SellerRating, true
-	case models.MetricAvgReplySeconds:
-		return m.AvgReplySeconds, true
-	case models.MetricFirstListingAt:
-		if m.FirstListingAt == 0 {
-			return nil, false
-		}
-		return time.Unix(m.FirstListingAt, 0).UTC().Format("2006-01-02"), true
-	case models.MetricFirstDealAt:
-		if m.FirstDealAt == 0 {
-			return nil, false
-		}
-		return time.Unix(m.FirstDealAt, 0).UTC().Format("2006-01-02"), true
-	default:
+func extractMetricValue(m clients.Metrics, def models.MetricDefinition) (any, bool) {
+	raw, ok := m.Value(def)
+	if !ok {
 		return nil, false
+	}
+
+	switch def.ValueType {
+	case models.MetricTypeDate:
+		if raw == 0 {
+			return nil, false
+		}
+		return time.Unix(int64(raw), 0).UTC().Format(time.DateOnly), true
+	case models.MetricTypeString:
+		return strconv.FormatFloat(raw, 'f', -1, 64), true
+	default:
+		return raw, true
 	}
 }

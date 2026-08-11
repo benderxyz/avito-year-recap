@@ -8,10 +8,7 @@ import (
 )
 
 func TestNormalizeShouldAssignCategoryFromRegistryWhenEventTypeIsValid(t *testing.T) {
-	registry := events.NewRegistry()
-	ingester := events.NewIngester(nil, registry)
-
-	event, err := ingester.BuildEvent(events.IngestEvent{
+	event, err := events.BuildEvent(testRegistry(), events.IngestEvent{
 		UserID:    42,
 		EventType: "item_view_received",
 		Value:     10,
@@ -32,10 +29,7 @@ func TestNormalizeShouldAssignCategoryFromRegistryWhenEventTypeIsValid(t *testin
 }
 
 func TestBuildEventShouldForceZeroValueWhenCategoryIsMilestone(t *testing.T) {
-	registry := events.NewRegistry()
-	ingester := events.NewIngester(nil, registry)
-
-	event, err := ingester.BuildEvent(events.IngestEvent{
+	event, err := events.BuildEvent(testRegistry(), events.IngestEvent{
 		UserID:    42,
 		EventType: "first_item_published",
 		Value:     99,
@@ -53,10 +47,7 @@ func TestBuildEventShouldForceZeroValueWhenCategoryIsMilestone(t *testing.T) {
 }
 
 func TestBuildEventShouldForceZeroValueWhenCategoryIsUnique(t *testing.T) {
-	registry := events.NewRegistry()
-	ingester := events.NewIngester(nil, registry)
-
-	event, err := ingester.BuildEvent(events.IngestEvent{
+	event, err := events.BuildEvent(testRegistry(), events.IngestEvent{
 		UserID:    42,
 		EventType: "category_opened",
 		Value:     5,
@@ -72,10 +63,7 @@ func TestBuildEventShouldForceZeroValueWhenCategoryIsUnique(t *testing.T) {
 }
 
 func TestNormalizeShouldFailWhenUserIDIsMissing(t *testing.T) {
-	registry := events.NewRegistry()
-	ingester := events.NewIngester(nil, registry)
-
-	_, err := ingester.BuildEvent(events.IngestEvent{
+	_, err := events.BuildEvent(testRegistry(), events.IngestEvent{
 		EventType: "item_view_received",
 	}, time.Now().UTC())
 

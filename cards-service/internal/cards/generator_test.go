@@ -8,36 +8,33 @@ import (
 	"cards-service/internal/models"
 )
 
-func fullMetrics() clients.Metrics {
-	listingsPercentile := float64(88)
-	viewsPercentile := float64(92)
-	favoritesPercentile := float64(79)
-	messagesPercentile := float64(85)
-	dealsPercentile := float64(74)
+func sample(value float64) clients.MetricSample {
+	return clients.MetricSample{Value: &value}
+}
 
+func sampleWithPercentile(value, percentile float64) clients.MetricSample {
+	return clients.MetricSample{Value: &value, Percentile: &percentile}
+}
+
+func fullMetrics() clients.Metrics {
 	return clients.Metrics{
-		ListingsPublished:   12,
-		ListingsPercentile:  &listingsPercentile,
-		ViewsTotal:          3400,
-		ViewsPercentile:     &viewsPercentile,
-		FavoritesReceived:   87,
-		FavoritesPercentile: &favoritesPercentile,
-		MessagesSent:        1250,
-		MessagesPercentile:  &messagesPercentile,
-		DealsClosed:         19,
-		DealsPercentile:     &dealsPercentile,
-		MoneyEarned:         150000,
-		MoneySaved:          32000,
-		DaysActive:          210,
-		PeakDayViews:        340,
-		SearchQueries:       500,
-		CategoriesTried:     7,
-		DeliveryOrders:      5,
-		ActiveListings:      8,
-		SellerRating:        4.8,
-		AvgReplySeconds:     120,
-		FirstListingAt:      1704067200,
-		FirstDealAt:         1706745600,
+		"listingsPublished": sampleWithPercentile(12, 88),
+		"viewsTotal":        sampleWithPercentile(3400, 92),
+		"favoritesReceived": sampleWithPercentile(87, 79),
+		"messagesSent":      sampleWithPercentile(1250, 85),
+		"dealsClosed":       sampleWithPercentile(19, 74),
+		"moneyEarned":       sample(150000),
+		"moneySaved":        sample(32000),
+		"daysActive":        sample(210),
+		"peakDayViews":      sample(340),
+		"searchQueries":     sample(500),
+		"categoriesTried":   sample(7),
+		"deliveryOrders":    sample(5),
+		"activeListings":    sample(8),
+		"sellerRating":      sample(4.8),
+		"avgReplySeconds":   sample(120),
+		"firstListingAt":    sample(1704067200),
+		"firstDealAt":       sample(1706745600),
 	}
 }
 
@@ -113,8 +110,7 @@ func TestBuildRecapPrivateShouldAttachComparisonToStatScenes(t *testing.T) {
 
 func TestBuildRecapShouldSkipZeroPercentileComparison(t *testing.T) {
 	metrics := fullMetrics()
-	zero := float64(0)
-	metrics.ListingsPercentile = &zero
+	metrics["listingsPublished"] = sampleWithPercentile(12, 0)
 	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, metrics, privateOptions([]byte("k")))
 
 	for _, scene := range recap.Story {
@@ -264,30 +260,84 @@ func TestBuildRecapPrivateShouldIncludeScenesForCalculatedMetrics(t *testing.T) 
 	}
 }
 
-func TestBuildRecapPrivateShouldFormatInsightDates(t *testing.T) {
+func findScene(story []map[string]any, id string) map[string]any {
+	for _, scene := range story {
+		if scene["id"] == id {
+			return scene
+		}
+	}
+	return nil
+}
+
+func TestBuildRecapShouldLeaveValueTemplateToFrontendWhenSceneUsesMetric(t *testing.T) {
 	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
 
-	for _, scene := range recap.Story {
-		if scene["id"] == "insight-first-listing" {
-			text, _ := scene["text"].(string)
-			if text != "Первое объявление в этом году вы опубликовали 1 января" {
-				t.Fatalf("expected formatted first listing date in insight text, got %q", text)
-			}
-		}
+	scene := findScene(recap.Story, "insight-first-listing")
+	if scene == nil {
+		t.Fatal("expected insight-first-listing scene")
+	}
+	if scene["text"] != "Первое объявление в этом году вы опубликовали {{value}}" {
+		t.Fatalf("expected untouched value template, got %v", scene["text"])
+	}
+	if scene["value"] != "firstListingAt" {
+		t.Fatalf("expected metric key in scene value, got %v", scene["value"])
 	}
 }
 
-func TestBuildRecapPrivateShouldEmitStringMilestoneMetrics(t *testing.T) {
+func TestBuildRecapShouldEmitDateMetricAsISOStringWhenDefinitionIsDate(t *testing.T) {
 	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, fullMetrics(), privateOptions([]byte("k")))
 
 	listing, ok := recap.Metrics["firstListingAt"]
 	if !ok {
 		t.Fatal("expected firstListingAt metric")
 	}
-	if listing.Type != models.MetricTypeString {
-		t.Fatalf("expected string metric type, got %q", listing.Type)
+	if listing.Type != models.MetricTypeDate {
+		t.Fatalf("expected date metric type, got %q", listing.Type)
 	}
 	if listing.Value != "2024-01-01" {
 		t.Fatalf("unexpected firstListingAt value %v", listing.Value)
+	}
+}
+
+func TestBuildRecapShouldSkipMetricWhenAnalyticsOmitsSourceKey(t *testing.T) {
+	metrics := fullMetrics()
+	delete(metrics, "firstDealAt")
+
+	recap := BuildRecap(models.Profile{ExternalID: "u1", Username: "alex"}, 2024, metrics, privateOptions([]byte("k")))
+
+	if _, ok := recap.Metrics["firstDealAt"]; ok {
+		t.Fatal("did not expect firstDealAt metric when analytics omits it")
+	}
+	if findScene(recap.Story, "insight-first-deal") != nil {
+		t.Fatal("did not expect insight-first-deal scene without the metric")
+	}
+}
+
+func TestBuildRecapShouldExposeMetricWhenDefinitionIsAddedWithoutCodeChanges(t *testing.T) {
+	rules := testRuleSet()
+	rules.metrics = append(rules.metrics, models.MetricDefinition{
+		Key:         "storiesWatched",
+		ValueType:   models.MetricTypeNumber,
+		IsPublic:    true,
+		SourceKey:   "storiesWatched",
+		SourceField: models.MetricSourceValue,
+	})
+
+	metrics := fullMetrics()
+	metrics["storiesWatched"] = sample(9)
+
+	recap := BuildRecap(
+		models.Profile{ExternalID: "u1", Username: "alex"},
+		2024,
+		metrics,
+		BuildOptions{Mode: models.RecapModePrivate, Rules: &rules},
+	)
+
+	metric, ok := recap.Metrics["storiesWatched"]
+	if !ok {
+		t.Fatal("expected metric defined only in metric definitions")
+	}
+	if metric.Value != float64(9) {
+		t.Fatalf("unexpected storiesWatched value %v", metric.Value)
 	}
 }

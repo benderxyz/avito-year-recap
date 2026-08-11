@@ -6,4 +6,7 @@ type MetricDefinition struct {
 	Currency      Currency
 	IsPublic      bool
 	PercentileKey string
+	SourceKey     string
+	SourceField   MetricSourceField
+	IncludeInLLM  bool
 }

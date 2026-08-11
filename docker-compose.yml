@@ -56,13 +56,19 @@ services:
     ports:
       - "8080:8080"
     environment:
-      <<: *clickhouse-client-env
+      <<: [*clickhouse-client-env, *postgres-client-env]
       SERVER_PORT: "8080"
       MIGRATIONS_DIR: /app/migrations
+      POSTGRES_DATABASE: analytics
+      PG_MIGRATIONS_DIR: /app/migrations-pg
+      PG_SEEDS_DIR: /app/seeds
+      SEED_ON_START: "true"
       USER_SERVICE_URL: http://user:8082
     depends_on:
       clickhouse:
         condition: service_started
+      postgres:
+        condition: service_healthy
       user:
         condition: service_healthy
 

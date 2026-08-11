@@ -8,7 +8,6 @@ import (
 
 	"analytics-service/internal/aggregation"
 	"analytics-service/internal/apperr"
-	"analytics-service/internal/events"
 )
 
 type enrichmentQuerier struct {
@@ -81,7 +80,7 @@ func TestServiceShouldEnrichCounterMetricsWithShareAndPercentile(t *testing.T) {
 			"item_published": lowerPercentileTotals(88, 12, 0, 100),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -109,7 +108,7 @@ func TestServiceShouldReturnAllNullFieldsWhenSparseGaugeIsAbsent(t *testing.T) {
 			"active_items_count": false,
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -137,7 +136,7 @@ func TestServiceShouldReturnNullShareWhenGlobalCounterTotalIsZero(t *testing.T) 
 			"item_published": {0, 0, 10, 10},
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -165,7 +164,7 @@ func TestServiceShouldEnrichMilestoneWhenValueIsPresent(t *testing.T) {
 			"first_item_published": higherPercentileTotals(88, 12, 1_800_000_000, 1_600_000_000),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -188,7 +187,7 @@ func TestServiceShouldEnrichMilestoneWhenValueIsPresent(t *testing.T) {
 }
 
 func TestServiceShouldFailEnrichmentWhenFromIsNotBeforeTo(t *testing.T) {
-	service := aggregation.NewService(events.NewRegistry(), &enrichmentQuerier{})
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), &enrichmentQuerier{})
 	from := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -211,7 +210,7 @@ func TestServiceShouldReuseCachedGlobalStatsWhenMetricsAreRequestedTwice(t *test
 			"item_published": lowerPercentileTotals(88, 12, 0, 100),
 		},
 	}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 

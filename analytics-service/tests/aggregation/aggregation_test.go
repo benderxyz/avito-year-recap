@@ -192,8 +192,8 @@ func TestUniqueAggregatorShouldCountLocalDaysWhenModeIsDay(t *testing.T) {
 
 func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.T) {
 	querier := &recordingQuerier{result: 3, present: true}
-	registry := events.NewRegistry()
-	service := aggregation.NewService(registry, querier)
+	registry := testRegistry()
+	service := aggregation.NewService(testRegistryProvider(registry), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -215,8 +215,8 @@ func TestServiceShouldMapMetricKeysWhenAggregatingAllRegisteredTypes(t *testing.
 
 func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 	querier := &recordingQuerier{present: false}
-	registry := events.NewRegistry()
-	service := aggregation.NewService(registry, querier)
+	registry := testRegistry()
+	service := aggregation.NewService(testRegistryProvider(registry), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -241,7 +241,7 @@ func TestServiceShouldReturnNullWhenSparseMetricIsAbsent(t *testing.T) {
 
 func TestServiceShouldFailWhenFromIsNotBeforeTo(t *testing.T) {
 	querier := &recordingQuerier{}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -254,7 +254,7 @@ func TestServiceShouldFailWhenFromIsNotBeforeTo(t *testing.T) {
 
 func TestServiceShouldUseUTCWhenTimezoneIsEmpty(t *testing.T) {
 	querier := &recordingQuerier{result: 1, present: true}
-	service := aggregation.NewService(events.NewRegistry(), querier)
+	service := aggregation.NewService(testRegistryProvider(testRegistry()), querier)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 

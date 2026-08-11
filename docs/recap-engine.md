@@ -323,7 +323,7 @@ export const mockRecapPayload: RecapPayload = {
 
 ## Метрики
 
-Метрики бывают 6-ти типов:
+Метрики бывают 7-ти типов:
 
 ```ts
 export enum EMetricType {
@@ -332,6 +332,7 @@ export enum EMetricType {
   Percentile = 'percentile', // Процент
   Ratio = 'ratio', // Доля
   String = 'string', // Строка
+  Date = 'date', // Дата в формате ISO (2026-03-14)
   List = 'list', // Список
 }
 
@@ -351,6 +352,8 @@ type PercentileMetricValue = { type: EMetricType.Percentile; value: number };
 type RatioMetricValue = { type: EMetricType.Ratio; value: number };
 
 type StringMetricValue = { type: EMetricType.String; value: string };
+
+type DateMetricValue = { type: EMetricType.Date; value: string };
 
 type ListMetricValue = { type: EMetricType.List; value: MetricListItem[] };
 ```

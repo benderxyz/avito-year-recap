@@ -5,29 +5,71 @@ import (
 )
 
 func testMetricDefinitions() []models.MetricDefinition {
+	number := func(key string, isPublic bool, percentileKey string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:           key,
+			ValueType:     models.MetricTypeNumber,
+			IsPublic:      isPublic,
+			PercentileKey: percentileKey,
+			SourceKey:     key,
+			SourceField:   models.MetricSourceValue,
+			IncludeInLLM:  true,
+		}
+	}
+
+	percentile := func(key, sourceKey string, isPublic bool) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:         key,
+			ValueType:   models.MetricTypePercentile,
+			IsPublic:    isPublic,
+			SourceKey:   sourceKey,
+			SourceField: models.MetricSourcePercentile,
+		}
+	}
+
+	money := func(key string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:          key,
+			ValueType:    models.MetricTypeMoney,
+			Currency:     models.CurrencyRUB,
+			SourceKey:    key,
+			SourceField:  models.MetricSourceValue,
+			IncludeInLLM: true,
+		}
+	}
+
+	date := func(key string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:         key,
+			ValueType:   models.MetricTypeDate,
+			SourceKey:   key,
+			SourceField: models.MetricSourceValue,
+		}
+	}
+
 	return []models.MetricDefinition{
-		{Key: "listingsPublished", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "listingsPercentile"},
-		{Key: "listingsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "viewsTotal", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "viewsPercentile"},
-		{Key: "viewsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "favoritesReceived", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "favoritesPercentile"},
-		{Key: "favoritesPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "messagesSent", ValueType: models.MetricTypeNumber, IsPublic: false, PercentileKey: "messagesPercentile"},
-		{Key: "messagesPercentile", ValueType: models.MetricTypePercentile, IsPublic: false},
-		{Key: "dealsClosed", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "dealsPercentile"},
-		{Key: "dealsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "moneyEarned", ValueType: models.MetricTypeMoney, Currency: models.CurrencyRUB, IsPublic: false},
-		{Key: "moneySaved", ValueType: models.MetricTypeMoney, Currency: models.CurrencyRUB, IsPublic: false},
-		{Key: "daysActive", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "peakDayViews", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "categoriesTried", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "searchQueries", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "deliveryOrders", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "activeListings", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "sellerRating", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "avgReplySeconds", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "firstListingAt", ValueType: models.MetricTypeString, IsPublic: false},
-		{Key: "firstDealAt", ValueType: models.MetricTypeString, IsPublic: false},
+		number("listingsPublished", true, "listingsPercentile"),
+		percentile("listingsPercentile", "listingsPublished", true),
+		number("viewsTotal", true, "viewsPercentile"),
+		percentile("viewsPercentile", "viewsTotal", true),
+		number("favoritesReceived", true, "favoritesPercentile"),
+		percentile("favoritesPercentile", "favoritesReceived", true),
+		number("messagesSent", false, "messagesPercentile"),
+		percentile("messagesPercentile", "messagesSent", false),
+		number("dealsClosed", true, "dealsPercentile"),
+		percentile("dealsPercentile", "dealsClosed", true),
+		money("moneyEarned"),
+		money("moneySaved"),
+		number("daysActive", true, ""),
+		number("peakDayViews", true, ""),
+		number("categoriesTried", true, ""),
+		number("searchQueries", true, ""),
+		number("deliveryOrders", true, ""),
+		number("activeListings", false, ""),
+		number("sellerRating", false, ""),
+		number("avgReplySeconds", false, ""),
+		date("firstListingAt"),
+		date("firstDealAt"),
 	}
 }
 

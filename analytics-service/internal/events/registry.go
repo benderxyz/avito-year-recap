@@ -2,87 +2,13 @@ package events
 
 import "fmt"
 
-var defaultRegistry = map[string]CategoryConfig{
-	"item_published": {
-		Category:  CategoryCounter,
-		MetricKey: "listingsPublished",
-	},
-	"item_view_received": {
-		Category:  CategoryCounter,
-		MetricKey: "viewsTotal",
-	},
-	"item_favorited": {
-		Category:  CategoryCounter,
-		MetricKey: "favoritesReceived",
-	},
-	"chat_message_sent": {
-		Category:  CategoryCounter,
-		MetricKey: "messagesSent",
-	},
-	"deal_completed": {
-		Category:  CategoryCounter,
-		MetricKey: "dealsClosed",
-	},
-	"sale_proceeds": {
-		Category:  CategoryCounter,
-		MetricKey: "moneyEarned",
-	},
-	"buyer_saving": {
-		Category:  CategoryCounter,
-		MetricKey: "moneySaved",
-	},
-	"delivery_order_created": {
-		Category:  CategoryCounter,
-		MetricKey: "deliveryOrders",
-	},
-	"search_performed": {
-		Category:  CategoryCounter,
-		MetricKey: "searchQueries",
-	},
-	"active_items_count": {
-		Category:  CategoryGauge,
-		MetricKey: "activeListings",
-	},
-	"seller_rating": {
-		Category:  CategoryGauge,
-		MetricKey: "sellerRating",
-	},
-	"peak_day_views": {
-		Category:  CategoryGauge,
-		MetricKey: "peakDayViews",
-	},
-	"first_item_published": {
-		Category:  CategoryMilestone,
-		MetricKey: "firstListingAt",
-	},
-	"first_deal_completed": {
-		Category:  CategoryMilestone,
-		MetricKey: "firstDealAt",
-	},
-	"category_opened": {
-		Category:    CategoryUnique,
-		UniqueMode:  UniqueModePayload,
-		UniqueField: "category",
-		MetricKey:   "categoriesTried",
-	},
-	"day_active": {
-		Category:   CategoryUnique,
-		UniqueMode: UniqueModeDay,
-		MetricKey:  "daysActive",
-	},
-	"chat_reply": {
-		Category:  CategoryInterval,
-		MetricKey: "avgReplySeconds",
-	},
-}
-
 type Registry struct {
 	byType map[string]CategoryConfig
 }
 
-func NewRegistry() *Registry {
-	copied := make(map[string]CategoryConfig, len(defaultRegistry))
-	for key, value := range defaultRegistry {
+func NewRegistry(configs map[string]CategoryConfig) *Registry {
+	copied := make(map[string]CategoryConfig, len(configs))
+	for key, value := range configs {
 		copied[key] = value
 	}
 	return &Registry{byType: copied}

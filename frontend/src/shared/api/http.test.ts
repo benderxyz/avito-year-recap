@@ -19,4 +19,13 @@ describe('shared api', () => {
       'https://recaps.hakolr.dev/api/share/NDk6MjAyNg.token',
     );
   });
+
+  it('removes text appended to a share token', () => {
+    expect(
+      buildShareRecapUrl(
+        'https://recaps.hakolr.dev',
+        'NDU6MjAyNg.signature Посмотрите, каким был мой год',
+      ),
+    ).toBe('https://recaps.hakolr.dev/api/share/NDU6MjAyNg.signature');
+  });
 });

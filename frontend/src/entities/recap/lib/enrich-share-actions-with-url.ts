@@ -1,6 +1,7 @@
 import {
   ESceneActionType,
   ESceneType,
+  EShareKind,
   type RecapPayload,
   type SceneAction,
 } from '@recap-engine/core';
@@ -9,26 +10,27 @@ type RecapPayloadWithShareUrl = RecapPayload & {
   features?: RecapPayload['features'] & { shareUrl?: string };
 };
 
-function enrichShareAction(action: SceneAction, shareUrl: string): SceneAction {
-  if (action.type !== ESceneActionType.Share || action.share.url) {
+function enrichShareAction(action: SceneAction, shareUrl: string | undefined): SceneAction {
+  if (action.type !== ESceneActionType.Share || action.share.kind !== EShareKind.Link) {
+    return action;
+  }
+
+  const url = action.share.url || shareUrl;
+  if (!url) {
     return action;
   }
 
   return {
     ...action,
     share: {
-      ...action.share,
-      url: shareUrl,
+      kind: EShareKind.Link,
+      url,
     },
   };
 }
 
 export function enrichShareActionsWithUrl(payload: RecapPayload): RecapPayload {
   const shareUrl = (payload as RecapPayloadWithShareUrl).features?.shareUrl;
-  if (!shareUrl) {
-    return payload;
-  }
-
   return {
     ...payload,
     story: payload.story.map((item) => {

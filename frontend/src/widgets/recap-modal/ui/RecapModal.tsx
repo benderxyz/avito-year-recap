@@ -67,7 +67,7 @@ export function RecapModal(props: RecapModalProps) {
     mode === 'shared' ? props.shareToken : '',
     opened && mode === 'shared',
   );
-  const { data, isLoading, isError, error } = mode === 'private' ? privateQuery : sharedQuery;
+  const { data, isLoading, isError } = mode === 'private' ? privateQuery : sharedQuery;
   const resolvedColorScheme = useResolvedRecapColorScheme();
   const theme = useMemo(() => buildRecapTheme(resolvedColorScheme), [resolvedColorScheme]);
 
@@ -120,7 +120,6 @@ export function RecapModal(props: RecapModalProps) {
         onClose={onClose}
         isLoading={isLoading}
         isError={isError}
-        error={error}
         prepared={prepared}
         theme={theme}
         onEvent={onEvent}

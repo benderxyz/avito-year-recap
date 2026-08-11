@@ -49,7 +49,14 @@ describe('enrichShareActionsWithUrl', () => {
     expect(outro.actions?.[0]).toMatchObject({
       type: ESceneActionType.Share,
       share: {
+        kind: EShareKind.Link,
         url: shareUrl,
+      },
+    });
+    expect(outro.actions?.[0]).not.toMatchObject({
+      share: {
+        title: expect.anything(),
+        text: expect.anything(),
       },
     });
   });
@@ -80,8 +87,10 @@ describe('enrichShareActionsWithUrl', () => {
     } as RecapPayload;
 
     const enriched = enrichShareActionsWithUrl(payload);
-    expect(enriched.story[0].actions?.[0]).toMatchObject({
-      share: { url: existingUrl },
+    expect(enriched.story[0].actions?.[0]).toEqual({
+      type: ESceneActionType.Share,
+      label: 'Поделиться',
+      share: { kind: EShareKind.Link, url: existingUrl },
     });
   });
 

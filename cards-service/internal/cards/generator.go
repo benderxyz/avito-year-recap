@@ -229,13 +229,13 @@ func attachPercentile(scene map[string]any, snapshot metricSnapshot, defsByKey m
 	}
 
 	percentileValue, ok := snapshot[models.MetricKey(def.PercentileKey)]
-	if !ok || percentileValue <= 0 {
+	if !ok || percentileValue <= 0 || percentileValue < def.ComparisonMinPercentile {
 		return scene
 	}
 
 	scene["percentile"] = def.PercentileKey
 	if _, hasTemplate := scene["comparisonTemplate"]; !hasTemplate {
-		scene["comparisonTemplate"] = "Ваш результат выше, чем у {{percentile}}% пользователей"
+		scene["comparisonTemplate"] = "Больше, чем у {{percentile}}% пользователей Авито"
 	}
 	return scene
 }

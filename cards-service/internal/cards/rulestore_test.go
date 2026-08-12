@@ -2,6 +2,7 @@ package cards
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -74,5 +75,29 @@ func TestRuleProviderShouldFailWithoutStore(t *testing.T) {
 
 	if _, err := provider.Get(context.Background()); err == nil {
 		t.Fatal("expected error when rule store is missing")
+	}
+}
+
+func TestResolveComparisonMinPercentileShouldFallBackToDefaultWhenValueIsNull(t *testing.T) {
+	got := resolveComparisonMinPercentile(sql.NullFloat64{Valid: false})
+
+	if got != defaultComparisonMinPercentile {
+		t.Fatalf("want default %v, got %v", defaultComparisonMinPercentile, got)
+	}
+}
+
+func TestResolveComparisonMinPercentileShouldUseStoredValueWhenPresent(t *testing.T) {
+	got := resolveComparisonMinPercentile(sql.NullFloat64{Float64: 75, Valid: true})
+
+	if got != 75 {
+		t.Fatalf("want 75, got %v", got)
+	}
+}
+
+func TestResolveComparisonMinPercentileShouldKeepExplicitZero(t *testing.T) {
+	got := resolveComparisonMinPercentile(sql.NullFloat64{Float64: 0, Valid: true})
+
+	if got != 0 {
+		t.Fatalf("want 0, got %v", got)
 	}
 }

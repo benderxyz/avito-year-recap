@@ -9,7 +9,6 @@ INSERT INTO event_registry (event_type, category, metric_key, unique_mode, uniqu
     ('delivery_order_created', 'counter', 'deliveryOrders', NULL, NULL, 80),
     ('search_performed', 'counter', 'searchQueries', NULL, NULL, 90),
     ('active_items_count', 'gauge', 'activeListings', NULL, NULL, 100),
-    ('seller_rating', 'gauge', 'sellerRating', NULL, NULL, 110),
     ('peak_day_views', 'gauge', 'peakDayViews', NULL, NULL, 120),
     ('first_item_published', 'milestone', 'firstListingAt', NULL, NULL, 130),
     ('first_deal_completed', 'milestone', 'firstDealAt', NULL, NULL, 140),

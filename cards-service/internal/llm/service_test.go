@@ -400,14 +400,14 @@ func TestMetricsSummaryShouldKeepOnlyPublicMetricsMarkedForPrompt(t *testing.T) 
 		"listingsPublished": promptSample(5),
 		"viewsTotal":        promptSample(0),
 		"messagesSent":      promptSample(3),
-		"sellerRating":      promptSample(4.8),
+		"moneyEarned":       promptSample(4.8),
 		"avgReplySeconds":   promptSample(120),
 	}
 	defs := []models.MetricDefinition{
 		promptDefinition("listingsPublished", true, true),
 		promptDefinition("viewsTotal", true, true),
 		promptDefinition("messagesSent", false, true),
-		promptDefinition("sellerRating", false, true),
+		promptDefinition("moneyEarned", false, true),
 		promptDefinition("avgReplySeconds", true, false),
 	}
 
@@ -419,8 +419,8 @@ func TestMetricsSummaryShouldKeepOnlyPublicMetricsMarkedForPrompt(t *testing.T) 
 	if strings.Contains(joined, "viewsTotal") {
 		t.Errorf("zero-valued public metric leaked; got %q", joined)
 	}
-	if strings.Contains(joined, "sellerRating") {
-		t.Errorf("private sellerRating leaked into prompt; got %q", joined)
+	if strings.Contains(joined, "moneyEarned") {
+		t.Errorf("private moneyEarned leaked into prompt; got %q", joined)
 	}
 	if strings.Contains(joined, "messagesSent") {
 		t.Errorf("private messagesSent leaked into prompt; got %q", joined)
@@ -431,7 +431,7 @@ func TestMetricsSummaryShouldKeepOnlyPublicMetricsMarkedForPrompt(t *testing.T) 
 }
 
 func TestMetricsSummaryShouldFailClosedWhenDefinitionsAreEmpty(t *testing.T) {
-	m := clients.Metrics{"listingsPublished": promptSample(5), "sellerRating": promptSample(4.8)}
+	m := clients.Metrics{"listingsPublished": promptSample(5), "moneyEarned": promptSample(4.8)}
 
 	if lines := metricsSummary(m, nil); len(lines) != 0 {
 		t.Errorf("nil definitions should yield no lines, got %v", lines)
@@ -442,12 +442,12 @@ func TestMetricsSummaryShouldFailClosedWhenDefinitionsAreEmpty(t *testing.T) {
 }
 
 func TestMetricsSummaryShouldKeepOneDecimalWhenValueIsFractional(t *testing.T) {
-	m := clients.Metrics{"sellerRating": promptSample(4.8)}
-	defs := []models.MetricDefinition{promptDefinition("sellerRating", true, true)}
+	m := clients.Metrics{"avgReplySeconds": promptSample(4.8)}
+	defs := []models.MetricDefinition{promptDefinition("avgReplySeconds", true, true)}
 
 	lines := metricsSummary(m, defs)
 
-	if len(lines) != 1 || lines[0] != "sellerRating: 4.8" {
+	if len(lines) != 1 || lines[0] != "avgReplySeconds: 4.8" {
 		t.Errorf("expected fractional formatting, got %v", lines)
 	}
 }

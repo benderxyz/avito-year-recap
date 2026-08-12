@@ -144,9 +144,20 @@ func (s *RuleStore) loadRecommendationRules(ctx context.Context) ([]recommendati
 	return rules, nil
 }
 
+// defaultComparisonMinPercentile применяется, когда порог в metric_definitions не задан.
+const defaultComparisonMinPercentile = 50
+
+func resolveComparisonMinPercentile(value sql.NullFloat64) float64 {
+	if !value.Valid {
+		return defaultComparisonMinPercentile
+	}
+	return value.Float64
+}
+
 func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricDefinition, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT key, value_type, currency, is_public, percentile_key, source_key, source_field, include_in_llm
+		SELECT key, value_type, currency, is_public, percentile_key, comparison_min_percentile,
+		       source_key, source_field, include_in_llm
 		FROM metric_definitions
 		WHERE enabled = true
 		ORDER BY sort_order, key
@@ -160,19 +171,22 @@ func (s *RuleStore) loadMetricDefinitions(ctx context.Context) ([]models.MetricD
 	for rows.Next() {
 		var key, valueType, sourceField string
 		var currency, percentileKey, sourceKey sql.NullString
+		var comparisonMin sql.NullFloat64
 		var isPublic, includeInLLM bool
-		if err := rows.Scan(&key, &valueType, &currency, &isPublic, &percentileKey, &sourceKey, &sourceField, &includeInLLM); err != nil {
+		if err := rows.Scan(&key, &valueType, &currency, &isPublic, &percentileKey, &comparisonMin,
+			&sourceKey, &sourceField, &includeInLLM); err != nil {
 			return nil, fmt.Errorf("scan metric_definition: %w", err)
 		}
 		defs = append(defs, models.MetricDefinition{
-			Key:           key,
-			ValueType:     models.MetricType(valueType),
-			Currency:      models.Currency(currency.String),
-			IsPublic:      isPublic,
-			PercentileKey: percentileKey.String,
-			SourceKey:     sourceKey.String,
-			SourceField:   models.MetricSourceField(sourceField),
-			IncludeInLLM:  includeInLLM,
+			Key:                     key,
+			ValueType:               models.MetricType(valueType),
+			Currency:                models.Currency(currency.String),
+			IsPublic:                isPublic,
+			PercentileKey:           percentileKey.String,
+			ComparisonMinPercentile: resolveComparisonMinPercentile(comparisonMin),
+			SourceKey:               sourceKey.String,
+			SourceField:             models.MetricSourceField(sourceField),
+			IncludeInLLM:            includeInLLM,
 		})
 	}
 	if err := rows.Err(); err != nil {

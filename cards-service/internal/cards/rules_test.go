@@ -10,7 +10,7 @@ func TestPredicateEvalShouldRespectOperators(t *testing.T) {
 	snapshot := metricSnapshot{
 		"dealsClosed":       0,
 		"listingsPublished": 5,
-		"sellerRating":      4.8,
+		"activeListings":    8,
 	}
 
 	cases := []struct {
@@ -22,7 +22,7 @@ func TestPredicateEvalShouldRespectOperators(t *testing.T) {
 		{"gt false", predicate{"dealsClosed", opGt, 0}, false},
 		{"gte boundary", predicate{"listingsPublished", opGte, 5}, true},
 		{"eq zero", predicate{"dealsClosed", opEq, 0}, true},
-		{"exists nonzero", predicate{"sellerRating", opExists, 0}, true},
+		{"exists nonzero", predicate{"activeListings", opExists, 0}, true},
 		{"exists zero", predicate{"dealsClosed", opExists, 0}, false},
 		{"unknown metric", predicate{"moneyEarned", opGt, 0}, false},
 	}

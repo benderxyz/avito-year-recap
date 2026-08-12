@@ -212,7 +212,6 @@ func generateEvents(userID uint64, activity float64, from, to time.Time, rng *ra
 
 	activeItems := 1.0
 	peakDayViews := 0.0
-	sellerRating := 3.8 + rng.Float64()*0.8
 	firstDealDone := false
 	dayActiveChance := clampFloat(0.2+0.35*activity, 0.15, 0.85)
 	publishChance := clampFloat(0.12+0.16*activity, 0.05, 0.5)
@@ -286,8 +285,6 @@ func generateEvents(userID uint64, activity float64, from, to time.Time, rng *ra
 			}
 			activeItems = maxFloat(0, activeItems-1)
 			events = append(events, evt(userID, session, "active_items_count", activeItems, "{}", dealAt.Add(6*time.Minute)))
-			sellerRating = minFloat(5, sellerRating+0.02)
-			events = append(events, evt(userID, session, "seller_rating", sellerRating, "{}", dealAt.Add(7*time.Minute)))
 		}
 
 		day = day.AddDate(0, 0, 1)
@@ -327,13 +324,6 @@ func clampFloat(value, min, max float64) float64 {
 
 func maxFloat(a, b float64) float64 {
 	if a > b {
-		return a
-	}
-	return b
-}
-
-func minFloat(a, b float64) float64 {
-	if a < b {
 		return a
 	}
 	return b

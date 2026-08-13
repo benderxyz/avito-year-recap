@@ -1,7 +1,10 @@
-import { Outlet } from '@tanstack/react-router';
 import { AppShell } from '@mantine/core';
+import { Outlet } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 export default function AppLayout() {
+  const { t } = useTranslation();
+
   return (
     <AppShell
       padding="md"
@@ -11,8 +14,8 @@ export default function AppLayout() {
         breakpoint: 'sm',
       }}
     >
-      <AppShell.Header>Logotype</AppShell.Header>
-      <AppShell.Navbar>Navbar</AppShell.Navbar>
+      <AppShell.Header>{t('layout.logo')}</AppShell.Header>
+      <AppShell.Navbar>{t('layout.navbar')}</AppShell.Navbar>
 
       <AppShell.Main>
         <Outlet />

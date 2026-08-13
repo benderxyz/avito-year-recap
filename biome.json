@@ -11,7 +11,8 @@
       "!**/coverage",
       "!**/node_modules",
       "!**/public",
-      "!**/routeTree.gen.ts"
+      "!**/routeTree.gen.ts",
+      "!**/generated/**"
     ]
   },
 

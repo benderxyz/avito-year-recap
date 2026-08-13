@@ -1,4 +1,4 @@
-import type translation from '../../public/locales/en.json';
+import type translation from '@/shared/i18n/locales/en.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {

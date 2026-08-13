@@ -29,6 +29,8 @@ type Config struct {
 	SeedsDir      string
 	SeedOnStart   bool
 
+	AdminAPIToken string
+
 	LLMAPIKey    string
 	LLMEnabled   bool
 	LLMProvider  string
@@ -62,6 +64,8 @@ func Load() Config {
 		MigrationsDir: getEnv("MIGRATIONS_DIR", "migrations"),
 		SeedsDir:      getEnv("SEEDS_DIR", "seeds"),
 		SeedOnStart:   getEnvBool("SEED_ON_START", false),
+
+		AdminAPIToken: getEnv("ADMIN_API_TOKEN", ""),
 
 		LLMAPIKey:    getEnv("OPENAI_API_KEY", ""),
 		LLMEnabled:   getEnvBool("LLM_ENABLED", false),

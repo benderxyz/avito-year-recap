@@ -40,6 +40,12 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 }
 
 var (
-	corsAllowedMethods = []string{http.MethodGet, http.MethodOptions}
-	corsAllowedHeaders = []string{"Content-Type"}
+	corsAllowedMethods = []string{
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodDelete,
+		http.MethodOptions,
+	}
+	corsAllowedHeaders = []string{"Content-Type", "Authorization"}
 )

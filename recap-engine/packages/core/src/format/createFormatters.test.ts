@@ -28,6 +28,20 @@ describe('createFormatters', () => {
     expect(format.currency(99, 'USD')).toBe('$99');
   });
 
+  it('formats dates as day and month by default', () => {
+    expect(createFormatters('ru-RU').date(new Date('2024-03-14'))).toBe('14 марта');
+  });
+
+  it('forwards date format options', () => {
+    expect(
+      createFormatters('en-US').date(new Date('2024-03-14'), {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+    ).toBe('Mar 14, 2024');
+  });
+
   it.each([
     [1, 'товар'],
     [21, 'товар'],

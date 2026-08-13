@@ -69,6 +69,20 @@ description: Виды экранов recap — intro, stat, insight, achievement
 }
 ```
 
+В тексте можно использовать `{{value}}`. Тогда сцене нужно поле `value` с ключом
+метрики, а для метрик типа `date` дополнительно `dateFormat`:
+
+```tsx
+{
+  id: 'first-listing',
+  type: ESceneType.Insight,
+  title: 'Первое объявление',
+  text: 'Первое объявление вы опубликовали {{value}}',
+  value: 'firstListingAt',
+  dateFormat: { day: 'numeric', month: 'long' },
+}
+```
+
 ## achievement — достижение
 
 Показывает бейдж. Если передать `badgeId`, данные подтянутся из prop `badges` компонента `<Recap>`:

@@ -7,10 +7,10 @@ import (
 )
 
 func TestPredicateEvalShouldRespectOperators(t *testing.T) {
-	snapshot := map[models.MetricKey]float64{
-		models.MetricDealsClosed:       0,
-		models.MetricListingsPublished: 5,
-		models.MetricSellerRating:      4.8,
+	snapshot := metricSnapshot{
+		"dealsClosed":       0,
+		"listingsPublished": 5,
+		"activeListings":    8,
 	}
 
 	cases := []struct {
@@ -18,13 +18,13 @@ func TestPredicateEvalShouldRespectOperators(t *testing.T) {
 		p    predicate
 		want bool
 	}{
-		{"gt true", predicate{models.MetricListingsPublished, opGt, 0}, true},
-		{"gt false", predicate{models.MetricDealsClosed, opGt, 0}, false},
-		{"gte boundary", predicate{models.MetricListingsPublished, opGte, 5}, true},
-		{"eq zero", predicate{models.MetricDealsClosed, opEq, 0}, true},
-		{"exists nonzero", predicate{models.MetricSellerRating, opExists, 0}, true},
-		{"exists zero", predicate{models.MetricDealsClosed, opExists, 0}, false},
-		{"unknown metric", predicate{models.MetricMoneyEarned, opGt, 0}, false},
+		{"gt true", predicate{"listingsPublished", opGt, 0}, true},
+		{"gt false", predicate{"dealsClosed", opGt, 0}, false},
+		{"gte boundary", predicate{"listingsPublished", opGte, 5}, true},
+		{"eq zero", predicate{"dealsClosed", opEq, 0}, true},
+		{"exists nonzero", predicate{"activeListings", opExists, 0}, true},
+		{"exists zero", predicate{"dealsClosed", opExists, 0}, false},
+		{"unknown metric", predicate{"moneyEarned", opGt, 0}, false},
 	}
 
 	for _, tc := range cases {
@@ -37,31 +37,31 @@ func TestPredicateEvalShouldRespectOperators(t *testing.T) {
 }
 
 func TestConditionEvalShouldHandleMatchModes(t *testing.T) {
-	snapshot := map[models.MetricKey]float64{
-		models.MetricListingsPublished: 5,
-		models.MetricDealsClosed:       0,
-		models.MetricViewsTotal:        0,
+	snapshot := metricSnapshot{
+		"listingsPublished": 5,
+		"dealsClosed":       0,
+		"viewsTotal":        0,
 	}
 
 	all := condition{match: matchAll, predicates: []predicate{
-		{models.MetricListingsPublished, opGt, 0},
-		{models.MetricDealsClosed, opEq, 0},
+		{"listingsPublished", opGt, 0},
+		{"dealsClosed", opEq, 0},
 	}}
 	if !all.eval(snapshot) {
 		t.Fatal("matchAll should pass when every predicate holds")
 	}
 
 	anyMatch := condition{match: matchAny, predicates: []predicate{
-		{models.MetricViewsTotal, opGt, 0},
-		{models.MetricListingsPublished, opGt, 0},
+		{"viewsTotal", opGt, 0},
+		{"listingsPublished", opGt, 0},
 	}}
 	if !anyMatch.eval(snapshot) {
 		t.Fatal("matchAny should pass when at least one predicate holds")
 	}
 
 	none := condition{match: matchAny, predicates: []predicate{
-		{models.MetricViewsTotal, opGt, 0},
-		{models.MetricDealsClosed, opGt, 0},
+		{"viewsTotal", opGt, 0},
+		{"dealsClosed", opGt, 0},
 	}}
 	if none.eval(snapshot) {
 		t.Fatal("matchAny should fail when no predicate holds")
@@ -94,21 +94,43 @@ func TestVisibilityAllowsShouldGateByMode(t *testing.T) {
 	}
 }
 
-func TestMetricsSnapshotShouldCoverEnum(t *testing.T) {
-	snapshot := metricsSnapshot(fullMetrics())
+func TestMetricsSnapshotShouldCoverEveryDefinitionWithData(t *testing.T) {
+	defs := testMetricDefinitions()
+	snapshot := metricsSnapshot(fullMetrics(), defs)
 
-	keys := []models.MetricKey{
-		models.MetricListingsPublished, models.MetricViewsTotal, models.MetricFavoritesReceived,
-		models.MetricMessagesSent, models.MetricDealsClosed, models.MetricMoneyEarned,
-		models.MetricMoneySaved, models.MetricDaysActive, models.MetricPeakDayViews,
-		models.MetricSearchQueries, models.MetricCategoriesTried, models.MetricDeliveryOrders,
-		models.MetricActiveListings, models.MetricSellerRating, models.MetricAvgReplySeconds,
-		models.MetricFirstListingAt, models.MetricFirstDealAt,
-	}
-
-	for _, key := range keys {
-		if _, ok := snapshot[key]; !ok {
-			t.Fatalf("snapshot missing metric key %q", key)
+	for _, def := range defs {
+		if _, ok := snapshot[models.MetricKey(def.Key)]; !ok {
+			t.Fatalf("snapshot missing metric key %q", def.Key)
 		}
+	}
+}
+
+func TestMetricsSnapshotShouldReadPercentileFromSourceMetric(t *testing.T) {
+	defs := []models.MetricDefinition{{
+		Key:         "listingsPercentile",
+		ValueType:   models.MetricTypePercentile,
+		SourceKey:   "listingsPublished",
+		SourceField: models.MetricSourcePercentile,
+	}}
+
+	snapshot := metricsSnapshot(fullMetrics(), defs)
+
+	if snapshot["listingsPercentile"] != 88 {
+		t.Fatalf("expected percentile 88 from source metric, got %v", snapshot["listingsPercentile"])
+	}
+}
+
+func TestMetricsSnapshotShouldSkipMetricWhenSampleIsMissing(t *testing.T) {
+	defs := []models.MetricDefinition{{
+		Key:         "unknownMetric",
+		ValueType:   models.MetricTypeNumber,
+		SourceKey:   "unknownMetric",
+		SourceField: models.MetricSourceValue,
+	}}
+
+	snapshot := metricsSnapshot(fullMetrics(), defs)
+
+	if _, ok := snapshot["unknownMetric"]; ok {
+		t.Fatal("did not expect a snapshot entry without analytics data")
 	}
 }

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-
-	"cards-service/internal/clients"
 )
 
 const maxRecommendations = 3
@@ -21,9 +19,7 @@ type recommendationRule struct {
 	when      condition
 }
 
-func buildRecommendations(rules []recommendationRule, m clients.Metrics, productBaseURL string) []map[string]any {
-	snapshot := metricsSnapshot(m)
-
+func buildRecommendations(rules []recommendationRule, snapshot metricSnapshot, productBaseURL string) []map[string]any {
 	matched := make([]recommendationRule, 0, len(rules))
 	for _, rule := range rules {
 		if rule.when.eval(snapshot) {

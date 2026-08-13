@@ -46,7 +46,30 @@ func main() {
 		log.Fatalf("migrate: %v", err)
 	}
 
-	registry := events.NewRegistry()
+	postgres, err := db.ConnectPostgres(ctx, cfg.PostgresDSN())
+	if err != nil {
+		log.Fatalf("connect postgres: %v", err)
+	}
+	defer func() {
+		_ = postgres.Close()
+	}()
+
+	if err := postgres.Migrate(ctx, cfg.PGMigrationsDir); err != nil {
+		log.Fatalf("migrate postgres: %v", err)
+	}
+
+	if cfg.SeedOnStart {
+		if err := postgres.Seed(ctx, cfg.PGSeedsDir); err != nil {
+			log.Fatalf("seed postgres: %v", err)
+		}
+	}
+
+	registryStore := events.NewRegistryStore(postgres.DB())
+	registry := events.NewRegistryProvider(registryStore, cfg.RegistryCacheTTL)
+	if _, err := registry.Get(ctx); err != nil {
+		log.Fatalf("load event registry: %v", err)
+	}
+
 	ingester := events.NewIngester(client.Conn(), registry)
 	querier := aggregation.NewClickHouseQuerier(client.Conn())
 	timezones := clients.NewUserClient(cfg.UserServiceURL)

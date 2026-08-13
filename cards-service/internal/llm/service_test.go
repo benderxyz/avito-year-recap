@@ -380,32 +380,75 @@ func TestInsertInsightWithoutIntroGoesToFront(t *testing.T) {
 	}
 }
 
-func TestMetricsSummaryFiltersToPublicKeys(t *testing.T) {
-	m := clients.Metrics{ListingsPublished: 5, ViewsTotal: 0, MessagesSent: 3, SellerRating: 4.8}
-	publicKeys := map[string]bool{"listingsPublished": true, "viewsTotal": true}
-	lines := metricsSummary(m, publicKeys)
-	joined := strings.Join(lines, "\n")
+func promptSample(value float64) clients.MetricSample {
+	return clients.MetricSample{Value: &value}
+}
+
+func promptDefinition(key string, isPublic, includeInLLM bool) models.MetricDefinition {
+	return models.MetricDefinition{
+		Key:          key,
+		ValueType:    models.MetricTypeNumber,
+		IsPublic:     isPublic,
+		SourceKey:    key,
+		SourceField:  models.MetricSourceValue,
+		IncludeInLLM: includeInLLM,
+	}
+}
+
+func TestMetricsSummaryShouldKeepOnlyPublicMetricsMarkedForPrompt(t *testing.T) {
+	m := clients.Metrics{
+		"listingsPublished": promptSample(5),
+		"viewsTotal":        promptSample(0),
+		"messagesSent":      promptSample(3),
+		"moneyEarned":       promptSample(4.8),
+		"avgReplySeconds":   promptSample(120),
+	}
+	defs := []models.MetricDefinition{
+		promptDefinition("listingsPublished", true, true),
+		promptDefinition("viewsTotal", true, true),
+		promptDefinition("messagesSent", false, true),
+		promptDefinition("moneyEarned", false, true),
+		promptDefinition("avgReplySeconds", true, false),
+	}
+
+	joined := strings.Join(metricsSummary(m, defs), "\n")
+
 	if !strings.Contains(joined, "listingsPublished: 5") {
 		t.Errorf("missing public listingsPublished; got %q", joined)
 	}
 	if strings.Contains(joined, "viewsTotal") {
 		t.Errorf("zero-valued public metric leaked; got %q", joined)
 	}
-	if strings.Contains(joined, "sellerRating") {
-		t.Errorf("private sellerRating leaked into prompt; got %q", joined)
+	if strings.Contains(joined, "moneyEarned") {
+		t.Errorf("private moneyEarned leaked into prompt; got %q", joined)
 	}
 	if strings.Contains(joined, "messagesSent") {
 		t.Errorf("private messagesSent leaked into prompt; got %q", joined)
 	}
+	if strings.Contains(joined, "avgReplySeconds") {
+		t.Errorf("metric not marked for prompt leaked; got %q", joined)
+	}
 }
 
-func TestMetricsSummaryFailClosedOnNilKeys(t *testing.T) {
-	m := clients.Metrics{ListingsPublished: 5, SellerRating: 4.8}
+func TestMetricsSummaryShouldFailClosedWhenDefinitionsAreEmpty(t *testing.T) {
+	m := clients.Metrics{"listingsPublished": promptSample(5), "moneyEarned": promptSample(4.8)}
+
 	if lines := metricsSummary(m, nil); len(lines) != 0 {
-		t.Errorf("nil publicKeys should yield no lines, got %v", lines)
+		t.Errorf("nil definitions should yield no lines, got %v", lines)
 	}
-	if lines := metricsSummary(m, map[string]bool{}); len(lines) != 0 {
-		t.Errorf("empty publicKeys should yield no lines, got %v", lines)
+	if lines := metricsSummary(m, []models.MetricDefinition{}); len(lines) != 0 {
+		t.Errorf("empty definitions should yield no lines, got %v", lines)
+	}
+}
+
+func TestMetricsSummaryShouldKeepOneDecimalWhenValueIsFractional(t *testing.T) {
+	m := clients.Metrics{"avgReplySeconds": promptSample(4.8)}
+	defs := []models.MetricDefinition{promptDefinition("avgReplySeconds", true, true)}
+
+	lines := metricsSummary(m, defs)
+
+	if len(lines) != 1 || lines[0] != "avgReplySeconds: 4.8" {
+		t.Errorf("expected fractional formatting, got %v", lines)
 	}
 }
 

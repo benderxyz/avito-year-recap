@@ -10,13 +10,17 @@ import (
 	"analytics-service/internal/events"
 )
 
+type registryProvider interface {
+	Get(ctx context.Context) (*events.Registry, error)
+}
+
 type Service struct {
-	registry *events.Registry
+	registry registryProvider
 	db       FloatQuerier
 	globals  *globalStats
 }
 
-func NewService(registry *events.Registry, db FloatQuerier) *Service {
+func NewService(registry registryProvider, db FloatQuerier) *Service {
 	return &Service{
 		registry: registry,
 		db:       db,
@@ -39,8 +43,13 @@ func (s *Service) Metrics(
 		timezone = "UTC"
 	}
 
+	registry, err := s.registry.Get(ctx)
+	if err != nil {
+		return MetricsSnapshot{}, fmt.Errorf("event registry unavailable: %w", err)
+	}
+
 	result := make(map[string]MetricValue)
-	for eventType, cfg := range s.registry.All() {
+	for eventType, cfg := range registry.All() {
 		aggregator, err := NewAggregator(s.db, cfg)
 		if err != nil {
 			return MetricsSnapshot{}, fmt.Errorf("factory for %s: %w", eventType, err)

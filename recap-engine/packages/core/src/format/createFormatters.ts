@@ -11,8 +11,14 @@ function pluralRu(n: number, forms: PluralForms): string {
   return forms.many;
 }
 
+const defaultDateFormat: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+
 export function createFormatters(locale = 'ru-RU'): Formatters {
   return {
+    date: (value, opts) =>
+      new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...(opts ?? defaultDateFormat) }).format(
+        value,
+      ),
     number: (count, opts) => new Intl.NumberFormat(locale, opts).format(count),
     currency: (count, currency = 'RUB') =>
       new Intl.NumberFormat(locale, {

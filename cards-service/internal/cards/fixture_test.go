@@ -5,29 +5,71 @@ import (
 )
 
 func testMetricDefinitions() []models.MetricDefinition {
+	number := func(key string, isPublic bool, percentileKey string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:                     key,
+			ValueType:               models.MetricTypeNumber,
+			IsPublic:                isPublic,
+			PercentileKey:           percentileKey,
+			ComparisonMinPercentile: defaultComparisonMinPercentile,
+			SourceKey:               key,
+			SourceField:             models.MetricSourceValue,
+			IncludeInLLM:            true,
+		}
+	}
+
+	percentile := func(key, sourceKey string, isPublic bool) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:         key,
+			ValueType:   models.MetricTypePercentile,
+			IsPublic:    isPublic,
+			SourceKey:   sourceKey,
+			SourceField: models.MetricSourcePercentile,
+		}
+	}
+
+	money := func(key string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:          key,
+			ValueType:    models.MetricTypeMoney,
+			Currency:     models.CurrencyRUB,
+			SourceKey:    key,
+			SourceField:  models.MetricSourceValue,
+			IncludeInLLM: true,
+		}
+	}
+
+	date := func(key string) models.MetricDefinition {
+		return models.MetricDefinition{
+			Key:         key,
+			ValueType:   models.MetricTypeDate,
+			SourceKey:   key,
+			SourceField: models.MetricSourceValue,
+		}
+	}
+
 	return []models.MetricDefinition{
-		{Key: "listingsPublished", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "listingsPercentile"},
-		{Key: "listingsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "viewsTotal", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "viewsPercentile"},
-		{Key: "viewsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "favoritesReceived", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "favoritesPercentile"},
-		{Key: "favoritesPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "messagesSent", ValueType: models.MetricTypeNumber, IsPublic: false, PercentileKey: "messagesPercentile"},
-		{Key: "messagesPercentile", ValueType: models.MetricTypePercentile, IsPublic: false},
-		{Key: "dealsClosed", ValueType: models.MetricTypeNumber, IsPublic: true, PercentileKey: "dealsPercentile"},
-		{Key: "dealsPercentile", ValueType: models.MetricTypePercentile, IsPublic: true},
-		{Key: "moneyEarned", ValueType: models.MetricTypeMoney, Currency: models.CurrencyRUB, IsPublic: false},
-		{Key: "moneySaved", ValueType: models.MetricTypeMoney, Currency: models.CurrencyRUB, IsPublic: false},
-		{Key: "daysActive", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "peakDayViews", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "categoriesTried", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "searchQueries", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "deliveryOrders", ValueType: models.MetricTypeNumber, IsPublic: true},
-		{Key: "activeListings", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "sellerRating", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "avgReplySeconds", ValueType: models.MetricTypeNumber, IsPublic: false},
-		{Key: "firstListingAt", ValueType: models.MetricTypeString, IsPublic: false},
-		{Key: "firstDealAt", ValueType: models.MetricTypeString, IsPublic: false},
+		number("listingsPublished", true, "listingsPercentile"),
+		percentile("listingsPercentile", "listingsPublished", true),
+		number("viewsTotal", true, "viewsPercentile"),
+		percentile("viewsPercentile", "viewsTotal", true),
+		number("favoritesReceived", true, "favoritesPercentile"),
+		percentile("favoritesPercentile", "favoritesReceived", true),
+		number("messagesSent", false, "messagesPercentile"),
+		percentile("messagesPercentile", "messagesSent", false),
+		number("dealsClosed", true, "dealsPercentile"),
+		percentile("dealsPercentile", "dealsClosed", true),
+		money("moneyEarned"),
+		money("moneySaved"),
+		number("daysActive", true, ""),
+		number("peakDayViews", true, ""),
+		number("categoriesTried", true, ""),
+		number("searchQueries", true, ""),
+		number("deliveryOrders", true, ""),
+		number("activeListings", false, ""),
+		number("avgReplySeconds", false, ""),
+		date("firstListingAt"),
+		date("firstDealAt"),
 	}
 }
 
@@ -42,16 +84,16 @@ func testStoryRules() []storyRule {
 
 	return []storyRule{
 		must("both", "", "", 0, false, `{"id":"intro","type":"intro","title":"{{displayName}}, ваш {{year}} на Авито","subtitle":"Год находок, сделок и удачных объявлений","actions":[{"type":"next","label":"Смотреть итоги"}]}`),
-		must("both", "listingsPublished", "gt", 0, true, `{"id":"stat-listings","type":"stat","value":"listingsPublished","unit":{"one":"объявление","few":"объявления","many":"объявлений"},"title":"вы опубликовали","eyebrow":"За год"}`),
-		must("both", "viewsTotal", "gt", 0, true, `{"id":"stat-views","type":"stat","value":"viewsTotal","title":"собрали ваши объявления"}`),
-		must("both", "favoritesReceived", "gt", 0, true, `{"id":"stat-favorites","type":"stat","value":"favoritesReceived","title":"в избранное"}`),
-		must("private", "messagesSent", "gt", 0, true, `{"id":"stat-messages","type":"stat","value":"messagesSent","title":"в чатах с покупателями"}`),
-		must("both", "dealsClosed", "gt", 0, true, `{"id":"stat-deals","type":"stat","value":"dealsClosed","title":"успешно закрыто"}`),
+		must("both", "listingsPublished", "gt", 0, true, `{"id":"stat-listings","type":"stat","value":"listingsPublished","unit":{"one":"объявление","few":"объявления","many":"объявлений"},"title":"вы опубликовали","eyebrow":"За год","comparisonTemplate":"Объявлений у вас больше, чем у {{percentile}}% продавцов"}`),
+		must("both", "viewsTotal", "gt", 0, true, `{"id":"stat-views","type":"stat","value":"viewsTotal","title":"собрали ваши объявления","comparisonTemplate":"Ваши объявления смотрели чаще, чем у {{percentile}}% продавцов"}`),
+		must("both", "favoritesReceived", "gt", 0, true, `{"id":"stat-favorites","type":"stat","value":"favoritesReceived","title":"в избранное","comparisonTemplate":"В избранное вас добавляли чаще, чем у {{percentile}}% продавцов"}`),
+		must("private", "messagesSent", "gt", 0, true, `{"id":"stat-messages","type":"stat","value":"messagesSent","title":"в чатах с покупателями","comparisonTemplate":"Вы переписывались активнее, чем {{percentile}}% пользователей"}`),
+		must("both", "dealsClosed", "gt", 0, true, `{"id":"stat-deals","type":"stat","value":"dealsClosed","title":"успешно закрыто","comparisonTemplate":"Сделок больше, чем у {{percentile}}% продавцов"}`),
 		must("private", "moneyEarned", "gt", 0, true, `{"id":"stat-earned","type":"stat","value":"moneyEarned","title":"заработали на продажах"}`),
 		must("private", "moneySaved", "gt", 0, true, `{"id":"stat-saved","type":"stat","value":"moneySaved","title":"сэкономили на покупках"}`),
 		must("both", "daysActive", "gt", 0, true, `{"id":"blocks-days-active","type":"blocks","blocks":[{"type":"stat","value":"daysActive","title":"были активны"}]}`),
 		must("both", "peakDayViews", "gt", 0, true, `{"id":"stat-peak-views","type":"stat","value":"peakDayViews","title":"за один день"}`),
-		must("both", "categoriesTried", "gt", 0, true, `{"id":"stat-categories","type":"stat","value":"categoriesTried","title":"вы попробовали"}`),
+		must("both", "categoriesTried", "gt", 0, true, `{"id":"stat-categories","type":"blocks","blocks":[{"type":"stat","value":"categoriesTried","unit":{"one":"категория","few":"категории","many":"категорий"},"title":"вы открывали за год","eyebrow":"Кругозор"},{"type":"callout","text":"Заглядывали в разные разделы, от электроники до садовой мебели"}]}`),
 		must("both", "searchQueries", "gt", 0, true, `{"id":"blocks-search","type":"blocks","blocks":[{"type":"stat","value":"searchQueries","title":"запросов за год"}]}`),
 		must("both", "deliveryOrders", "gt", 0, true, `{"id":"stat-delivery","type":"stat","value":"deliveryOrders","title":"через Авито Доставку"}`),
 		must("private", "activeListings", "gt", 0, true, `{"id":"stat-active-listings","type":"stat","value":"activeListings","title":"сейчас активны"}`),

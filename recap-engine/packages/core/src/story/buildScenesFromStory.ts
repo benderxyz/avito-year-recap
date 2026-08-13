@@ -1,8 +1,9 @@
-import { metricNumber } from '../payload/metrics';
+import { metricDate, metricNumber } from '../payload/metrics';
 import { defineScenes } from '../scenes/defineScenes';
 import { ESceneActionType } from '../types/actions';
+import type { RecapContext } from '../types/context';
 import { EMotionPreset } from '../types/motion';
-import type { RecapPayload } from '../types/payload';
+import { EMetricType, type RecapPayload } from '../types/payload';
 import {
   ESceneBlockType,
   ESceneType,
@@ -16,14 +17,46 @@ function narrative(payload: RecapPayload, id: string) {
   return payload.narrative?.scenes?.[id];
 }
 
-function fillMoneyTemplate(
+function formatMetricValue(
+  ctx: RecapContext<RecapPayload>,
+  metricKey: string,
+  dateFormat: Intl.DateTimeFormatOptions | undefined,
+): string | null {
+  const metric = ctx.data.metrics[metricKey];
+
+  if (!metric) return null;
+
+  switch (metric.type) {
+    case EMetricType.Money:
+      return ctx.format.currency(metric.value, metric.currency);
+    case EMetricType.Number:
+    case EMetricType.Percentile:
+    case EMetricType.Ratio:
+      return ctx.format.number(metric.value);
+    case EMetricType.Date: {
+      const parsed = metricDate(ctx.data.metrics, metricKey);
+      return parsed ? ctx.format.date(parsed, dateFormat) : null;
+    }
+    case EMetricType.String:
+      return metric.value;
+    default:
+      return null;
+  }
+}
+
+function fillValueTemplate(
   template: string,
-  ctx: { data: RecapPayload; format: { currency: (n: number) => string } },
+  ctx: RecapContext<RecapPayload>,
   metricKey: string | undefined,
+  dateFormat?: Intl.DateTimeFormatOptions,
 ): string {
   if (!metricKey || !template.includes('{{value}}')) return template;
-  const amount = metricNumber(ctx.data.metrics, metricKey);
-  return template.replace(/\{\{value\}\}/g, ctx.format.currency(amount));
+
+  const formatted = formatMetricValue(ctx, metricKey, dateFormat);
+
+  if (formatted === null) return template;
+
+  return template.replace(/\{\{value\}\}/g, formatted);
 }
 
 function mapStatBlock(block: StoryStatBlock): StatBlock<RecapPayload> {
@@ -119,8 +152,14 @@ function mapStoryItem(item: StoryItem, payload: RecapPayload): SceneDefinition<R
         type: ESceneType.Insight,
         linksTo: item.linksTo,
         blockMotion: item.blockMotion ?? EMotionPreset.StaggerText,
-        title: (ctx) => narrative(ctx.data, item.id)?.title ?? item.title ?? '',
-        text: (ctx) => narrative(ctx.data, item.id)?.body ?? item.text ?? '',
+        title: (ctx) => {
+          const raw = narrative(ctx.data, item.id)?.title ?? item.title ?? '';
+          return fillValueTemplate(raw, ctx, item.value, item.dateFormat);
+        },
+        text: (ctx) => {
+          const raw = narrative(ctx.data, item.id)?.body ?? item.text ?? '';
+          return fillValueTemplate(raw, ctx, item.value, item.dateFormat);
+        },
       };
 
     case ESceneType.Achievement:
@@ -142,11 +181,11 @@ function mapStoryItem(item: StoryItem, payload: RecapPayload): SceneDefinition<R
         title: (ctx) => narrative(ctx.data, item.id)?.title ?? item.title ?? '',
         text: (ctx) => {
           const raw = narrative(ctx.data, item.id)?.body ?? item.text ?? '';
-          return fillMoneyTemplate(raw, ctx, item.value);
+          return fillValueTemplate(raw, ctx, item.value, item.dateFormat);
         },
         callout: (ctx) => {
           const raw = item.callout ?? narrative(ctx.data, item.id)?.comparison ?? '';
-          return fillMoneyTemplate(raw, ctx, item.value);
+          return fillValueTemplate(raw, ctx, item.value, item.dateFormat);
         },
       };
 

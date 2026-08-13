@@ -7,6 +7,10 @@ import (
 	"cards-service/internal/clients"
 )
 
+func testSnapshot(m clients.Metrics) metricSnapshot {
+	return metricsSnapshot(m, testMetricDefinitions())
+}
+
 func recoIDs(scenes []map[string]any) []string {
 	ids := make([]string, 0, len(scenes))
 	for _, scene := range scenes {
@@ -18,7 +22,7 @@ func recoIDs(scenes []map[string]any) []string {
 }
 
 func TestBuildRecommendationsShouldCapAndRankByPriority(t *testing.T) {
-	scenes := buildRecommendations(testRecommendationRules(), fullMetrics(), "https://www.avito.ru")
+	scenes := buildRecommendations(testRecommendationRules(), testSnapshot(fullMetrics()), "https://www.avito.ru")
 
 	if len(scenes) == 0 {
 		t.Fatal("expected recommendations for an active user")
@@ -34,9 +38,9 @@ func TestBuildRecommendationsShouldCapAndRankByPriority(t *testing.T) {
 }
 
 func TestBuildRecommendationsShouldSuggestPromotionForSellerWithoutDeals(t *testing.T) {
-	m := clients.Metrics{ListingsPublished: 5, DealsClosed: 0}
+	m := clients.Metrics{"listingsPublished": sample(5), "dealsClosed": sample(0)}
 
-	ids := recoIDs(buildRecommendations(testRecommendationRules(), m, "https://www.avito.ru"))
+	ids := recoIDs(buildRecommendations(testRecommendationRules(), testSnapshot(m), "https://www.avito.ru"))
 
 	if ids[0] != "reco-resume-listings" {
 		t.Fatalf("expected promotion recommendation first for seller without deals, got %v", ids)
@@ -44,7 +48,7 @@ func TestBuildRecommendationsShouldSuggestPromotionForSellerWithoutDeals(t *test
 }
 
 func TestBuildRecommendationsShouldSuggestFirstListingForInactiveUser(t *testing.T) {
-	ids := recoIDs(buildRecommendations(testRecommendationRules(), clients.Metrics{}, "https://www.avito.ru"))
+	ids := recoIDs(buildRecommendations(testRecommendationRules(), testSnapshot(clients.Metrics{}), "https://www.avito.ru"))
 
 	found := false
 	for _, id := range ids {
@@ -58,7 +62,7 @@ func TestBuildRecommendationsShouldSuggestFirstListingForInactiveUser(t *testing
 }
 
 func TestBuildRecommendationsShouldBuildAbsoluteAvitoLinks(t *testing.T) {
-	scenes := buildRecommendations(testRecommendationRules(), clients.Metrics{FavoritesReceived: 3}, "https://www.avito.ru")
+	scenes := buildRecommendations(testRecommendationRules(), testSnapshot(clients.Metrics{"favoritesReceived": sample(3)}), "https://www.avito.ru")
 
 	actions, ok := scenes[0]["actions"].([]map[string]any)
 	if !ok || len(actions) == 0 {

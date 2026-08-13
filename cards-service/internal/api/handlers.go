@@ -135,11 +135,11 @@ func (h *Handler) buildRecap(
 
 	if h.llm != nil {
 		enriched, report, err := h.llm.Enrich(r.Context(), llm.EnrichInput{
-			ID:               id,
-			Year:             year,
-			Mode:             mode,
-			Metrics:          metrics,
-			PublicMetricKeys: ruleSet.PublicMetricKeys(),
+			ID:          id,
+			Year:        year,
+			Mode:        mode,
+			Metrics:     metrics,
+			Definitions: ruleSet.MetricDefinitions(),
 		}, payload)
 		if err != nil {
 			slog.Warn("llm enrich failed, serving base recap", "error", err, "user_id", id, "year", year)

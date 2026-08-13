@@ -33,6 +33,8 @@ export type StoryInsightItem = StoryItemBase & {
   type: ESceneType.Insight;
   text?: string;
   title?: string;
+  value?: string;
+  dateFormat?: Intl.DateTimeFormatOptions;
   linksTo?: string;
   blockMotion?: EMotionPreset.StaggerText | EMotionPreset.None;
 };
@@ -52,6 +54,7 @@ export type StoryUpsellItem = StoryItemBase & {
   text?: string;
   callout?: string;
   value?: string;
+  dateFormat?: Intl.DateTimeFormatOptions;
   blockMotion?: EMotionPreset.CalloutIn | EMotionPreset.None;
 };
 

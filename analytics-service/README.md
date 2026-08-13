@@ -17,7 +17,7 @@ For `unique`
 - payload mode reads `JSONExtractString(payload, field)`
 - day mode counts distinct local calendar days via user timezone
 
-Event types are Avito marketplace actions (`item_published`, `deal_completed`, `category_opened`, …). See `internal/events/registry.go`.
+Event types are Avito marketplace actions (`item_published`, `deal_completed`, `category_opened`, …). They are configured in the Postgres table `event_registry`, one row per event type with its category, target metric key and unique mode. Nothing is hardcoded in Go, so a new event type is a new row. The registry is read through a TTL-cached provider (`REGISTRY_CACHE_TTL_SECONDS`, default 60), and an unknown event type is rejected on ingest.
 
 ## API
 
@@ -51,6 +51,8 @@ Example:
 
 Env vars: `CLICKHOUSE_HOST`, `CLICKHOUSE_PORT` (native, default `9000`), `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`, `USER_SERVICE_URL` (default `http://localhost:8082`), `SERVER_PORT`, `MIGRATIONS_DIR`.
 
+The event registry lives in Postgres: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE` (default `analytics`), `POSTGRES_SSLMODE`, `PG_MIGRATIONS_DIR`, `PG_SEEDS_DIR`, `SEED_ON_START`, `REGISTRY_CACHE_TTL_SECONDS`.
+
 Timezone for metrics comes from user-service via `GET /users/{userID}`. Missing user falls back to UTC.
 
-Migrations run on startup from `migrations/`.
+ClickHouse migrations run on startup from `migrations/`, Postgres migrations from `migrations-pg/`. Registry seed rows in `seeds/` apply when `SEED_ON_START=true` and are idempotent.

@@ -1,7 +1,7 @@
 export { createFormatters } from './format/createFormatters';
 export { fillTemplate, resolveUnit } from './format/templates';
 
-export { metricList, metricNumber, metricString } from './payload';
+export { metricDate, metricList, metricNumber, metricString } from './payload';
 export {
   createInitialPlayerState,
   DEFAULT_MOTION_DURATION_MS,

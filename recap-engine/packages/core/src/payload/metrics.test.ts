@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 
 import { EMetricType, type MetricValue } from '../types/payload';
-import { metricList, metricNumber, metricString } from './metrics';
+import { metricDate, metricList, metricNumber, metricString } from './metrics';
 
 const metrics: Record<string, MetricValue> = {
   number: { type: EMetricType.Number, value: 12 },
@@ -9,6 +9,8 @@ const metrics: Record<string, MetricValue> = {
   percentile: { type: EMetricType.Percentile, value: 87 },
   ratio: { type: EMetricType.Ratio, value: 0.5 },
   string: { type: EMetricType.String, value: 'Москва' },
+  date: { type: EMetricType.Date, value: '2024-03-14' },
+  brokenDate: { type: EMetricType.Date, value: 'не дата' },
   list: {
     type: EMetricType.List,
     value: [{ id: 'one', label: 'Первый', value: 1, imageUrl: '/one.png' }],
@@ -40,6 +42,18 @@ describe('metricString', () => {
   it('returns defaults for missing and non-string metrics', () => {
     expect(metricString(metrics, 'missing')).toBe('');
     expect(metricString(metrics, 'number', 'нет')).toBe('нет');
+  });
+});
+
+describe('metricDate', () => {
+  it('parses an ISO date metric', () => {
+    expect(metricDate(metrics, 'date')?.toISOString()).toBe('2024-03-14T00:00:00.000Z');
+  });
+
+  it('returns null for missing, non-date and unparsable metrics', () => {
+    expect(metricDate(metrics, 'missing')).toBeNull();
+    expect(metricDate(metrics, 'string')).toBeNull();
+    expect(metricDate(metrics, 'brokenDate')).toBeNull();
   });
 });
 

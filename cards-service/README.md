@@ -69,7 +69,8 @@ recap's `features.shareUrl`).
   },
   "metrics": {
     "listingsPublished": { "type": "number", "value": 12 },
-    "moneyEarned": { "type": "money", "value": 150000, "currency": "RUB" }
+    "moneyEarned": { "type": "money", "value": 150000, "currency": "RUB" },
+    "firstListingAt": { "type": "date", "value": "2026-01-14" }
   },
   "badges": [
     { "id": "active_user", "title": "…", "description": "…", "iconUrl": "/badges/active_user.svg" }
@@ -90,13 +91,38 @@ in private mode when sharing is enabled.
 Badges, story scenes, recommendations, metric definitions come from Postgres.
 Built-in fallback rules are gone. Postgres is required.
 
+No metric key is hardcoded in Go. Every metric is a row in `metric_definitions`:
+
+| column | meaning |
+| --- | --- |
+| `key` | key in the payload `metrics` map |
+| `value_type` | `number`, `money`, `percentile`, `ratio`, `string`, `date` |
+| `source_key` | key in the analytics-service response, defaults to `key` |
+| `source_field` | which field of the analytics metric to read: `value`, `percentile`, `share` |
+| `percentile_key` | metric that holds the percentile for comparison scenes |
+| `comparison_min_percentile` | minimum percentile at which the comparison line is shown for this metric; empty means the service default of 50; percentile 0 is never shown regardless of the threshold |
+| `is_public` | whether the metric survives in a public share card |
+| `include_in_llm` | whether the metric goes into the LLM prompt |
+
+A `date` metric is stored upstream as a unix timestamp and serialized as an ISO
+date (`2026-01-14`). Formatting for humans happens in the frontend through
+`Intl.DateTimeFormat`, so the `{{value}}` placeholder in scene copy is left
+untouched by the backend and resolved by recap-engine using the scene `value`
+key. Adding a metric means adding a row here plus a row in the analytics-service
+`event_registry`, with no code change.
+
 On startup the service migrates schema from `migrations/`, then loads rules
 through a TTL-cached provider. Missing `POSTGRES_HOST`, connect failure, or
 migrate failure stops the process.
 
 Seed rows live in `seeds/` (separate from schema migrations). They apply on
-startup only when `SEED_ON_START=true`. Seeds use `ON CONFLICT DO NOTHING`, so
-restarts stay idempotent.
+startup only when `SEED_ON_START=true`, and they are declarative: each run
+upserts every row via `ON CONFLICT ... DO UPDATE` and deletes any row not
+present in the seed file (`DELETE ... WHERE id NOT IN (...)`), so the tables
+end up exactly matching what the seed files describe. One consequence
+matters for anyone operating the service: editing data directly in the
+database does not survive a restart, since the next seed run reverts it to
+whatever is in `seeds/`.
 
 ## LLM enrichment
 
@@ -109,11 +135,11 @@ otherwise the base recap is served unchanged.
 On timeout, transport error, provider error, or unparsable output, the original
 payload is returned and the failure is logged. The base recap flow is untouched.
 
-**Privacy: only public metrics leave the service.** The prompt is built from a
-public allowlist derived from `metric_definitions.is_public`
-([`RuleSet.PublicMetricKeys()`](internal/cards/rules.go)) — the single source of
+**Privacy: only public metrics leave the service.** The prompt is built from
+metric definitions that are both `is_public` and `include_in_llm`
+([`RuleSet.MetricDefinitions()`](internal/cards/rules.go)) — the single source of
 truth shared with share cards. Private metrics (e.g. `moneyEarned`, `moneySaved`,
-`sellerRating`, `messagesSent`, `activeListings`) are **never** sent to the
+`messagesSent`, `activeListings`) are **never** sent to the
 provider, in either mode. The filter is **fail-closed**: if the allowlist is
 empty, no metrics are sent at all. Model output is additionally validated
 ([validate.go](internal/llm/validate.go)) to strip digits, newlines, and

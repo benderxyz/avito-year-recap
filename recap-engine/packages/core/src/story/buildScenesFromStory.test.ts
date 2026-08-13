@@ -235,6 +235,79 @@ describe('buildScenesFromStory', () => {
     expect(upsell.blockMotion).toBe(EMotionPreset.CalloutIn);
   });
 
+  it.each(['firstListing', 'sales', 'saving', 'city'])(
+    'fills the value placeholder in insight copy for the %s metric',
+    (key) => {
+      const payload = makePayload({
+        metrics: {
+          sales: { type: EMetricType.Number, value: 42 },
+          saving: { type: EMetricType.Money, value: 1250, currency: 'RUB' },
+          city: { type: EMetricType.String, value: 'Москва' },
+          firstListing: { type: EMetricType.Date, value: '2024-03-14' },
+        },
+        story: [
+          {
+            id: 'insight',
+            type: ESceneType.Insight,
+            text: 'Первое объявление {{value}}',
+            value: key,
+          },
+        ],
+      });
+
+      const insight = sceneById(buildScenesFromStory(payload), 'insight');
+      if (insight.type !== ESceneType.Insight) return;
+
+      const format = contextFor(payload).format;
+      const expected: Record<string, string> = {
+        firstListing: `Первое объявление ${format.date(new Date('2024-03-14'))}`,
+        sales: `Первое объявление ${format.number(42)}`,
+        saving: `Первое объявление ${format.currency(1250, 'RUB')}`,
+        city: 'Первое объявление Москва',
+      };
+
+      expect(resolved(insight.text, payload)).toBe(expected[key]);
+    },
+  );
+
+  it('keeps the value placeholder when the metric is missing', () => {
+    const payload = makePayload({
+      story: [
+        {
+          id: 'insight',
+          type: ESceneType.Insight,
+          text: 'Первое объявление {{value}}',
+          value: 'unknownMetric',
+        },
+      ],
+    });
+
+    const insight = sceneById(buildScenesFromStory(payload), 'insight');
+    if (insight.type !== ESceneType.Insight) return;
+
+    expect(resolved(insight.text, payload)).toBe('Первое объявление {{value}}');
+  });
+
+  it('applies the requested date format to insight copy', () => {
+    const payload = makePayload({
+      metrics: { firstListing: { type: EMetricType.Date, value: '2024-03-14' } },
+      story: [
+        {
+          id: 'insight',
+          type: ESceneType.Insight,
+          text: 'Начало {{value}}',
+          value: 'firstListing',
+          dateFormat: { day: 'numeric', month: 'numeric', year: 'numeric' },
+        },
+      ],
+    });
+
+    const insight = sceneById(buildScenesFromStory(payload), 'insight');
+    if (insight.type !== ESceneType.Insight) return;
+
+    expect(resolved(insight.text, payload)).toBe('Начало 14.03.2024');
+  });
+
   it('maps stat, text and callout blocks with their options', () => {
     const blocksScene = sceneById(scenes, 'blocks');
     expect(blocksScene.type).toBe(ESceneType.Blocks);

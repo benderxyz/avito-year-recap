@@ -2,16 +2,15 @@ package clients
 
 import "testing"
 
-func TestParseMetricsShouldMapNestedFieldsWhenAnalyticsReturnsMetricObjects(t *testing.T) {
+func TestParseMetricsShouldKeepAnyKeyWhenAnalyticsReturnsMetricObjects(t *testing.T) {
 	metrics := ParseMetrics(map[string]MetricField{
 		"listingsPublished": {
 			Value:      floatPtr(47),
 			Percentile: floatPtr(88.4),
 			Share:      floatPtr(4.7),
 		},
-		"viewsTotal": {
-			Value:      floatPtr(12840),
-			Percentile: floatPtr(92.1),
+		"brandNewMetric": {
+			Value: floatPtr(3),
 		},
 		"activeListings": {
 			Value:      nil,
@@ -20,17 +19,35 @@ func TestParseMetricsShouldMapNestedFieldsWhenAnalyticsReturnsMetricObjects(t *t
 		},
 	})
 
-	if metrics.ListingsPublished != 47 {
-		t.Fatalf("expected listingsPublished 47, got %d", metrics.ListingsPublished)
+	if len(metrics) != 3 {
+		t.Fatalf("expected 3 metrics, got %d", len(metrics))
 	}
-	if metrics.ListingsPercentile == nil || *metrics.ListingsPercentile != 88.4 {
-		t.Fatalf("expected listings percentile 88.4, got %v", metrics.ListingsPercentile)
+	if metrics["listingsPublished"].Value == nil || *metrics["listingsPublished"].Value != 47 {
+		t.Fatalf("expected listingsPublished 47, got %v", metrics["listingsPublished"].Value)
 	}
-	if metrics.ViewsTotal != 12840 {
-		t.Fatalf("expected viewsTotal 12840, got %d", metrics.ViewsTotal)
+	if metrics["brandNewMetric"].Value == nil || *metrics["brandNewMetric"].Value != 3 {
+		t.Fatalf("expected unknown key to pass through, got %v", metrics["brandNewMetric"].Value)
 	}
-	if metrics.ActiveListings != 0 {
-		t.Fatalf("expected activeListings 0 when value is null, got %d", metrics.ActiveListings)
+	if metrics["activeListings"].Value != nil {
+		t.Fatalf("expected nil value to stay nil, got %v", metrics["activeListings"].Value)
+	}
+}
+
+func TestParseMetricsShouldRoundPercentileAndShareWhenValuesHaveExtraPrecision(t *testing.T) {
+	metrics := ParseMetrics(map[string]MetricField{
+		"viewsTotal": {
+			Value:      floatPtr(12840),
+			Percentile: floatPtr(92.1449),
+			Share:      floatPtr(4.7891),
+		},
+	})
+
+	sample := metrics["viewsTotal"]
+	if sample.Percentile == nil || *sample.Percentile != 92.14 {
+		t.Fatalf("expected percentile 92.14, got %v", sample.Percentile)
+	}
+	if sample.Share == nil || *sample.Share != 4.79 {
+		t.Fatalf("expected share 4.79, got %v", sample.Share)
 	}
 }
 

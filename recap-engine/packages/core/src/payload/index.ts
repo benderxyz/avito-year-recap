@@ -1,1 +1,1 @@
-export { metricList, metricNumber, metricString } from './metrics';
+export { metricDate, metricList, metricNumber, metricString } from './metrics';

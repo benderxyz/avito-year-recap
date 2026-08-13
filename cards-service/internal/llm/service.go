@@ -60,11 +60,11 @@ func promptVersion(model string) string {
 }
 
 type EnrichInput struct {
-	ID               string
-	Year             int
-	Mode             models.RecapMode
-	Metrics          clients.Metrics
-	PublicMetricKeys map[string]bool
+	ID          string
+	Year        int
+	Mode        models.RecapMode
+	Metrics     clients.Metrics
+	Definitions []models.MetricDefinition
 }
 
 type EnrichReport struct {
@@ -114,7 +114,7 @@ func (s *Service) generate(ctx context.Context, in EnrichInput, payload models.R
 	cctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	messages := buildMessages(payload.Meta.User.DisplayName, payload.Badges, in.Metrics, in.PublicMetricKeys)
+	messages := buildMessages(payload.Meta.User.DisplayName, payload.Badges, in.Metrics, in.Definitions)
 	raw, err := s.provider.Complete(cctx, CompletionRequest{
 		Messages:    messages,
 		Temperature: 0.7,

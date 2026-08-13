@@ -8,6 +8,7 @@ export const routes = {
   recommendations: '/recommendations',
   recommendationById: '/recommendations/$id',
   stories: '/stories',
+  storyCreate: '/stories/new',
   storyById: '/stories/$id',
   preview: '/preview',
 } as const;

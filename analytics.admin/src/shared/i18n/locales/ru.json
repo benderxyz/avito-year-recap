@@ -115,5 +115,65 @@
       "whenOp": "Оператор",
       "whenValue": "Значение"
     }
+  },
+  "stories": {
+    "title": "Сцены",
+    "create": "Создать",
+    "createTitle": "Новая сцена",
+    "editTitle": "Редактировать сцену",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "empty": "Нет сцен",
+    "loadError": "Не удалось загрузить сцены",
+    "search": "Поиск",
+    "enabled": "Включена",
+    "visibility": "Видимость",
+    "sceneType": "Тип сцены",
+    "metric": "Метрика",
+    "yes": "Да",
+    "no": "Нет",
+    "all": "Все",
+    "enums": {
+      "visibility": {
+        "private": "Приватный",
+        "public": "Публичный",
+        "both": "Оба"
+      },
+      "sceneType": {
+        "intro": "Интро",
+        "stat": "Стат",
+        "insight": "Инсайт",
+        "achievement": "Достижение",
+        "upsell": "Апселл",
+        "blocks": "Блоки",
+        "outro": "Аутро",
+        "custom": "Своя"
+      },
+      "predicateOp": {
+        "gt": "Больше",
+        "gte": "Не меньше",
+        "eq": "Равно",
+        "exists": "Существует"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "sceneType": "Тип сцены",
+      "visibility": "Видимость",
+      "enabled": "Вкл.",
+      "metric": "Метрика",
+      "sortOrder": "Порядок"
+    },
+    "fields": {
+      "id": "Id",
+      "sceneType": "Тип сцены",
+      "visibility": "Видимость",
+      "payload": "Payload",
+      "sortOrder": "Порядок",
+      "enabled": "Включена",
+      "whenMetric": "Метрика",
+      "whenOp": "Оператор",
+      "whenValue": "Значение"
+    }
   }
 }

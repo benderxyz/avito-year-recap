@@ -21,6 +21,7 @@ import { Route as RecommendationsIndexRouteImport } from './routes/recommendatio
 import { Route as RecommendationsIdRouteImport } from './routes/recommendations/$id'
 import { Route as StoriesIndexRouteImport } from './routes/stories/index'
 import { Route as StoriesIdRouteImport } from './routes/stories/$id'
+import { Route as StoriesNewRouteImport } from './routes/stories/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const StoriesIdRoute = StoriesIdRouteImport.update({
   path: '/stories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoriesNewRoute = StoriesNewRouteImport.update({
+  id: '/stories/new',
+  path: '/stories/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
   '/stories/$id': typeof StoriesIdRoute
+  '/stories/new': typeof StoriesNewRoute
   '/badges/': typeof BadgesIndexRoute
   '/metrics/': typeof MetricsIndexRoute
   '/recommendations/': typeof RecommendationsIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
   '/stories/$id': typeof StoriesIdRoute
+  '/stories/new': typeof StoriesNewRoute
   '/badges': typeof BadgesIndexRoute
   '/metrics': typeof MetricsIndexRoute
   '/recommendations': typeof RecommendationsIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
   '/stories/$id': typeof StoriesIdRoute
+  '/stories/new': typeof StoriesNewRoute
   '/badges/': typeof BadgesIndexRoute
   '/metrics/': typeof MetricsIndexRoute
   '/recommendations/': typeof RecommendationsIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/metrics/new'
     | '/recommendations/$id'
     | '/stories/$id'
+    | '/stories/new'
     | '/badges/'
     | '/metrics/'
     | '/recommendations/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/metrics/new'
     | '/recommendations/$id'
     | '/stories/$id'
+    | '/stories/new'
     | '/badges'
     | '/metrics'
     | '/recommendations'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/metrics/new'
     | '/recommendations/$id'
     | '/stories/$id'
+    | '/stories/new'
     | '/badges/'
     | '/metrics/'
     | '/recommendations/'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   MetricsNewRoute: typeof MetricsNewRoute
   RecommendationsIdRoute: typeof RecommendationsIdRoute
   StoriesIdRoute: typeof StoriesIdRoute
+  StoriesNewRoute: typeof StoriesNewRoute
   BadgesIndexRoute: typeof BadgesIndexRoute
   MetricsIndexRoute: typeof MetricsIndexRoute
   RecommendationsIndexRoute: typeof RecommendationsIndexRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stories/new': {
+      id: '/stories/new'
+      path: '/stories/new'
+      fullPath: '/stories/new'
+      preLoaderRoute: typeof StoriesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   MetricsNewRoute: MetricsNewRoute,
   RecommendationsIdRoute: RecommendationsIdRoute,
   StoriesIdRoute: StoriesIdRoute,
+  StoriesNewRoute: StoriesNewRoute,
   BadgesIndexRoute: BadgesIndexRoute,
   MetricsIndexRoute: MetricsIndexRoute,
   RecommendationsIndexRoute: RecommendationsIndexRoute,

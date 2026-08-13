@@ -115,5 +115,65 @@
       "whenOp": "Operator",
       "whenValue": "Value"
     }
+  },
+  "stories": {
+    "title": "Stories",
+    "create": "Create",
+    "createTitle": "New story",
+    "editTitle": "Edit story",
+    "save": "Save",
+    "delete": "Delete",
+    "empty": "No stories",
+    "loadError": "Failed to load stories",
+    "search": "Search",
+    "enabled": "Enabled",
+    "visibility": "Visibility",
+    "sceneType": "Scene type",
+    "metric": "Metric",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "enums": {
+      "visibility": {
+        "private": "Private",
+        "public": "Public",
+        "both": "Both"
+      },
+      "sceneType": {
+        "intro": "Intro",
+        "stat": "Stat",
+        "insight": "Insight",
+        "achievement": "Achievement",
+        "upsell": "Upsell",
+        "blocks": "Blocks",
+        "outro": "Outro",
+        "custom": "Custom"
+      },
+      "predicateOp": {
+        "gt": "Greater than",
+        "gte": "Greater or equal",
+        "eq": "Equal",
+        "exists": "Exists"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "sceneType": "Scene type",
+      "visibility": "Visibility",
+      "enabled": "Enabled",
+      "metric": "Metric",
+      "sortOrder": "Sort order"
+    },
+    "fields": {
+      "id": "Id",
+      "sceneType": "Scene type",
+      "visibility": "Visibility",
+      "payload": "Payload",
+      "sortOrder": "Sort order",
+      "enabled": "Enabled",
+      "whenMetric": "Metric",
+      "whenOp": "Operator",
+      "whenValue": "Value"
+    }
   }
 }

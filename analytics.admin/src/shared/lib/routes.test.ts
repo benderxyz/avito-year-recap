@@ -9,6 +9,9 @@ describe('routes', () => {
     expect(routes.metrics).toBe('/metrics');
     expect(routes.metricByKey).toBe('/metrics/$key');
     expect(routes.metricCreate).toBe('/metrics/new');
+    expect(routes.stories).toBe('/stories');
+    expect(routes.storyById).toBe('/stories/$id');
+    expect(routes.storyCreate).toBe('/stories/new');
     expect(routes.preview).toBe('/preview');
   });
 });

@@ -100,6 +100,7 @@ No metric key is hardcoded in Go. Every metric is a row in `metric_definitions`:
 | `source_key` | key in the analytics-service response, defaults to `key` |
 | `source_field` | which field of the analytics metric to read: `value`, `percentile`, `share` |
 | `percentile_key` | metric that holds the percentile for comparison scenes |
+| `comparison_min_percentile` | minimum percentile at which the comparison line is shown for this metric; empty means the service default of 50; percentile 0 is never shown regardless of the threshold |
 | `is_public` | whether the metric survives in a public share card |
 | `include_in_llm` | whether the metric goes into the LLM prompt |
 
@@ -115,8 +116,13 @@ through a TTL-cached provider. Missing `POSTGRES_HOST`, connect failure, or
 migrate failure stops the process.
 
 Seed rows live in `seeds/` (separate from schema migrations). They apply on
-startup only when `SEED_ON_START=true`. Seeds use `ON CONFLICT DO NOTHING`, so
-restarts stay idempotent.
+startup only when `SEED_ON_START=true`, and they are declarative: each run
+upserts every row via `ON CONFLICT ... DO UPDATE` and deletes any row not
+present in the seed file (`DELETE ... WHERE id NOT IN (...)`), so the tables
+end up exactly matching what the seed files describe. One consequence
+matters for anyone operating the service: editing data directly in the
+database does not survive a restart, since the next seed run reverts it to
+whatever is in `seeds/`.
 
 ## LLM enrichment
 
@@ -133,7 +139,7 @@ payload is returned and the failure is logged. The base recap flow is untouched.
 metric definitions that are both `is_public` and `include_in_llm`
 ([`RuleSet.MetricDefinitions()`](internal/cards/rules.go)) — the single source of
 truth shared with share cards. Private metrics (e.g. `moneyEarned`, `moneySaved`,
-`sellerRating`, `messagesSent`, `activeListings`) are **never** sent to the
+`messagesSent`, `activeListings`) are **never** sent to the
 provider, in either mode. The filter is **fail-closed**: if the allowlist is
 empty, no metrics are sent at all. Model output is additionally validated
 ([validate.go](internal/llm/validate.go)) to strip digits, newlines, and

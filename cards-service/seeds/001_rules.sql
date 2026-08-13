@@ -1,7 +1,16 @@
 INSERT INTO badge_rules (id, title, description, icon_url, visibility, metric_key, op, threshold, sort_order) VALUES
     ('messages_sent_1000', 'Разговорчивый', 'Вы отправили больше 1000 сообщений!', '/badges/messages_sent_1000.svg', 'both', 'messagesSent', 'gt', 1000, 10),
     ('active_user', 'Активный пользователь', 'Вы заходили на нашу площадку в этом году!', '/badges/active_user.svg', 'both', 'daysActive', 'gt', 0, 20)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    icon_url = EXCLUDED.icon_url,
+    visibility = EXCLUDED.visibility,
+    metric_key = EXCLUDED.metric_key,
+    op = EXCLUDED.op,
+    threshold = EXCLUDED.threshold,
+    sort_order = EXCLUDED.sort_order,
+    updated_at = now();
 
 INSERT INTO story_rules (id, scene_type, visibility, metric_key, op, threshold, payload, sort_order) VALUES
     ('intro', 'intro', 'both', NULL, NULL, NULL, '{"id":"intro","type":"intro","title":"{{displayName}}, ваш {{year}} на Авито","subtitle":"Год находок, сделок и удачных объявлений","actions":[{"type":"next","label":"Смотреть итоги"}]}'::jsonb, 1),
@@ -22,7 +31,15 @@ INSERT INTO story_rules (id, scene_type, visibility, metric_key, op, threshold, 
     ('insight-first-listing', 'insight', 'private', 'firstListingAt', 'gt', 0, '{"id":"insight-first-listing","type":"insight","value":"firstListingAt","title":"Первое объявление","text":"Первое объявление в этом году вы опубликовали {{value}}"}'::jsonb, 160),
     ('insight-first-deal', 'insight', 'private', 'firstDealAt', 'gt', 0, '{"id":"insight-first-deal","type":"insight","value":"firstDealAt","title":"Первая сделка","text":"Первую сделку закрыли {{value}}"}'::jsonb, 170),
     ('outro', 'outro', 'both', NULL, NULL, NULL, '{"id":"outro","type":"outro","title":"Это был ваш год на Авито","subtitle":"Сохраните итоги или вернитесь к объявлениям","actions":[{"type":"share","label":"Поделиться","share":{"kind":"link","title":"Мои итоги на Авито","text":"Посмотрите, каким был мой год на Авито!"}},{"type":"custom","id":"close-recap","label":"На главную","variant":"primary"}]}'::jsonb, 1000)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    scene_type = EXCLUDED.scene_type,
+    visibility = EXCLUDED.visibility,
+    metric_key = EXCLUDED.metric_key,
+    op = EXCLUDED.op,
+    threshold = EXCLUDED.threshold,
+    payload = EXCLUDED.payload,
+    sort_order = EXCLUDED.sort_order,
+    updated_at = now();
 
 INSERT INTO recommendation_rules (id, title, text, callout, link_label, path, priority, condition) VALUES
     ('resume-listings', 'Продвиньте свои объявления', 'У вас есть объявления, но сделок пока немного. Продвижение поможет им найти покупателя быстрее.', 'Больше показов — больше сделок', 'Продвинуть объявления', '/profile', 100, '{"match":"all","predicates":[{"metric":"listingsPublished","op":"gt","value":0},{"metric":"dealsClosed","op":"eq","value":0}]}'::jsonb),
@@ -31,4 +48,30 @@ INSERT INTO recommendation_rules (id, title, text, callout, link_label, path, pr
     ('resume-active', 'Обновите активные объявления', 'У вас есть активные объявления. Освежите их, чтобы они снова поднялись в поиске.', 'Актуальные объявления смотрят чаще', 'К моим объявлениям', '/profile', 70, '{"predicates":[{"metric":"activeListings","op":"gt","value":0}]}'::jsonb),
     ('resume-search', 'Продолжите поиск', 'Вы активно искали в этом году. Возможно, нужное объявление уже появилось.', 'Новые объявления каждый день', 'Продолжить поиск', '/', 60, '{"match":"any","predicates":[{"metric":"searchQueries","op":"gt","value":0},{"metric":"viewsTotal","op":"gt","value":0}]}'::jsonb),
     ('new-listing', 'Разместите первое объявление', 'В этом году вы ещё не продавали. Начните — это займёт пару минут.', 'Продайте то, чем больше не пользуетесь', 'Разместить объявление', '/additem', 50, '{"predicates":[{"metric":"listingsPublished","op":"eq","value":0}]}'::jsonb)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    title = EXCLUDED.title,
+    text = EXCLUDED.text,
+    callout = EXCLUDED.callout,
+    link_label = EXCLUDED.link_label,
+    path = EXCLUDED.path,
+    priority = EXCLUDED.priority,
+    condition = EXCLUDED.condition,
+    updated_at = now();
+
+DELETE FROM badge_rules
+WHERE id NOT IN ('messages_sent_1000', 'active_user');
+
+DELETE FROM story_rules
+WHERE id NOT IN (
+    'intro', 'stat-listings', 'stat-views', 'stat-favorites', 'stat-messages',
+    'stat-deals', 'stat-earned', 'stat-saved', 'blocks-days-active',
+    'stat-peak-views', 'stat-categories', 'blocks-search', 'stat-delivery',
+    'stat-active-listings', 'stat-reply', 'insight-first-listing',
+    'insight-first-deal', 'outro'
+);
+
+DELETE FROM recommendation_rules
+WHERE id NOT IN (
+    'resume-listings', 'listings-favorited', 'resume-delivery', 'resume-active',
+    'resume-search', 'new-listing'
+);

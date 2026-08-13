@@ -22,3 +22,12 @@ ON CONFLICT (event_type) DO UPDATE SET
     unique_field = EXCLUDED.unique_field,
     sort_order = EXCLUDED.sort_order,
     updated_at = now();
+
+DELETE FROM event_registry
+WHERE event_type NOT IN (
+    'item_published', 'item_view_received', 'item_favorited', 'chat_message_sent',
+    'deal_completed', 'sale_proceeds', 'buyer_saving', 'delivery_order_created',
+    'search_performed', 'active_items_count', 'peak_day_views',
+    'first_item_published', 'first_deal_completed', 'category_opened',
+    'day_active', 'chat_reply'
+);

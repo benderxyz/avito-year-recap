@@ -1,4 +1,4 @@
-import { Modal } from '@mantine/core';
+import { Modal, Transition } from '@mantine/core';
 import {
   metricList,
   prepareRecap,
@@ -18,6 +18,7 @@ import {
   useSharedRecapQuery,
 } from '@/entities/recap';
 import styles from './RecapModal.module.css';
+import { RecapModalOverlayCircles } from './RecapModalOverlayCircles';
 import { RecapStoryShell, recapStoryShellStyles } from './RecapStoryShell';
 
 let topCategoriesSceneRegistered = false;
@@ -96,18 +97,13 @@ export function RecapModal(props: RecapModalProps) {
   };
 
   return (
-    <Modal
+    <Modal.Root
       opened={opened}
       onClose={onClose}
       centered
-      withCloseButton={false}
       padding={0}
       radius="xl"
       size="auto"
-      overlayProps={{
-        blur: 12,
-        backgroundOpacity: 0.62,
-      }}
       classNames={{
         inner: styles.inner,
         content: styles.content,
@@ -115,15 +111,23 @@ export function RecapModal(props: RecapModalProps) {
       }}
       aria-labelledby="recap-modal-title"
     >
-      <RecapStoryShell
-        title={title}
-        onClose={onClose}
-        isLoading={isLoading}
-        isError={isError}
-        prepared={prepared}
-        theme={theme}
-        onEvent={onEvent}
-      />
-    </Modal>
+      <Modal.Overlay blur={12} backgroundOpacity={0.62} color={theme.colors.bg} />
+      <Transition mounted={opened} transition="fade" duration={200}>
+        {(transitionStyles) => <RecapModalOverlayCircles style={transitionStyles} />}
+      </Transition>
+      <Modal.Content radius="xl">
+        <Modal.Body>
+          <RecapStoryShell
+            title={title}
+            onClose={onClose}
+            isLoading={isLoading}
+            isError={isError}
+            prepared={prepared}
+            theme={theme}
+            onEvent={onEvent}
+          />
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }

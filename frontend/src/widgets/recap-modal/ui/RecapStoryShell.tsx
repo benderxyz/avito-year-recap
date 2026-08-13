@@ -37,10 +37,6 @@ export function RecapStoryShell({
       </ActionIcon>
 
       <div className={styles.storyFrame}>
-        <Text id="recap-modal-title" className={styles.storyTitle}>
-          {title}
-        </Text>
-
         {isLoading ? (
           <Center className={styles.storyState}>
             <Loader color="avito" />
@@ -56,15 +52,22 @@ export function RecapStoryShell({
         ) : null}
 
         {!isLoading && !isError && prepared ? (
-          <div className={styles.recapRoot}>
-            <Recap
-              {...prepared}
-              autoplay
-              theme={theme}
-              onEvent={onEvent}
-              className={styles.recapWidget}
-            />
-          </div>
+          <>
+            <Text id="recap-modal-title" className={styles.storyTitle}>
+              {title}
+            </Text>
+            <div className={styles.recapRoot}>
+              <Recap
+                {...prepared}
+                theme={theme}
+                autoplay
+                holdToPause
+                tapNav
+                onEvent={onEvent}
+                className={styles.recapWidget}
+              />
+            </div>
+          </>
         ) : null}
 
         {!isLoading && !isError && !prepared ? (

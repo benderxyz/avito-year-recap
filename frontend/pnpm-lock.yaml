@@ -15,8 +15,8 @@ importers:
         specifier: ^9.5.1
         version: 9.5.1(react@19.2.8)
       '@recap-engine/core':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: ^1.3.0
+        version: 1.3.0
       '@recap-engine/react':
         specifier: ^2.0.0
         version: 2.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -522,6 +522,9 @@ packages:
 
   '@recap-engine/core@1.2.0':
     resolution: {integrity: sha512-sPYK//b266MCQnVtGW0QeudWoSvVZvMWybGqisV5hv8py5H+QQD2gTYUDBxNhRrpENw9eECU9zRU7O1ZTr5BBw==}
+
+  '@recap-engine/core@1.3.0':
+    resolution: {integrity: sha512-HcntBkMufbFvSQ1EJY1c/TFXU2jjaRUajcVqbtSIyUW16I+1L+XcFA4ma8UOcRcKgakClaWjjM6mbgrmaVkwDQ==}
 
   '@recap-engine/react@2.0.0':
     resolution: {integrity: sha512-QEWrcpe7w0Qy0+WvGDnrgrcYCEZ1Iqlr1xub9572rTRWhak0xXRb2afH+p5RiU8e2TjpfIWRi2tgF2P9ZouCZw==}
@@ -2263,6 +2266,8 @@ snapshots:
     optional: true
 
   '@recap-engine/core@1.2.0': {}
+
+  '@recap-engine/core@1.3.0': {}
 
   '@recap-engine/react@2.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:

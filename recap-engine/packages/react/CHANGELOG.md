@@ -1,5 +1,12 @@
 # @recap-engine/react
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies [e1f3977]
+  - @recap-engine/core@1.3.0
+
 ## 2.0.0
 
 ### Major Changes

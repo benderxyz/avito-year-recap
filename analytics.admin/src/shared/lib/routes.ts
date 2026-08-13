@@ -7,5 +7,5 @@ export const routes = {
   recommendationById: '/recommendations/$id',
   stories: '/stories',
   storyById: '/stories/$id',
-  preview: 'preview',
+  preview: '/preview',
 }

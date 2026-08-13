@@ -5,7 +5,7 @@ type AppProvidersProps = {
   children?: ReactNode
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export default function AppProviders({ children }: AppProvidersProps) {
   return (
     <MantineProvider theme={mantineTheme} defaultColorScheme="light">
       {children}

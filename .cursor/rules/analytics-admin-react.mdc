@@ -1,0 +1,38 @@
+---
+description: React components in analytics.admin use default function exports
+globs: analytics.admin/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# React components (analytics.admin)
+
+Declare every React component as a default function export. Do not use named function exports, `const` components, or `export default` of an anonymous arrow.
+
+```tsx
+// ❌ BAD
+export function BadgePage() {
+  return null
+}
+
+const BadgePage = () => null
+export default BadgePage
+
+// ✅ GOOD
+export default function BadgePage() {
+  return null
+}
+```
+
+Barrel `index.ts` re-exports the default:
+
+```ts
+export { default } from './BadgePage'
+```
+
+Import the default from the folder:
+
+```ts
+import BadgePage from '@/pages/BadgePage'
+```
+
+Does not apply to non-components (`router.ts`, hooks, route `Route` objects, type-only modules).

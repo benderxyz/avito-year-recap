@@ -1,6 +1,69 @@
 {
   "layout": {
-    "logo": "Logo",
-    "navbar": "Navbar"
+    "logo": "Recap admin"
+  },
+  "nav": {
+    "metrics": "Metrics",
+    "badges": "Badges",
+    "stories": "Stories",
+    "recommendations": "Recommendations",
+    "preview": "Preview"
+  },
+  "metrics": {
+    "title": "Metrics",
+    "create": "Create",
+    "createTitle": "New metric",
+    "editTitle": "Edit metric",
+    "save": "Save",
+    "delete": "Delete",
+    "empty": "No metrics",
+    "loadError": "Failed to load metrics",
+    "search": "Search",
+    "enabled": "Enabled",
+    "isPublic": "Public",
+    "includeInLlm": "Include in LLM",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "enums": {
+      "valueType": {
+        "number": "Number",
+        "money": "Money",
+        "percentile": "Percentile",
+        "ratio": "Ratio",
+        "string": "String",
+        "date": "Date"
+      },
+      "sourceField": {
+        "value": "Value",
+        "percentile": "Percentile",
+        "share": "Share"
+      },
+      "currency": {
+        "RUB": "RUB"
+      }
+    },
+    "columns": {
+      "key": "Key",
+      "valueType": "Value type",
+      "sourceField": "Source field",
+      "sourceKey": "Source key",
+      "enabled": "Enabled",
+      "isPublic": "Public",
+      "includeInLlm": "LLM"
+    },
+    "fields": {
+      "key": "Key",
+      "valueType": "Value type",
+      "sourceField": "Source field",
+      "sourceKey": "Source key",
+      "currency": "Currency",
+      "percentileKey": "Percentile key",
+      "comparisonMinPercentile": "Comparison min percentile",
+      "sortOrder": "Sort order",
+      "enabled": "Enabled",
+      "isPublic": "Public",
+      "includeInLlm": "Include in LLM"
+    }
   }
 }

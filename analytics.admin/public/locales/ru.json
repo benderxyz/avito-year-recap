@@ -1,6 +1,69 @@
 {
   "layout": {
-    "logo": "Логотип",
-    "navbar": "Навигация"
+    "logo": "Recap admin"
+  },
+  "nav": {
+    "metrics": "Метрики",
+    "badges": "Бейджи",
+    "stories": "Сцены",
+    "recommendations": "Рекомендации",
+    "preview": "Превью"
+  },
+  "metrics": {
+    "title": "Метрики",
+    "create": "Создать",
+    "createTitle": "Новая метрика",
+    "editTitle": "Редактировать метрику",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "empty": "Нет метрик",
+    "loadError": "Не удалось загрузить метрики",
+    "search": "Поиск",
+    "enabled": "Включена",
+    "isPublic": "Публичная",
+    "includeInLlm": "В промпте LLM",
+    "yes": "Да",
+    "no": "Нет",
+    "all": "Все",
+    "enums": {
+      "valueType": {
+        "number": "Число",
+        "money": "Деньги",
+        "percentile": "Перцентиль",
+        "ratio": "Доля",
+        "string": "Строка",
+        "date": "Дата"
+      },
+      "sourceField": {
+        "value": "Значение",
+        "percentile": "Перцентиль",
+        "share": "Доля"
+      },
+      "currency": {
+        "RUB": "RUB"
+      }
+    },
+    "columns": {
+      "key": "Ключ",
+      "valueType": "Тип значения",
+      "sourceField": "Поле источника",
+      "sourceKey": "Ключ источника",
+      "enabled": "Вкл.",
+      "isPublic": "Публичная",
+      "includeInLlm": "LLM"
+    },
+    "fields": {
+      "key": "Ключ",
+      "valueType": "Тип значения",
+      "sourceField": "Поле источника",
+      "sourceKey": "Ключ источника",
+      "currency": "Валюта",
+      "percentileKey": "Ключ перцентиля",
+      "comparisonMinPercentile": "Мин. перцентиль сравнения",
+      "sortOrder": "Порядок",
+      "enabled": "Включена",
+      "isPublic": "Публичная",
+      "includeInLlm": "В промпте LLM"
+    }
   }
 }

@@ -1,0 +1,27 @@
+---
+description: Admin UI architecture — shells, Form* fields, filters, no mega-CRUD
+globs: analytics.admin/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Architecture (analytics.admin)
+
+List/detail shells know nothing about badges/metrics/stories. Entity-specific columns, filters, and form fields live in `entities/*`. Pages only compose. Do not build a generic `CrudResource` config.
+
+## Forms
+
+- `react-hook-form` + `zod` (`zodResolver`). Not `@mantine/form`.
+- Fields are `Form*` wrappers in `shared/ui/form`: `name` + `control`, where `name` is `FieldPath<T>` from that `control`.
+- Do not pass raw Mantine inputs into resource forms.
+
+```tsx
+<FormTextInput name="title" control={control} label="Title" />
+```
+
+## Filters
+
+List filters are controlled `value` / `onChange`. Pages sync them to the URL with `nuqs` (`useQueryStates`). They are not RHF.
+
+## Data
+
+Call Orval hooks from pages/entities, not from `CatalogPage` / `ResourceFormPage` / `DataTable`.

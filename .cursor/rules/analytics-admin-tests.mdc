@@ -1,0 +1,21 @@
+---
+description: Unit-test new analytics.admin code and always re-run the suite
+globs: analytics.admin/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Unit tests (analytics.admin)
+
+Write unit tests for new behavior (colocated `*.test.ts` / `*.test.tsx`). After changes, run `pnpm test` in `analytics.admin` and do not leave a failing suite.
+
+Use [`renderWithProviders`](analytics.admin/src/shared/lib/test/render-with-providers.tsx) for components that need Mantine / QueryClient.
+
+```tsx
+import { renderWithProviders } from '@/shared/lib/test/render-with-providers'
+
+it('renders empty state', () => {
+  renderWithProviders(<DataTable columns={columns} items={[]} />)
+})
+```
+
+Form fields: wrap with `useForm` and pass `control`. Do not skip tests for shared UI primitives.

@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
@@ -62,7 +62,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': { target: 'https://recaps.hakolr.dev/api', changeOrigin: true },
+      '/api': { target: 'https://recaps.hakolr.dev', changeOrigin: true },
     },
   },
 });

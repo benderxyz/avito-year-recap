@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"cards-service/internal/admin"
 	"cards-service/internal/api"
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
@@ -42,7 +43,7 @@ func main() {
 
 	setupLLM(handler, cfg, pg.DB())
 
-	mux := api.RegisterRoutes(handler)
+	mux := api.RegisterRoutes(handler, setupAdmin(cfg, pg.DB(), ruleProvider))
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
@@ -134,6 +135,25 @@ func loadRuleProvider(pg *db.Postgres) *cards.RuleProvider {
 		cards.NewRuleStore(pg.DB()),
 		time.Minute,
 	)
+}
+
+func setupAdmin(
+	cfg config.Config,
+	sqlDB *sql.DB,
+	ruleProvider *cards.RuleProvider,
+) *admin.Handler {
+	if cfg.AdminAPIToken == "" {
+		slog.Warn("ADMIN_API_TOKEN is empty; admin api is closed")
+	}
+
+	return admin.NewHandler(admin.Options{
+		Token:           cfg.AdminAPIToken,
+		Store:           admin.NewPostgresStore(sqlDB),
+		Rules:           ruleProvider,
+		ShareSigningKey: []byte(cfg.ShareSigningKey),
+		ShareBaseURL:    cfg.ShareBaseURL,
+		ProductBaseURL:  cfg.ProductBaseURL,
+	})
 }
 
 func setupLLM(

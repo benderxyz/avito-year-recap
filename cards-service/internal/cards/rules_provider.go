@@ -24,6 +24,19 @@ func NewRuleProvider(store *RuleStore, ttl time.Duration) *RuleProvider {
 	}
 }
 
+func (p *RuleProvider) Invalidate() {
+	if p == nil {
+		return
+	}
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.cached = RuleSet{}
+	p.loaded = false
+	p.expires = time.Time{}
+}
+
 func (p *RuleProvider) Get(ctx context.Context) (RuleSet, error) {
 	if p == nil || p.store == nil {
 		return RuleSet{}, fmt.Errorf("rule provider is not configured")

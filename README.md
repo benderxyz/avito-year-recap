@@ -167,6 +167,8 @@ Postgres один контейнер, порт `5432`. База `cards` для c
 
 Rules для cards берутся из `cards-service/seeds/`, если `SEED_ON_START=true`. В compose это уже включено. Миграции и сиды cards пишутся в базу `cards`.
 
+Сид накатывается только на пустые таблицы, по файлу на таблицу. Если в таблице уже есть строки, ее файл пропускается, и правки из админки переживают рестарт. Админка живет на `/api/admin/**` в cards-service и закрыта токеном `ADMIN_API_TOKEN`, описание методов лежит на `/api/admin/docs`.
+
 Пользователей и события заливает `seed-data/seed-script` через API. Профили уходят в user-service (база `users`). События уходят в analytics.
 
 Smoke после `docker compose up --build`

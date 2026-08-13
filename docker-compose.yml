@@ -88,6 +88,7 @@ services:
       MIGRATIONS_DIR: /app/migrations
       SEEDS_DIR: /app/seeds
       SEED_ON_START: "true"
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN:-dev-insecure-admin-token}
       LLM_ENABLED: "true"
       LLM_PROVIDER: "openai"
       LLM_BASE_URL: "https://openrouter.ai/api/v1"

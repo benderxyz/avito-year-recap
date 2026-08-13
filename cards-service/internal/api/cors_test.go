@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -54,6 +55,34 @@ func TestWithCORSShouldAnswerPreflight(t *testing.T) {
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Methods"); got == "" {
 		t.Fatal("expected allow-methods on preflight response")
+	}
+}
+
+func TestWithCORSShouldAllowAdminWriteMethodsOnPreflight(t *testing.T) {
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/api/admin/metrics/viewsTotal", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
+	req.Header.Set("Access-Control-Request-Method", http.MethodPut)
+	recorder := httptest.NewRecorder()
+
+	newCORSHandler().ServeHTTP(recorder, req)
+
+	methods := recorder.Header().Get("Access-Control-Allow-Methods")
+	if !strings.Contains(methods, http.MethodPut) || !strings.Contains(methods, http.MethodDelete) {
+		t.Fatalf("expected write methods on preflight, got %q", methods)
+	}
+}
+
+func TestWithCORSShouldAllowAuthorizationHeaderOnPreflight(t *testing.T) {
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/api/admin/metrics", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
+	req.Header.Set("Access-Control-Request-Method", http.MethodPost)
+	req.Header.Set("Access-Control-Request-Headers", "Authorization")
+	recorder := httptest.NewRecorder()
+
+	newCORSHandler().ServeHTTP(recorder, req)
+
+	if headers := recorder.Header().Get("Access-Control-Allow-Headers"); !strings.Contains(headers, "Authorization") {
+		t.Fatalf("expected Authorization to be allowed, got %q", headers)
 	}
 }
 

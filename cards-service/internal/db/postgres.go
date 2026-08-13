@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type Postgres struct {
@@ -52,17 +54,80 @@ func (p *Postgres) Close() error {
 }
 
 func (p *Postgres) Migrate(ctx context.Context, migrationsDir string) error {
-	return p.execSQLDir(ctx, migrationsDir)
+	files, err := sqlFiles(migrationsDir)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range files {
+		if err := p.execSQLFile(ctx, migrationsDir, name); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
+
+var seedFileTable = regexp.MustCompile(`^\d+_([a-z0-9_]+)\.sql$`)
 
 func (p *Postgres) Seed(ctx context.Context, seedsDir string) error {
-	return p.execSQLDir(ctx, seedsDir)
+	files, err := sqlFiles(seedsDir)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range files {
+		table := seedTableName(name)
+		if table != "" {
+			empty, err := p.tableIsEmpty(ctx, table)
+			if err != nil {
+				return err
+			}
+			if !empty {
+				slog.Info("seed skipped, table already has rows", "file", name, "table", table)
+				continue
+			}
+		}
+
+		if err := p.execSQLFile(ctx, seedsDir, name); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (p *Postgres) execSQLDir(ctx context.Context, dir string) error {
+func seedTableName(fileName string) string {
+	match := seedFileTable.FindStringSubmatch(fileName)
+	if match == nil {
+		return ""
+	}
+
+	return match[1]
+}
+
+func (p *Postgres) tableIsEmpty(ctx context.Context, table string) (bool, error) {
+	var relation sql.NullString
+	if err := p.db.QueryRowContext(ctx, "SELECT to_regclass($1)", table).Scan(&relation); err != nil {
+		return false, fmt.Errorf("check table %s: %w", table, err)
+	}
+	if !relation.Valid {
+		return true, nil
+	}
+
+	var hasRows bool
+	query := "SELECT EXISTS (SELECT 1 FROM " + pq.QuoteIdentifier(table) + ")"
+	if err := p.db.QueryRowContext(ctx, query).Scan(&hasRows); err != nil {
+		return false, fmt.Errorf("count rows in %s: %w", table, err)
+	}
+
+	return !hasRows, nil
+}
+
+func sqlFiles(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("read sql dir: %w", err)
+		return nil, fmt.Errorf("read sql dir: %w", err)
 	}
 
 	var files []string
@@ -74,18 +139,18 @@ func (p *Postgres) execSQLDir(ctx context.Context, dir string) error {
 	}
 	sort.Strings(files)
 
-	for _, name := range files {
-		path := filepath.Join(dir, name)
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("read sql file %s: %w", name, err)
-		}
+	return files, nil
+}
 
-		statements := splitSQLStatements(string(content))
-		for _, statement := range statements {
-			if _, err := p.db.ExecContext(ctx, statement); err != nil {
-				return fmt.Errorf("exec sql file %s: %w", name, err)
-			}
+func (p *Postgres) execSQLFile(ctx context.Context, dir, name string) error {
+	content, err := os.ReadFile(filepath.Join(dir, name))
+	if err != nil {
+		return fmt.Errorf("read sql file %s: %w", name, err)
+	}
+
+	for _, statement := range splitSQLStatements(string(content)) {
+		if _, err := p.db.ExecContext(ctx, statement); err != nil {
+			return fmt.Errorf("exec sql file %s: %w", name, err)
 		}
 	}
 

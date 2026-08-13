@@ -31,12 +31,3 @@ ON CONFLICT (key) DO UPDATE SET
     include_in_llm = EXCLUDED.include_in_llm,
     sort_order = EXCLUDED.sort_order,
     updated_at = now();
-
-DELETE FROM metric_definitions
-WHERE key NOT IN (
-    'listingsPublished', 'listingsPercentile', 'viewsTotal', 'viewsPercentile',
-    'favoritesReceived', 'favoritesPercentile', 'messagesSent', 'messagesPercentile',
-    'dealsClosed', 'dealsPercentile', 'moneyEarned', 'moneySaved', 'daysActive',
-    'peakDayViews', 'categoriesTried', 'searchQueries', 'deliveryOrders',
-    'activeListings', 'avgReplySeconds', 'firstListingAt', 'firstDealAt'
-);

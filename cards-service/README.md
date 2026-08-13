@@ -18,7 +18,8 @@ base recap is served unchanged. See [LLM enrichment](#llm-enrichment).
 - [rules engine](internal/cards/rules.go), [Postgres rule store](internal/cards/rulestore.go), [cached provider](internal/cards/rules_provider.go)
 - [LLM enrichment service](internal/llm/service.go), [provider](internal/llm/openai.go), [prompt](internal/llm/prompt.go), [output validation](internal/llm/validate.go), [result cache](internal/llm/cache.go)
 - [recap models](internal/models/recap.go)
-- [schema DDL](migrations/001_rules.sql), [seed data](seeds/001_rules.sql)
+- [admin routes](internal/admin/handler.go), [admin store](internal/admin/store_postgres.go), [validation](internal/admin/validate.go), [bearer auth](internal/admin/auth.go), [preview data](internal/admin/preview.go), [OpenAPI document](internal/admin/openapi.go)
+- [schema DDL](migrations/001_rules.sql), [seed data](seeds/001_metric_definitions.sql)
 
 ## API
 
@@ -54,6 +55,11 @@ recap's `features.shareUrl`).
 - Errors:
   - `400 invalid share token` — token missing, malformed, or signature invalid.
   - `404 recap not found` — profile or metrics could not be resolved.
+
+### `/api/admin/**`
+
+Admin API over the four rule catalogs: metric definitions, badges, story scenes,
+recommendations. See [Admin API](#admin-api).
 
 ## Response shape (`RecapPayload`)
 
@@ -116,13 +122,68 @@ through a TTL-cached provider. Missing `POSTGRES_HOST`, connect failure, or
 migrate failure stops the process.
 
 Seed rows live in `seeds/` (separate from schema migrations). They apply on
-startup only when `SEED_ON_START=true`, and they are declarative: each run
-upserts every row via `ON CONFLICT ... DO UPDATE` and deletes any row not
-present in the seed file (`DELETE ... WHERE id NOT IN (...)`), so the tables
-end up exactly matching what the seed files describe. One consequence
-matters for anyone operating the service: editing data directly in the
-database does not survive a restart, since the next seed run reverts it to
-whatever is in `seeds/`.
+startup only when `SEED_ON_START=true`, and only to empty tables. One file per
+table, named `NNN_<table>.sql`: before running a file the service counts rows in
+that table and skips the file when the table already has any. An empty stand
+still gets the full catalog from `seeds/`; after the first start the admin API is
+the source of truth, and rules edited there survive restarts.
+
+## Admin API
+
+`/api/admin/**` edits the same four tables the generator reads. Every request
+needs `Authorization: Bearer <ADMIN_API_TOKEN>`; the token is compared in
+constant time and never logged. An empty `ADMIN_API_TOKEN` is treated as a
+configuration error: the service keeps serving the public recap and answers
+`401` to every admin request.
+
+Each catalog exposes the same five operations. `POST` creates (`409` when the id
+is taken), `PUT` updates an existing record (`404` when it is missing) — they are
+separate operations, not one upsert. Ids cannot be renamed: delete and create
+instead.
+
+| Method | Path | Meaning |
+| --- | --- | --- |
+| `GET` | `/api/admin/{catalog}` | list without pagination, including `enabled: false` |
+| `POST` | `/api/admin/{catalog}` | create, `201` with the stored record |
+| `GET` | `/api/admin/{catalog}/{id}` | one record |
+| `PUT` | `/api/admin/{catalog}/{id}` | update, `200` with the stored record |
+| `DELETE` | `/api/admin/{catalog}/{id}` | delete, `204` |
+
+Catalogs are `metrics` (keyed by `key`), `badges`, `stories`, `recommendations`.
+Lists are sorted the way the generator sorts them: `sortOrder` then id, and
+`priority` descending for recommendations.
+
+Filters are query parameters and are validated against the same enums as the
+bodies, so an unknown value answers `400` instead of silently returning
+everything:
+
+| Catalog | Filters |
+| --- | --- |
+| `metrics` | `enabled`, `isPublic`, `includeInLlm`, `valueType`, `sourceField`, `search` |
+| `badges` | `enabled`, `visibility`, `metric`, `search` |
+| `stories` | `enabled`, `visibility`, `sceneType`, `metric`, `search` |
+| `recommendations` | `enabled`, `metric`, `minPriority`, `search` |
+
+Deleting a record that others point at answers `409` with the referencing ids in
+`references`: a metric used by a badge, a scene, a recommendation predicate, or
+another metric's `percentileKey` / `sourceKey`; a badge shown by a scene.
+
+Errors always look like `{"error": "...", "fields": {...}, "references": [...]}`,
+where `fields` maps a request field to the reason it was rejected.
+
+`GET /api/admin/preview` returns a `RecapPayload` built by the same generator as
+the public route, on throwaway random metrics derived from the current metric
+definitions, and never calls the LLM. Every call differs; `?seed=` makes it
+reproducible, `?year=` and `?mode=private|public` pick the recap being built.
+
+`GET /api/admin/openapi.json` and `GET /api/admin/docs` (Swagger UI) describe all
+of the above. Both are static API documentation and need no token, so the docs
+page opens in a browser; requests fired from it still need the token, entered
+through Swagger UI's Authorize button. Schemas are generated from the Go request
+and response structs, so they cannot drift from the handlers.
+
+Any write invalidates the rule provider cache, so the next recap and the next
+preview see the change without waiting for the TTL.
 
 ## LLM enrichment
 
@@ -184,7 +245,8 @@ Environment variables (see [internal/config/config.go](internal/config/config.go
 | `POSTGRES_SSLMODE` | `disable` | Postgres SSL mode |
 | `MIGRATIONS_DIR` | `migrations` | schema migrations directory |
 | `SEEDS_DIR` | `seeds` | seed files directory |
-| `SEED_ON_START` | `false` | apply seeds from `SEEDS_DIR` on startup |
+| `SEED_ON_START` | `false` | apply seeds from `SEEDS_DIR` on startup, skipping tables that already have rows |
+| `ADMIN_API_TOKEN` | _(empty)_ | bearer token for `/api/admin/**`; empty closes the admin API with `401` |
 | `LLM_ENABLED` | `false` | enable LLM enrichment (needs `OPENAI_API_KEY`) |
 | `OPENAI_API_KEY` | _(empty)_ | provider API key matching `LLM_BASE_URL` (OpenRouter `sk-or-v1-…` or OpenAI `sk-…`) |
 | `LLM_PROVIDER` | `openai` | provider adapter; `openai` covers any OpenAI-compatible endpoint |
@@ -201,6 +263,10 @@ The API is browser-facing, so [internal/api/cors.go](internal/api/cors.go) wraps
 the mux with an origin allowlist from `CORS_ALLOWED_ORIGINS`. Origins are matched
 exactly (scheme + host + port), so `http://localhost:3000` does not cover
 `http://127.0.0.1:3000` — list both if you need both.
+
+Allowed methods are `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS` and allowed headers
+are `Content-Type` and `Authorization`, because the admin UI writes from the
+browser. Writes stay protected by the admin token, not by the origin list.
 
 Requests from a listed origin get `Access-Control-Allow-Origin`; preflight
 `OPTIONS` is answered with `204` and never reaches the routes. Requests from an

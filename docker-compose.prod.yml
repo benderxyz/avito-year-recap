@@ -84,6 +84,7 @@ services:
       MIGRATIONS_DIR: /app/migrations
       SEEDS_DIR: /app/seeds
       SEED_ON_START: ${SEED_ON_START:-true}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
       SHARE_SIGNING_KEY: ${SHARE_SIGNING_KEY}
       SHARE_BASE_URL: ${SHARE_BASE_URL:-https://recaps.hakolr.dev}
       PRODUCT_BASE_URL: ${PRODUCT_BASE_URL:-https://www.avito.ru}

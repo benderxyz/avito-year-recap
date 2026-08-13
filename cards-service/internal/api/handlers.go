@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"cards-service/internal/admin"
 	"cards-service/internal/cards"
 	"cards-service/internal/clients"
 	"cards-service/internal/llm"
@@ -45,12 +46,16 @@ func (h *Handler) SetLLMService(s *llm.Service) {
 	h.llm = s
 }
 
-func RegisterRoutes(handler *Handler) *http.ServeMux {
+func RegisterRoutes(handler *Handler, adminHandler *admin.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /api/recap/{year}/{id}", handler.GetRecap)
 	mux.HandleFunc("GET /api/share/{token}", handler.GetSharedRecap)
+
+	if adminHandler != nil {
+		admin.RegisterRoutes(mux, adminHandler)
+	}
 
 	return mux
 }

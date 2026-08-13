@@ -1,6 +1,6 @@
-import { createRouter } from '@tanstack/react-router'
-import { routeTree } from '@/app/routeTree.gen'
+import { createRouter } from '@tanstack/react-router';
+import { routeTree } from '@/app/routeTree.gen';
 
-export const router = createRouter({ routeTree })
+export const router = createRouter({ routeTree });
 
-export type AppRouter = typeof router
+export type AppRouter = typeof router;

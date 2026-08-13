@@ -1,3 +1,3 @@
 export default function RecommendationPage() {
-  return null
+  return null;
 }

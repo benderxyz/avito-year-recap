@@ -8,4 +8,4 @@ export const routes = {
   stories: '/stories',
   storyById: '/stories/$id',
   preview: '/preview',
-}
+};

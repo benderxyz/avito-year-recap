@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "typecheck": "tsc -b",
+    "preview": "vite preview",
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "check": "biome check .",
+    "lintfix": "biome check . --write"
   },
   "dependencies": {
     "@mantine/core": "^8.3.18",
@@ -16,6 +21,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
     "@tanstack/router-plugin": "^1.168.30",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",

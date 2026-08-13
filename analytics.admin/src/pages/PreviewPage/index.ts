@@ -1,1 +1,1 @@
-export { default } from './PreviewPage'
+export { default } from './PreviewPage';

@@ -1,3 +1,3 @@
 export default function BadgesPage() {
-  return null
+  return null;
 }

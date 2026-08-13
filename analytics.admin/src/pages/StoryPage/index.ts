@@ -1,1 +1,1 @@
-export { default } from './StoryPage'
+export { default } from './StoryPage';

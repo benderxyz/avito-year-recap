@@ -1,3 +1,3 @@
 export default function MetricsPage() {
-  return null
+  return null;
 }

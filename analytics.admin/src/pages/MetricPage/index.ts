@@ -1,1 +1,1 @@
-export { default } from './MetricPage'
+export { default } from './MetricPage';

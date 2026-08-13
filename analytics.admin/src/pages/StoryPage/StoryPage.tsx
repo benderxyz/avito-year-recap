@@ -1,3 +1,3 @@
 export default function StoryPage() {
-  return null
+  return null;
 }

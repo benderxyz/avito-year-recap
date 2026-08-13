@@ -1,3 +1,3 @@
 export default function PreviewPage() {
-  return null
+  return null;
 }

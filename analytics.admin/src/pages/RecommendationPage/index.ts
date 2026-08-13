@@ -1,1 +1,1 @@
-export { default } from './RecommendationPage'
+export { default } from './RecommendationPage';

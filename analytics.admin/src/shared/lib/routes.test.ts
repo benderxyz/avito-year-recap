@@ -5,6 +5,7 @@ describe('routes', () => {
   it('exposes absolute admin paths', () => {
     expect(routes.badges).toBe('/badges');
     expect(routes.badgeById).toBe('/badges/$id');
+    expect(routes.badgeCreate).toBe('/badges/new');
     expect(routes.metrics).toBe('/metrics');
     expect(routes.metricByKey).toBe('/metrics/$key');
     expect(routes.metricCreate).toBe('/metrics/new');

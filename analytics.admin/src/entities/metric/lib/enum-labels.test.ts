@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { i18n } from '@/shared/i18n/config';
-import { getMetricSourceFieldLabel, getMetricValueTypeLabel } from './metric-enum-labels';
+import { getMetricSourceFieldLabel, getMetricValueTypeLabel } from './enum-labels';
 
 describe('metric enum labels', () => {
   it('localizes known valueType and sourceField values', () => {

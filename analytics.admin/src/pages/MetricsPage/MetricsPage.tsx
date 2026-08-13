@@ -2,10 +2,13 @@ import { Button } from '@mantine/core';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryStates } from 'nuqs';
 import { useTranslation } from 'react-i18next';
-import { getMetricColumns } from '@/entities/metric/get-metric-columns';
-import MetricFilters, { type MetricFiltersValue } from '@/entities/metric/MetricFilters';
-import { metricFilterParsers } from '@/entities/metric/metric-filter-parsers';
-import { useGetApiAdminMetrics } from '@/shared/api/generated/metrics/metrics';
+import {
+  getMetricColumns,
+  MetricFilters,
+  type MetricFiltersValue,
+  metricFilterParsers,
+  useGetApiAdminMetrics,
+} from '@/entities/metric';
 import { routes } from '@/shared/lib/routes';
 import CatalogPage from '@/shared/ui/CatalogPage';
 import DataTable from '@/shared/ui/DataTable';

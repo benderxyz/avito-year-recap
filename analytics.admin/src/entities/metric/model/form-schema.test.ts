@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metricFormDefaults, metricFormSchema } from './metric-form-schema';
+import { metricFormDefaults, metricFormSchema } from './form-schema';
 
 describe('metricFormSchema', () => {
   it('rejects an empty key', () => {

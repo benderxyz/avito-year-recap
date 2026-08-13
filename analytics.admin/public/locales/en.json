@@ -65,5 +65,55 @@
       "isPublic": "Public",
       "includeInLlm": "Include in LLM"
     }
+  },
+  "badges": {
+    "title": "Badges",
+    "create": "Create",
+    "createTitle": "New badge",
+    "editTitle": "Edit badge",
+    "save": "Save",
+    "delete": "Delete",
+    "empty": "No badges",
+    "loadError": "Failed to load badges",
+    "search": "Search",
+    "enabled": "Enabled",
+    "visibility": "Visibility",
+    "metric": "Metric",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "enums": {
+      "visibility": {
+        "private": "Private",
+        "public": "Public",
+        "both": "Both"
+      },
+      "predicateOp": {
+        "gt": "Greater than",
+        "gte": "Greater or equal",
+        "eq": "Equal",
+        "exists": "Exists"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "title": "Title",
+      "visibility": "Visibility",
+      "enabled": "Enabled",
+      "metric": "Metric",
+      "sortOrder": "Sort order"
+    },
+    "fields": {
+      "id": "Id",
+      "title": "Title",
+      "description": "Description",
+      "iconUrl": "Icon URL",
+      "sortOrder": "Sort order",
+      "enabled": "Enabled",
+      "visibility": "Visibility",
+      "whenMetric": "Metric",
+      "whenOp": "Operator",
+      "whenValue": "Value"
+    }
   }
 }

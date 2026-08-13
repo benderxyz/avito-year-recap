@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '@/shared/lib/test/render-with-providers';
-import { type MetricFormValues, metricFormDefaults } from '../metric-form-schema';
+import { type MetricFormValues, metricFormDefaults } from '../../model/form-schema';
 import MetricFormFields from './MetricFormFields';
 
 function Harness() {

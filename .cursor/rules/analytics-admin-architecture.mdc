@@ -1,5 +1,5 @@
 ---
-description: Admin UI architecture — shells, Form* fields, filters, no mega-CRUD
+description: Admin UI architecture — shells, Form* fields, filters, FSD entities
 globs: analytics.admin/**/*.{ts,tsx}
 alwaysApply: false
 ---
@@ -7,6 +7,19 @@ alwaysApply: false
 # Architecture (analytics.admin)
 
 List/detail shells know nothing about badges/metrics/stories. Entity-specific columns, filters, and form fields live in `entities/*`. Pages only compose. Do not build a generic `CrudResource` config.
+
+## Entity slices (FSD)
+
+Each slice in `entities/*` has segments `ui`, `model`, `api`, `lib` and a public `index.ts`. Pages import from the slice (`@/entities/badge`), not from files inside segments.
+
+```
+entities/badge/
+  index.ts
+  ui/          # Filters, FormFields
+  model/       # zod schema, nuqs parsers
+  lib/         # enum labels, table columns
+  api/         # Orval re-export for this entity
+```
 
 ## Forms
 
@@ -24,4 +37,4 @@ List filters are controlled `value` / `onChange`. Pages sync them to the URL wit
 
 ## Data
 
-Call Orval hooks from pages/entities, not from `CatalogPage` / `ResourceFormPage` / `DataTable`.
+Pages call Orval hooks through the entity `api` segment, not from `CatalogPage` / `ResourceFormPage` / `DataTable`, and not via deep imports into `shared/api/generated`.

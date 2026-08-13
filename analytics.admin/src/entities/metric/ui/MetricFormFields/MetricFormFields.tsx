@@ -8,8 +8,8 @@ import {
   getMetricCurrencyOptions,
   getMetricSourceFieldOptions,
   getMetricValueTypeOptions,
-} from '../metric-enum-labels';
-import type { MetricFormValues } from '../metric-form-schema';
+} from '../../lib/enum-labels';
+import type { MetricFormValues } from '../../model/form-schema';
 
 type MetricFormFieldsProps = {
   control: Control<MetricFormValues>;

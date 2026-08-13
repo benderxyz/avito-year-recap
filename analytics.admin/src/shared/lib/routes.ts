@@ -1,5 +1,6 @@
 export const routes = {
   badges: '/badges',
+  badgeCreate: '/badges/new',
   badgeById: '/badges/$id',
   metrics: '/metrics',
   metricCreate: '/metrics/new',

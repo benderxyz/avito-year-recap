@@ -4,23 +4,21 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import MetricFormFields from '@/entities/metric/MetricFormFields';
 import {
+  getGetApiAdminMetricsKeyQueryKey,
+  getGetApiAdminMetricsQueryKey,
+  MetricFormFields,
   type MetricFormValues,
   metricFormDefaults,
   metricFormSchema,
   metricToFormValues,
   toMetricCreate,
   toMetricWrite,
-} from '@/entities/metric/metric-form-schema';
-import {
-  getGetApiAdminMetricsKeyQueryKey,
-  getGetApiAdminMetricsQueryKey,
   useDeleteApiAdminMetricsKey,
   useGetApiAdminMetricsKey,
   usePostApiAdminMetrics,
   usePutApiAdminMetricsKey,
-} from '@/shared/api/generated/metrics/metrics';
+} from '@/entities/metric';
 import { routes } from '@/shared/lib/routes';
 import ResourceFormPage from '@/shared/ui/ResourceFormPage';
 

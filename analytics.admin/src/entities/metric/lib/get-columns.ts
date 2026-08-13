@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 import type { MetricDefinition } from '@/shared/api/generated/model/metricDefinition';
 import type { DataTableColumn } from '@/shared/ui/DataTable/DataTable';
-import { getMetricSourceFieldLabel, getMetricValueTypeLabel } from './metric-enum-labels';
+import { getMetricSourceFieldLabel, getMetricValueTypeLabel } from './enum-labels';
 
 export function getMetricColumns(t: TFunction): DataTableColumn<MetricDefinition>[] {
   return [

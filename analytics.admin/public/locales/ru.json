@@ -65,5 +65,55 @@
       "isPublic": "Публичная",
       "includeInLlm": "В промпте LLM"
     }
+  },
+  "badges": {
+    "title": "Бейджи",
+    "create": "Создать",
+    "createTitle": "Новый бейдж",
+    "editTitle": "Редактировать бейдж",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "empty": "Нет бейджей",
+    "loadError": "Не удалось загрузить бейджи",
+    "search": "Поиск",
+    "enabled": "Включен",
+    "visibility": "Видимость",
+    "metric": "Метрика",
+    "yes": "Да",
+    "no": "Нет",
+    "all": "Все",
+    "enums": {
+      "visibility": {
+        "private": "Приватный",
+        "public": "Публичный",
+        "both": "Оба"
+      },
+      "predicateOp": {
+        "gt": "Больше",
+        "gte": "Не меньше",
+        "eq": "Равно",
+        "exists": "Существует"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "title": "Заголовок",
+      "visibility": "Видимость",
+      "enabled": "Вкл.",
+      "metric": "Метрика",
+      "sortOrder": "Порядок"
+    },
+    "fields": {
+      "id": "Id",
+      "title": "Заголовок",
+      "description": "Описание",
+      "iconUrl": "URL иконки",
+      "sortOrder": "Порядок",
+      "enabled": "Включен",
+      "visibility": "Видимость",
+      "whenMetric": "Метрика",
+      "whenOp": "Оператор",
+      "whenValue": "Значение"
+    }
   }
 }

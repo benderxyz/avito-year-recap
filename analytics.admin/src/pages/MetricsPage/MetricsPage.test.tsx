@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useGetApiAdminMetrics } from '@/shared/api/generated/metrics/metrics';
+import { useGetApiAdminMetrics } from '@/entities/metric';
 import type { MetricDefinition } from '@/shared/api/generated/model/metricDefinition';
 import { renderWithProviders } from '@/shared/lib/test/render-with-providers';
 import MetricsPage from './MetricsPage';

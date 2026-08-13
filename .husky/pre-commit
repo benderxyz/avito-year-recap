@@ -28,3 +28,11 @@ if git diff --cached --name-only --diff-filter=ACMR | grep -q '^frontend/'; then
     pnpm exec lint-staged
   fi
 fi
+
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^analytics.admin/'; then
+  if [ -x "$ROOT/analytics.admin/node_modules/.bin/lint-staged" ]; then
+    cd "$ROOT/analytics.admin" || exit 1
+    export PATH="$ROOT/analytics.admin/node_modules/.bin:$PATH"
+    pnpm exec lint-staged
+  fi
+fi

@@ -19,11 +19,12 @@ description: Справочник функций и типов @recap-engine/cor
 | `buildScenesFromStory(payload)` | Только сборка `scenes` из `story` |
 | `defineScenes(scenes)` | Проверка уникальных `id`, типизация массива сцен |
 | `createTheme(tokens?)` | Тема + CSS-переменные |
-| `createFormatters(locale?)` | Форматирование чисел, валют, склонений |
+| `createFormatters(locale?)` | Форматирование чисел, валют, дат, склонений |
 | `metricNumber(metrics, key)` | Число из payload |
 | `metricString(metrics, key)` | Строка из payload |
+| `metricDate(metrics, key)` | Дата из payload (`Date` или `null`) |
 | `metricList(metrics, key)` | Список из payload |
-| `fillTemplate(template, values)` | Подстановка `{{key}}` в строку |
+| `fillTemplate(template, values)` | Подстановка `{'{{key}}'}` в строку |
 | `resolveValue(value, ctx)` | Вычисление функции в поле сцены |
 | `playerReducer(state, action)` | Переключение сцен (низкоуровневое) |
 | `normalizeMotion(motion)` | Нормализация пресета анимации |
@@ -33,7 +34,7 @@ description: Справочник функций и типов @recap-engine/cor
 | Enum | Значения |
 |------|----------|
 | `ESceneType` | `intro`, `stat`, `insight`, `achievement`, `upsell`, `blocks`, `outro`, `custom` |
-| `EMetricType` | `number`, `money`, `percentile`, `ratio`, `string`, `list` |
+| `EMetricType` | `number`, `money`, `percentile`, `ratio`, `string`, `date`, `list` |
 | `EMotionPreset` | `fade`, `slide-up`, `slide-left`, `scale-fade`, `count-up`, `badge-pop`, `stagger-text`, `callout-in`, `none` |
 | `EPlayerPhase` | `enter`, `active`, `exit` |
 | `ESceneActionType` | `next`, `prev`, `link`, `share`, `goto`, `custom` |

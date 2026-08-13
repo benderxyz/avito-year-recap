@@ -64,8 +64,8 @@ var defaultUsers = []seedUser{
 func main() {
 	userFlag := flag.String("user", "", "comma-separated user ids; empty seeds the default roster")
 	year := flag.Int("year", 2026, "recap year")
-	analyticsURL := flag.String("analytics", "http://127.0.0.1:8080", "analytics-service base url")
-	userURL := flag.String("users", "http://127.0.0.1:8082", "user-service base url")
+	analyticsURL := flag.String("analytics", "http://localhost:8080", "analytics-service base url")
+	userURL := flag.String("users", "http://localhost:8082", "user-service base url")
 	seed := flag.Int64("seed", 42, "rng seed")
 	flag.Parse()
 

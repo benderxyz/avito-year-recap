@@ -1,5 +1,11 @@
 # @recap-engine/react
 
+## 2.0.0
+
+### Major Changes
+
+- 8e1b93a: added navigation and pausing for player
+
 ## 1.4.0
 
 ### Minor Changes

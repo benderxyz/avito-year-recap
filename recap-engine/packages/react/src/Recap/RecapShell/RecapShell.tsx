@@ -13,8 +13,12 @@ import type { RecapShellProps } from './interface';
 
 export function RecapShell<TData>({
   gestures = true,
+  tapNav = false,
+  holdToPause = false,
   autoplay,
   loop = false,
+  isAutoplayPaused = false,
+  onAutoplayPausedChange,
   slots,
   className,
 }: RecapShellProps) {
@@ -50,10 +54,19 @@ export function RecapShell<TData>({
     dispatch,
   });
 
-  useAutoplay({ autoplay, loop, durationMs: scene?.durationMs });
+  useAutoplay({
+    autoplay,
+    loop,
+    durationMs: scene?.durationMs,
+    isPaused: isAutoplayPaused,
+  });
   useKeyboardNav();
 
-  const swipe = useSwipe(gestures, next, prev);
+  const swipe = useSwipe(gestures, next, prev, {
+    tapNav: gestures ? tapNav : false,
+    holdToPause: holdToPause && Boolean(autoplay),
+    onHoldPauseChange: onAutoplayPausedChange,
+  });
 
   if (!scene) return null;
 

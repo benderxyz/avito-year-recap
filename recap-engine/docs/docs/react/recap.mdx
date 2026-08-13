@@ -43,6 +43,8 @@ Spread `{...prepared}` передаёт `data`, `scenes`, `badges`.
 
 - Progress bar (точки или полоска)
 - Свайпы, стрелки ← →, кнопки навигации
+- Tap-зоны слева/справа (как в stories) — опционально через `tapNav`
+- Удержание для паузы autoplay — опционально через `holdToPause`
 - Анимации переходов и count-up на числах
 - Autoplay с паузой на анимации числа
 - Поддержка `prefers-reduced-motion`
@@ -54,6 +56,8 @@ Spread `{...prepared}` передаёт `data`, `scenes`, `badges`.
 | `autoplay` | выкл. | Автолистание (`true` или `{ delayMs: 5000 }`) |
 | `loop` | `false` | Зациклить после последней сцены |
 | `gestures` | `true` | Свайпы |
+| `tapNav` | `false` | Тап по левой/правой части экрана для prev/next |
+| `holdToPause` | `false` | Пауза autoplay при удержании указателя (stories-style) |
 | `initialSceneId` | первая сцена | Стартовый экран по `id` |
 | `locale` | `'ru-RU'` | Локаль для чисел и валют |
 | `badges` | `[]` | Бейджи для achievement-сцен |
@@ -75,6 +79,34 @@ Spread `{...prepared}` передаёт `data`, `scenes`, `badges`.
   }}
 />
 ```
+
+## Stories-style жесты
+
+Поведение как в Telegram/Instagram stories — включается отдельными props:
+
+```tsx
+<Recap
+  theme={theme}
+  data={data}
+  scenes={scenes}
+  autoplay
+  holdToPause   // удержание — пауза, отпускание — продолжение
+  tapNav        // тап слева = prev, справа = next
+/>
+```
+
+`tapNav` можно настроить ширину зон:
+
+```tsx
+<Recap
+  {...prepared}
+  tapNav={{ leftRatio: 0.25, rightRatio: 0.25 }}
+/>
+```
+
+По умолчанию каждая зона занимает ~33% ширины экрана. Центральная область не реагирует на тап. Клики по кнопкам и progress bar не перехватываются.
+
+`holdToPause` работает только при включённом `autoplay` и синхронизирован с progress bar.
 
 ## Связанное
 

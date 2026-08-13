@@ -1,5 +1,11 @@
 # @recap-engine/react
 
+## 1.4.0
+
+### Minor Changes
+
+- Add optional stories-style gestures: `holdToPause` for autoplay and `tapNav` for left/right screen navigation.
+
 ## 1.3.0
 
 ### Minor Changes

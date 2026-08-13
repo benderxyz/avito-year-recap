@@ -94,6 +94,39 @@ describe('RecapShell', () => {
     expect(disabled.value.next).not.toHaveBeenCalled();
   });
 
+  it('supports tap navigation when tapNav is enabled', () => {
+    const { value, container } = renderWithRecap(<RecapShell tapNav gestures />, {
+      scenes: [contentScene, { id: 'second', type: ESceneType.Outro, title: 'Конец' }],
+    });
+    const root = container.querySelector('.recap-root') as HTMLElement;
+    Object.defineProperty(root, 'getBoundingClientRect', {
+      value: () => ({ left: 0, width: 300, top: 0, height: 600 }),
+    });
+
+    fireEvent.pointerDown(root, { clientX: 40 });
+    fireEvent.pointerUp(root, { clientX: 42 });
+    fireEvent.pointerDown(root, { clientX: 260 });
+    fireEvent.pointerUp(root, { clientX: 258 });
+
+    expect(value.prev).toHaveBeenCalledTimes(1);
+    expect(value.next).toHaveBeenCalledTimes(1);
+  });
+
+  it('pauses autoplay while pointer is held when holdToPause is enabled', () => {
+    const onAutoplayPausedChange = jest.fn();
+    const { container } = renderWithRecap(
+      <RecapShell holdToPause autoplay onAutoplayPausedChange={onAutoplayPausedChange} />,
+      { scenes: [contentScene] },
+    );
+    const root = container.querySelector('.recap-root') as HTMLElement;
+
+    fireEvent.pointerDown(root, { clientX: 120, pointerId: 1 });
+    fireEvent.pointerUp(root, { clientX: 120, pointerId: 1 });
+
+    expect(onAutoplayPausedChange).toHaveBeenCalledWith(true);
+    expect(onAutoplayPausedChange).toHaveBeenCalledWith(false);
+  });
+
   it('handles keyboard navigation and completion at the last scene', () => {
     const onEvent = jest.fn();
     const { value } = renderWithRecap(<RecapShell />, {

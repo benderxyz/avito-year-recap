@@ -63,6 +63,22 @@ describe('Progress', () => {
     );
   });
 
+  it('keeps autoplay progress paused while hold-to-pause is active', () => {
+    const { container } = renderWithRecap(<Progress />, {
+      autoplay: true,
+      blockMotionDone: true,
+      isAnimating: false,
+      isAutoplayPaused: true,
+      player: { index: 0, direction: 1, phase: EPlayerPhase.Active, total: 2 },
+      reducedMotion: false,
+    });
+
+    expect(container.querySelector('[data-state="current"]')).toHaveAttribute(
+      'data-playing',
+      'false',
+    );
+  });
+
   it('does not render for a single scene', () => {
     const { container } = renderWithRecap(<Progress />, {
       player: { index: 0, direction: 1, phase: EPlayerPhase.Active, total: 1 },

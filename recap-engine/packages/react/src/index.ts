@@ -60,6 +60,6 @@ export {
   Subtitle,
   Title,
 } from './primitives';
-export { Recap, type RecapProps } from './Recap';
+export { Recap, type RecapProps, type TapNavConfig } from './Recap';
 export { type CustomSceneComponentProps, registerScene } from './registry';
 export { cn } from './utils/cn';

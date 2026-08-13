@@ -23,6 +23,8 @@ export function Recap<TData>({
   autoplay,
   loop,
   gestures = true,
+  tapNav = false,
+  holdToPause = false,
   reducedMotion: reducedMotionOverride,
   className,
   slots,
@@ -31,6 +33,7 @@ export function Recap<TData>({
   const reducedMotion = usePrefersReducedMotion(reducedMotionOverride);
   const format = useMemo(() => createFormatters(locale), [locale]);
   const [isAnimating, setAnimating] = useState(false);
+  const [isAutoplayPaused, setAutoplayPaused] = useState(false);
 
   const { player, dispatch, next, prev, goTo, progress } = useRecapPlayer(
     scenes,
@@ -61,6 +64,7 @@ export function Recap<TData>({
         goTo,
         progress,
         autoplay,
+        isAutoplayPaused,
         isAnimating,
         setAnimating,
         notifyBlockMotionComplete,
@@ -69,8 +73,12 @@ export function Recap<TData>({
     >
       <RecapShell
         gestures={gestures}
+        tapNav={tapNav}
+        holdToPause={holdToPause}
         autoplay={autoplay}
         loop={loop}
+        isAutoplayPaused={isAutoplayPaused}
+        onAutoplayPausedChange={setAutoplayPaused}
         slots={slots}
         className={className}
       />

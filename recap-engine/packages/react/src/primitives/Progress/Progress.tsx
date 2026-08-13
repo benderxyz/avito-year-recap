@@ -4,8 +4,16 @@ import { useRecap } from '../../context/RecapContext';
 const DEFAULT_AUTOPLAY_DELAY_MS = 3200;
 
 export function Progress() {
-  const { autoplay, blockMotionDone, goTo, isAnimating, player, reducedMotion, scenes } =
-    useRecap();
+  const {
+    autoplay,
+    blockMotionDone,
+    goTo,
+    isAnimating,
+    isAutoplayPaused,
+    player,
+    reducedMotion,
+    scenes,
+  } = useRecap();
 
   if (player.total <= 1) return null;
 
@@ -15,7 +23,7 @@ export function Progress() {
       ? autoplay.delayMs
       : (currentScene?.durationMs ?? DEFAULT_AUTOPLAY_DELAY_MS);
   const animated = Boolean(autoplay) && !reducedMotion;
-  const playing = animated && !isAnimating && blockMotionDone;
+  const playing = animated && !isAnimating && blockMotionDone && !isAutoplayPaused;
 
   return (
     <nav className="recap-progress" aria-label="Навигация по сценам">

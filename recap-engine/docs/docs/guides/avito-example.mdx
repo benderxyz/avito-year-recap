@@ -19,7 +19,7 @@ frontend/src/
 
 1. **`prepareRecap(mockRecapPayload)`** — mock JSON превращается в `data`, `scenes`, `badges`.
 2. **`registerScene('top-categories', ...)`** — custom экран «Топ категорий» (список из list-метрики).
-3. **`<Recap {...prepared} autoplay theme={...} onEvent={...} />`** — плеер с автолистанием.
+3. **`<Recap {...prepared} autoplay holdToPause tapNav theme={...} onEvent={...} />`** — плеер с автолистанием и stories-style жестами.
 4. **`onEvent`** — закрывает modal, когда recap завершён или нажата кнопка «Закрыть».
 
 ```tsx
@@ -36,7 +36,7 @@ const onEvent = (event: RecapEvent) => {
   }
 };
 
-<Recap {...prepared} autoplay theme={theme} onEvent={onEvent} />
+<Recap {...prepared} autoplay holdToPause tapNav theme={theme} onEvent={onEvent} />
 ```
 
 ## Custom scene «top-categories»

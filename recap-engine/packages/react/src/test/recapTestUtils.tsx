@@ -39,6 +39,7 @@ export function createRecapValue(overrides: Partial<RecapContextValue> = {}): Re
     setAnimating: jest.fn(),
     notifyBlockMotionComplete: jest.fn(),
     blockMotionDone: true,
+    isAutoplayPaused: false,
     ...overrides,
   };
 }

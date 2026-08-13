@@ -112,4 +112,32 @@ describe('useAutoplay', () => {
     unmount();
     expect(jest.getTimerCount()).toBe(0);
   });
+
+  it('pauses and resumes with the remaining delay', () => {
+    const next = jest.fn();
+    const value = createRecapValue({
+      next,
+      player: { index: 0, total: 2, direction: 1, phase: EPlayerPhase.Active },
+    });
+
+    const { rerender } = renderHook(
+      ({ isPaused }: { isPaused: boolean }) =>
+        useAutoplay({ autoplay: true, durationMs: 1000, isPaused }),
+      {
+        wrapper: recapWrapper(value),
+        initialProps: { isPaused: false },
+      },
+    );
+
+    act(() => jest.advanceTimersByTime(400));
+    rerender({ isPaused: true });
+    act(() => jest.advanceTimersByTime(1000));
+    expect(next).not.toHaveBeenCalled();
+
+    rerender({ isPaused: false });
+    act(() => jest.advanceTimersByTime(599));
+    expect(next).not.toHaveBeenCalled();
+    act(() => jest.advanceTimersByTime(1));
+    expect(next).toHaveBeenCalledTimes(1);
+  });
 });

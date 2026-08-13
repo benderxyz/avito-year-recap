@@ -49,6 +49,7 @@ export function createRecapValue<TData = unknown>(
     setAnimating: jest.fn(),
     notifyBlockMotionComplete: jest.fn(),
     blockMotionDone: true,
+    isAutoplayPaused: false,
     ...overrides,
     player,
   };

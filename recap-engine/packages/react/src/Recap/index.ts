@@ -1,2 +1,2 @@
-export type { RecapProps } from './interface';
+export type { RecapProps, TapNavConfig } from './interface';
 export { Recap } from './Recap';

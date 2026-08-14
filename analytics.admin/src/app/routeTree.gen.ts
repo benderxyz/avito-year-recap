@@ -19,6 +19,7 @@ import { Route as MetricsKeyRouteImport } from './routes/metrics/$key'
 import { Route as MetricsNewRouteImport } from './routes/metrics/new'
 import { Route as RecommendationsIndexRouteImport } from './routes/recommendations/index'
 import { Route as RecommendationsIdRouteImport } from './routes/recommendations/$id'
+import { Route as RecommendationsNewRouteImport } from './routes/recommendations/new'
 import { Route as StoriesIndexRouteImport } from './routes/stories/index'
 import { Route as StoriesIdRouteImport } from './routes/stories/$id'
 import { Route as StoriesNewRouteImport } from './routes/stories/new'
@@ -73,6 +74,11 @@ const RecommendationsIdRoute = RecommendationsIdRouteImport.update({
   path: '/recommendations/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecommendationsNewRoute = RecommendationsNewRouteImport.update({
+  id: '/recommendations/new',
+  path: '/recommendations/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoriesIndexRoute = StoriesIndexRouteImport.update({
   id: '/stories/',
   path: '/stories/',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/metrics/$key': typeof MetricsKeyRoute
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
+  '/recommendations/new': typeof RecommendationsNewRoute
   '/stories/$id': typeof StoriesIdRoute
   '/stories/new': typeof StoriesNewRoute
   '/badges/': typeof BadgesIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/metrics/$key': typeof MetricsKeyRoute
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
+  '/recommendations/new': typeof RecommendationsNewRoute
   '/stories/$id': typeof StoriesIdRoute
   '/stories/new': typeof StoriesNewRoute
   '/badges': typeof BadgesIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/metrics/$key': typeof MetricsKeyRoute
   '/metrics/new': typeof MetricsNewRoute
   '/recommendations/$id': typeof RecommendationsIdRoute
+  '/recommendations/new': typeof RecommendationsNewRoute
   '/stories/$id': typeof StoriesIdRoute
   '/stories/new': typeof StoriesNewRoute
   '/badges/': typeof BadgesIndexRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/metrics/$key'
     | '/metrics/new'
     | '/recommendations/$id'
+    | '/recommendations/new'
     | '/stories/$id'
     | '/stories/new'
     | '/badges/'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/metrics/$key'
     | '/metrics/new'
     | '/recommendations/$id'
+    | '/recommendations/new'
     | '/stories/$id'
     | '/stories/new'
     | '/badges'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/metrics/$key'
     | '/metrics/new'
     | '/recommendations/$id'
+    | '/recommendations/new'
     | '/stories/$id'
     | '/stories/new'
     | '/badges/'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   MetricsKeyRoute: typeof MetricsKeyRoute
   MetricsNewRoute: typeof MetricsNewRoute
   RecommendationsIdRoute: typeof RecommendationsIdRoute
+  RecommendationsNewRoute: typeof RecommendationsNewRoute
   StoriesIdRoute: typeof StoriesIdRoute
   StoriesNewRoute: typeof StoriesNewRoute
   BadgesIndexRoute: typeof BadgesIndexRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecommendationsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recommendations/new': {
+      id: '/recommendations/new'
+      path: '/recommendations/new'
+      fullPath: '/recommendations/new'
+      preLoaderRoute: typeof RecommendationsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stories/': {
       id: '/stories/'
       path: '/stories'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   MetricsKeyRoute: MetricsKeyRoute,
   MetricsNewRoute: MetricsNewRoute,
   RecommendationsIdRoute: RecommendationsIdRoute,
+  RecommendationsNewRoute: RecommendationsNewRoute,
   StoriesIdRoute: StoriesIdRoute,
   StoriesNewRoute: StoriesNewRoute,
   BadgesIndexRoute: BadgesIndexRoute,

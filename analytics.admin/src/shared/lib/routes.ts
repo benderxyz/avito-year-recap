@@ -6,6 +6,7 @@ export const routes = {
   metricCreate: '/metrics/new',
   metricByKey: '/metrics/$key',
   recommendations: '/recommendations',
+  recommendationCreate: '/recommendations/new',
   recommendationById: '/recommendations/$id',
   stories: '/stories',
   storyCreate: '/stories/new',

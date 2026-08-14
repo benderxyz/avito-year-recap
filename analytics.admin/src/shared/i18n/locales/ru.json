@@ -178,5 +178,56 @@
       "whenOp": "Оператор",
       "whenValue": "Значение"
     }
+  },
+  "recommendations": {
+    "title": "Рекомендации",
+    "create": "Создать",
+    "createTitle": "Новая рекомендация",
+    "editTitle": "Редактировать рекомендацию",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "empty": "Нет рекомендаций",
+    "loadError": "Не удалось загрузить рекомендации",
+    "search": "Поиск",
+    "enabled": "Включена",
+    "metric": "Метрика",
+    "minPriority": "Мин. приоритет",
+    "yes": "Да",
+    "no": "Нет",
+    "all": "Все",
+    "addPredicate": "Добавить условие",
+    "removePredicate": "Удалить",
+    "enums": {
+      "matchMode": {
+        "all": "Все",
+        "any": "Любое"
+      },
+      "predicateOp": {
+        "gt": "Больше",
+        "gte": "Не меньше",
+        "eq": "Равно",
+        "exists": "Существует"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "title": "Заголовок",
+      "path": "Путь",
+      "enabled": "Вкл.",
+      "metric": "Метрика"
+    },
+    "fields": {
+      "id": "Id",
+      "title": "Заголовок",
+      "text": "Текст",
+      "callout": "Выноска",
+      "linkLabel": "Текст ссылки",
+      "path": "Путь",
+      "enabled": "Включена",
+      "whenMatch": "Совпадение",
+      "whenMetric": "Метрика",
+      "whenOp": "Оператор",
+      "whenValue": "Значение"
+    }
   }
 }

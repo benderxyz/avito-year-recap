@@ -178,5 +178,56 @@
       "whenOp": "Operator",
       "whenValue": "Value"
     }
+  },
+  "recommendations": {
+    "title": "Recommendations",
+    "create": "Create",
+    "createTitle": "New recommendation",
+    "editTitle": "Edit recommendation",
+    "save": "Save",
+    "delete": "Delete",
+    "empty": "No recommendations",
+    "loadError": "Failed to load recommendations",
+    "search": "Search",
+    "enabled": "Enabled",
+    "metric": "Metric",
+    "minPriority": "Min priority",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "addPredicate": "Add condition",
+    "removePredicate": "Remove",
+    "enums": {
+      "matchMode": {
+        "all": "All",
+        "any": "Any"
+      },
+      "predicateOp": {
+        "gt": "Greater than",
+        "gte": "Greater or equal",
+        "eq": "Equal",
+        "exists": "Exists"
+      }
+    },
+    "columns": {
+      "id": "Id",
+      "title": "Title",
+      "path": "Path",
+      "enabled": "Enabled",
+      "metric": "Metric"
+    },
+    "fields": {
+      "id": "Id",
+      "title": "Title",
+      "text": "Text",
+      "callout": "Callout",
+      "linkLabel": "Link label",
+      "path": "Path",
+      "enabled": "Enabled",
+      "whenMatch": "Match",
+      "whenMetric": "Metric",
+      "whenOp": "Operator",
+      "whenValue": "Value"
+    }
   }
 }

@@ -12,6 +12,9 @@ describe('routes', () => {
     expect(routes.stories).toBe('/stories');
     expect(routes.storyById).toBe('/stories/$id');
     expect(routes.storyCreate).toBe('/stories/new');
+    expect(routes.recommendations).toBe('/recommendations');
+    expect(routes.recommendationById).toBe('/recommendations/$id');
+    expect(routes.recommendationCreate).toBe('/recommendations/new');
     expect(routes.preview).toBe('/preview');
   });
 });

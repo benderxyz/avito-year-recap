@@ -43,6 +43,7 @@ jobs:
               - 'recap-engine/pnpm-workspace.yaml'
             nginx:
               - 'infra/nginx/**'
+              - 'analytics.admin/**'
             compose:
               - 'docker-compose.prod.yml'
               - '.env.prod.example'

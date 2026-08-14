@@ -152,7 +152,11 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:1.27-alpine
+    build:
+      context: .
+      dockerfile: infra/nginx/Dockerfile
+      args:
+        VITE_ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
     container_name: nginx
     ports:
       - "80:80"

@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>analytics.admin</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "/src/shared/lib/react-shims/react.ts",
+          "react-dom": "/src/shared/lib/react-shims/react-dom.ts",
+          "react-dom/client": "/src/shared/lib/react-shims/react-dom-client.ts",
+          "react/jsx-runtime": "/src/shared/lib/react-shims/jsx-runtime.ts",
+          "react/jsx-dev-runtime": "/src/shared/lib/react-shims/jsx-dev-runtime.ts"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

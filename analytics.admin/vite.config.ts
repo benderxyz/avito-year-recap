@@ -5,6 +5,15 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
 const localesDir = path.resolve(import.meta.dirname, 'src/shared/i18n/locales');
+const shimDir = path.resolve(import.meta.dirname, 'src/shared/lib/react-shims');
+
+const REACT_SHIM_SPECIFIERS = {
+  react: path.join(shimDir, 'react.ts'),
+  'react-dom': path.join(shimDir, 'react-dom.ts'),
+  'react-dom/client': path.join(shimDir, 'react-dom-client.ts'),
+  'react/jsx-runtime': path.join(shimDir, 'jsx-runtime.ts'),
+  'react/jsx-dev-runtime': path.join(shimDir, 'jsx-dev-runtime.ts'),
+} as const;
 
 function localesJsonPlugin(): Plugin {
   return {
@@ -44,6 +53,37 @@ function localesJsonPlugin(): Plugin {
   };
 }
 
+function reactImportMapPlugin(): Plugin {
+  return {
+    name: 'react-importmap',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        if (!ctx.bundle) {
+          return html;
+        }
+
+        const imports: Record<string, string> = {};
+
+        for (const [specifier, filePath] of Object.entries(REACT_SHIM_SPECIFIERS)) {
+          const chunk = Object.values(ctx.bundle).find(
+            (item) => item.type === 'chunk' && item.facadeModuleId === filePath,
+          );
+
+          if (chunk && chunk.type === 'chunk') {
+            imports[specifier] = `/${chunk.fileName}`;
+          }
+        }
+
+        return html.replace(
+          /<script type="importmap">[\s\S]*?<\/script>/,
+          `<script type="importmap">${JSON.stringify({ imports })}</script>`,
+        );
+      },
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     tanstackRouter({
@@ -54,10 +94,23 @@ export default defineConfig({
     }),
     react(),
     localesJsonPlugin(),
+    reactImportMapPlugin(),
   ],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        'shim-react': REACT_SHIM_SPECIFIERS.react,
+        'shim-react-dom': REACT_SHIM_SPECIFIERS['react-dom'],
+        'shim-react-dom-client': REACT_SHIM_SPECIFIERS['react-dom/client'],
+        'shim-jsx-runtime': REACT_SHIM_SPECIFIERS['react/jsx-runtime'],
+        'shim-jsx-dev-runtime': REACT_SHIM_SPECIFIERS['react/jsx-dev-runtime'],
+      },
     },
   },
   server: {

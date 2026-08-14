@@ -229,5 +229,41 @@
       "whenOp": "Оператор",
       "whenValue": "Значение"
     }
+  },
+  "preview": {
+    "title": "Превью",
+    "run": "Превью",
+    "empty": "Выберите версию пакета и запустите превью",
+    "errors": {
+      "npm": "Не удалось загрузить версии пакета из npm",
+      "engine": "Не удалось загрузить движок Recap",
+      "backend": "Не удалось загрузить данные превью",
+      "prepareRecap": "Не удалось подготовить Recap из данных превью"
+    },
+    "fields": {
+      "reactVersion": "@recap-engine/react",
+      "coreVersion": "@recap-engine/core",
+      "year": "Год",
+      "mode": "Режим",
+      "seed": "Seed",
+      "theme": "Тема",
+      "autoplay": "Автоплей",
+      "loop": "Цикл",
+      "gestures": "Жесты",
+      "tapNav": "Навигация тапом",
+      "holdToPause": "Пауза по удержанию",
+      "reducedMotion": "Меньше анимации"
+    },
+    "modes": {
+      "private": "Приватный",
+      "public": "Публичный"
+    },
+    "themes": {
+      "avitoLight": "Avito светлая",
+      "avitoDark": "Avito тёмная",
+      "midnight": "Полночь",
+      "sunset": "Закат",
+      "forest": "Лес"
+    }
   }
 }

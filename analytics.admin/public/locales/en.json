@@ -229,5 +229,41 @@
       "whenOp": "Operator",
       "whenValue": "Value"
     }
+  },
+  "preview": {
+    "title": "Preview",
+    "run": "Preview",
+    "empty": "Choose a package version and run preview",
+    "errors": {
+      "npm": "Failed to load package versions from npm",
+      "engine": "Failed to load the Recap engine",
+      "backend": "Failed to load preview data",
+      "prepareRecap": "Failed to prepare Recap from preview data"
+    },
+    "fields": {
+      "reactVersion": "@recap-engine/react",
+      "coreVersion": "@recap-engine/core",
+      "year": "Year",
+      "mode": "Mode",
+      "seed": "Seed",
+      "theme": "Theme",
+      "autoplay": "Autoplay",
+      "loop": "Loop",
+      "gestures": "Gestures",
+      "tapNav": "Tap navigation",
+      "holdToPause": "Hold to pause",
+      "reducedMotion": "Reduced motion"
+    },
+    "modes": {
+      "private": "Private",
+      "public": "Public"
+    },
+    "themes": {
+      "avitoLight": "Avito light",
+      "avitoDark": "Avito dark",
+      "midnight": "Midnight",
+      "sunset": "Sunset",
+      "forest": "Forest"
+    }
   }
 }

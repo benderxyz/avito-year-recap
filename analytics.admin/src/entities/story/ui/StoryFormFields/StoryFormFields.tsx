@@ -56,7 +56,6 @@ export default function StoryFormFields({ control, idReadOnly = false }: StoryFo
         data={getPredicateOpOptions(t)}
       />
       <FormNumberInput name="when.value" control={control} label={t('stories.fields.whenValue')} />
-      <FormNumberInput name="sortOrder" control={control} label={t('stories.fields.sortOrder')} />
       <FormSwitch name="enabled" control={control} label={t('stories.fields.enabled')} />
     </>
   );

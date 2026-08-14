@@ -2,6 +2,9 @@
   "layout": {
     "logo": "Recap admin"
   },
+  "table": {
+    "dragHandle": "Reorder"
+  },
   "nav": {
     "metrics": "Metrics",
     "badges": "Badges",

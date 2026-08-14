@@ -24,6 +24,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 vi.mock('@/shared/api/generated/metrics/metrics', () => ({
   useGetApiAdminMetrics: vi.fn(),
+  usePutApiAdminMetricsKey: () => ({ mutateAsync: vi.fn() }),
 }));
 
 const metric: MetricDefinition = {

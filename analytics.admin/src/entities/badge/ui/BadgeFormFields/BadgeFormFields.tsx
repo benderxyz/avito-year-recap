@@ -41,7 +41,6 @@ export default function BadgeFormFields({ control, idReadOnly = false }: BadgeFo
         data={getPredicateOpOptions(t)}
       />
       <FormNumberInput name="when.value" control={control} label={t('badges.fields.whenValue')} />
-      <FormNumberInput name="sortOrder" control={control} label={t('badges.fields.sortOrder')} />
       <FormSwitch name="enabled" control={control} label={t('badges.fields.enabled')} />
     </>
   );

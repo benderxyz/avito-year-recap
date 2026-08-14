@@ -17,7 +17,10 @@ export function getBadgeColumns(t: TFunction): DataTableColumn<BadgeRule>[] {
       header: t('badges.columns.enabled'),
       render: (row) => (row.enabled ? t('badges.yes') : t('badges.no')),
     },
-    { key: 'metric', header: t('badges.columns.metric'), render: (row) => row.when.metric },
-    { key: 'sortOrder', header: t('badges.columns.sortOrder'), render: (row) => row.sortOrder },
+    {
+      key: 'metric',
+      header: t('badges.columns.metric'),
+      render: (row) => row.when.metric,
+    },
   ];
 }

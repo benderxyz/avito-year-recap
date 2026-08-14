@@ -57,7 +57,6 @@ export default function MetricFormFields({ control, keyReadOnly = false }: Metri
         control={control}
         label={t('metrics.fields.comparisonMinPercentile')}
       />
-      <FormNumberInput name="sortOrder" control={control} label={t('metrics.fields.sortOrder')} />
       <FormSwitch name="enabled" control={control} label={t('metrics.fields.enabled')} />
       <FormSwitch name="isPublic" control={control} label={t('metrics.fields.isPublic')} />
       <FormSwitch name="includeInLlm" control={control} label={t('metrics.fields.includeInLlm')} />

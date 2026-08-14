@@ -35,6 +35,37 @@ describe('DataTable', () => {
     expect(onRowClick).toHaveBeenCalledWith({ title: 'First' });
   });
 
+  it('renders a drag handle when onReorder is set', () => {
+    const { getByLabelText } = renderWithProviders(
+      <DataTable
+        columns={columns}
+        items={[{ title: 'First' }]}
+        getRowId={(row) => row.title}
+        onReorder={vi.fn()}
+      />,
+    );
+
+    expect(getByLabelText('Reorder')).toBeInTheDocument();
+  });
+
+  it('still calls onRowClick when a reorderable row is clicked', async () => {
+    const user = userEvent.setup();
+    const onRowClick = vi.fn();
+    const { getByText } = renderWithProviders(
+      <DataTable
+        columns={columns}
+        items={[{ title: 'First' }]}
+        getRowId={(row) => row.title}
+        onReorder={vi.fn()}
+        onRowClick={onRowClick}
+      />,
+    );
+
+    await user.click(getByText('First'));
+
+    expect(onRowClick).toHaveBeenCalledWith({ title: 'First' });
+  });
+
   it('renders a table skeleton while loading', () => {
     const { getByLabelText, queryByText, getAllByRole } = renderWithProviders(
       <DataTable columns={columns} items={[]} isLoading skeletonRowCount={3} />,

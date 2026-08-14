@@ -26,6 +26,5 @@ export function getStoryColumns(t: TFunction): DataTableColumn<StoryRule>[] {
       header: t('stories.columns.metric'),
       render: (row) => row.when?.metric ?? '',
     },
-    { key: 'sortOrder', header: t('stories.columns.sortOrder'), render: (row) => row.sortOrder },
   ];
 }

@@ -1,4 +1,5 @@
 import { Button } from '@mantine/core';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryStates } from 'nuqs';
 import { useTranslation } from 'react-i18next';
@@ -6,16 +7,23 @@ import {
   BadgeFilters,
   type BadgeFiltersValue,
   badgeFilterParsers,
+  badgeToFormValues,
   getBadgeColumns,
+  getGetApiAdminBadgesQueryKey,
+  toBadgeWrite,
   useGetApiAdminBadges,
+  usePutApiAdminBadgesId,
 } from '@/entities/badge';
 import { routes } from '@/shared/lib/routes';
+import { sortOrderBetween } from '@/shared/lib/sort-order';
 import CatalogPage from '@/shared/ui/CatalogPage';
 import DataTable from '@/shared/ui/DataTable';
 
 export default function BadgesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const updateMutation = usePutApiAdminBadgesId();
 
   const [query, setQuery] = useQueryStates(badgeFilterParsers, { history: 'replace' });
 
@@ -42,6 +50,27 @@ export default function BadgesPage() {
     });
   }
 
+  const items = data?.items ?? [];
+
+  async function onReorder(nextItems: typeof items, movedId: string) {
+    const movedIndex = nextItems.findIndex((row) => row.id === movedId);
+    const moved = nextItems[movedIndex];
+    if (!moved) {
+      return;
+    }
+
+    const sortOrder = sortOrderBetween(nextItems, movedIndex);
+    if (sortOrder === moved.sortOrder) {
+      return;
+    }
+
+    await updateMutation.mutateAsync({
+      id: moved.id,
+      data: { ...toBadgeWrite(badgeToFormValues(moved)), sortOrder },
+    });
+    await queryClient.invalidateQueries({ queryKey: getGetApiAdminBadgesQueryKey() });
+  }
+
   return (
     <CatalogPage
       title={t('badges.title')}
@@ -56,10 +85,13 @@ export default function BadgesPage() {
     >
       <DataTable
         columns={getBadgeColumns(t)}
-        items={data?.items ?? []}
+        items={items}
         emptyMessage={t('badges.empty')}
         getRowId={(row) => row.id}
         isLoading={isLoading}
+        onReorder={(items, movedId) => {
+          void onReorder(items, movedId);
+        }}
         onRowClick={(row) => {
           navigate({ to: routes.badgeById, params: { id: row.id } });
         }}

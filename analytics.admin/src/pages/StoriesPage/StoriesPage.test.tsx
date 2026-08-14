@@ -24,6 +24,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 vi.mock('@/shared/api/generated/stories/stories', () => ({
   useGetApiAdminStories: vi.fn(),
+  usePutApiAdminStoriesId: () => ({ mutateAsync: vi.fn() }),
 }));
 
 const story: StoryRule = {

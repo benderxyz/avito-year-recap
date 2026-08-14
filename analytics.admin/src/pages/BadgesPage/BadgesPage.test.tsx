@@ -24,6 +24,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 vi.mock('@/shared/api/generated/badges/badges', () => ({
   useGetApiAdminBadges: vi.fn(),
+  usePutApiAdminBadgesId: () => ({ mutateAsync: vi.fn() }),
 }));
 
 const badge: BadgeRule = {

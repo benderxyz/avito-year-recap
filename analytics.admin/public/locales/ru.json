@@ -2,6 +2,9 @@
   "layout": {
     "logo": "Recap admin"
   },
+  "table": {
+    "dragHandle": "Изменить порядок"
+  },
   "nav": {
     "metrics": "Метрики",
     "badges": "Бейджи",
